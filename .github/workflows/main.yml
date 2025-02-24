@@ -42,7 +42,7 @@ jobs:
           source env/bin/activate  # Correct the virtual environment path
           black src/ tests/
           flake8 src/ tests/
-          bandit -r /src /tests
+          bandit -r src/ tests/
 
       - name: Run Tests
         run: |
