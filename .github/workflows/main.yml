@@ -20,15 +20,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: install
+      - name: Install Dependencies
         run: |
-          python -m venv env/
+          python -m venv env  # Ensure consistent naming of the virtual environment
           source env/bin/activate
           pip install -r requirements.txt
-      - uses: pypa/gh-action-pip-audit@v1.1.0
+
+      - name: Audit Python Dependencies
+        uses: pypa/gh-action-pip-audit@v1.1.0
         with:
-          virtual-environment: venv/
-          
+          virtual-environment: env  # Correct the virtual environment path
+
       - name: Set AWS Region
         run: |
           echo "AWS_REGION=eu-west-2" >> $GITHUB_ENV
@@ -36,14 +38,14 @@ jobs:
           
       - name: Auto-fix Formatting Issues
         run: |
-          source venv/bin/activate
+          source env/bin/activate  # Correct the virtual environment path
           black src/ tests/
           flake8 src/ tests/
           bandit -r src/ tests/
 
       - name: Run Tests
         run: |
-          source venv/bin/activate
+          source env/bin/activate  # Correct the virtual environment path
           pytest tests/
 
       - name: Pytest coverage comment
