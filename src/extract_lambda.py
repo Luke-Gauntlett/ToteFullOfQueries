@@ -1,0 +1,1 @@
+""" Function should query the DB and format data into JSON file"""
