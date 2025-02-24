@@ -28,7 +28,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Audit Python Dependencies
-        uses: pypa/gh-action-pip-audit@v1
+        uses: pypa/gh-action-pip-audit@v1.1.0
         with:
           requirements: requirements.txt
           
