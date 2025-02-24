@@ -1,1 +1,3 @@
-""" Function should take the extracted data from the lambda and upload to extracted s3 bucket"""
+"""
+Function should take the extracted data from the lambda 
+"""
