@@ -36,9 +36,9 @@ jobs:
       - name: Auto-fix Formatting Issues
         run: |
           source venv/bin/activate  # Activate the virtual environment
-          black src/ tests/
-          flake8 src/ tests/
-          bandit -r src/ tests/
+          black src/ tests/ terraform/
+          flake8 src/ tests/ terraform/
+          bandit -r src/ tests/ terraform/
 
       - name: Run Tests
         run: |
