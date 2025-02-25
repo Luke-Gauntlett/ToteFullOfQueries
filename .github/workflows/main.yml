@@ -44,7 +44,7 @@ jobs:
       - name: Run Tests
         run: |
           source env/bin/activate  # Correct the virtual environment path
-          pytest tests/ --cov=my_package --cov-report=txt:pytest-coverage.txt --junitxml=pytest.xml
+          pytest --cov=my_package --cov-report=txt:pytest-coverage.txt --junitxml=pytest.xml tests/
           
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
