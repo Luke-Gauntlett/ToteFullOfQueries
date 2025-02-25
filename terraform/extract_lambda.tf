@@ -5,12 +5,12 @@ resource "aws_lambda_function" "workflow_tasks_extract" {
   s3_bucket        = aws_s3_bucket.code_bucket.bucket
   s3_key           = "${var.extract_lambda}/function.zip"
   # waiting for vars 
-  role             = aws_iam_role.lambda_role.arn
+  role = aws_iam_role.lambda_iam.arn
   # need to connect to the iam role
-  handler          = "${var.extract_lambda}.lambda_handler"
-  runtime          = "python3.12"
-  timeout          = var.default_timeout
-  layers           = [aws_lambda_layer_version.dependencies.arn]
+  handler    = "${var.extract_lambda}.lambda_handler"
+  runtime    = "python3.12"
+  timeout    = var.default_timeout
+  layers     = [aws_lambda_layer_version.dependencies.arn]
   depends_on = [aws_s3_object.lambda_zip_code, aws_s3_object.lambda_layer]
 }
 
@@ -26,4 +26,4 @@ resource "aws_lambda_layer_version" "dependencies" {
 
 
 
- 
+
