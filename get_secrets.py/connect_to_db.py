@@ -19,7 +19,7 @@ def connect_to_database():
     try:
         
         conn = pg8000.connect(
-            user=credentials["username"],
+            user=credentials["user"],
             password=credentials["password"],
             host=credentials["host"],
             port=int(credentials["port"]),
