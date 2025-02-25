@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest  
     permissions:
-      pull-requests: write  
+      pull-requests: write  # Allow posting coverage comments on PRs
     
     steps:
       - name: Checkout Code
@@ -51,6 +51,5 @@ jobs:
       - name: Pytest Coverage Comment
         uses: MishaKav/pytest-coverage-comment@main
         with:
-          pytest-coverage-path: ./coverage.xml  
+          pytest-coverage-path: ./coverage.xml  # Fix incorrect file path
           junitxml-path: ./pytest.xml
-
