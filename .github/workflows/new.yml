@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest  
+    permissions:
+      pull-requests: write  # Allow posting coverage comments on PRs
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -19,32 +22,35 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          python -m venv venv  # Create a virtual environment
+          python -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
+
       - name: Audit Python Dependencies
         uses: pypa/gh-action-pip-audit@v1.1.0
         with:
-          virtual-environment: venv  # Specify the correct virtual environment
+          virtual-environment: venv
 
       - name: Set AWS Region
         run: |
           echo "AWS_REGION=eu-west-2" >> $GITHUB_ENV
           echo "AWS_DEFAULT_REGION=eu-west-2" >> $GITHUB_ENV
-          
+
       - name: Auto-fix Formatting Issues
         run: |
-          source venv/bin/activate  # Activate the virtual environment
+          source venv/bin/activate
           black src/ tests/
           flake8 src/ tests/
           bandit -r src/ tests/
-      - name: Run Tests
+
+      - name: Run Tests with Coverage
         run: |
-          source venv/bin/activate  # Activate the virtual environment
-          pytest tests/ --cov=src --cov-report=term-missing --cov-report=xml:pytest-coverage.xml --junitxml=pytest.xml
-          
-      - name: Pytest coverage comment
+          source venv/bin/activate
+          pytest tests/ --cov=src --cov-report=xml --cov-report=term --junitxml=pytest.xml
+
+      - name: Pytest Coverage Comment
         uses: MishaKav/pytest-coverage-comment@main
         with:
-          pytest-coverage-path: ./pytest-coverage.xml
+          pytest-coverage-path: ./coverage.xml  # Fix incorrect file path
           junitxml-path: ./pytest.xml
+
