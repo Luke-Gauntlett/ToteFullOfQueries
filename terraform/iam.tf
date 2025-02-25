@@ -1,3 +1,6 @@
+
+#########################################  IAM Role and IAM Policy document   ###################################################
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     effect = "Allow"
@@ -16,6 +19,9 @@ resource "aws_iam_role" "lambda_iam" {
   assume_role_policy    = data.aws_iam_policy_document.assume_role.json
   force_detach_policies = true
 }
+
+
+#########################################  IAM Policy for S3 Read/Write   ###################################################
 
 data "aws_iam_policy_document" "s3_policy" {
   statement {
@@ -38,6 +44,47 @@ resource "aws_iam_policy_attachment" "s3_attach_policy" {
 }
 
 
+########################################################## IAM Policy for SNS Notification   ###########################################################
 
 
+data "aws_iam_policy_document" "sns_policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["sns:Publish"]
+    resources = "arn:aws:sns:eu-west-2:${data.aws_caller_identity.current.account_id}:IAM-Change-Notifications"
+  }
 
+}
+resource "aws_iam_policy" "sns_policy" {
+  name   = "sns_policy"
+  policy = data.aws_iam_policy_document.sns_policy.json
+
+}
+
+resource "aws_iam_policy_attachment" "sns_attach_policy" {
+  name       = "sns_attach_policy"
+  roles      = [aws_iam_role.lambda_iam.name]
+  policy_arn = aws_iam_policy.sns_policy.arn
+}
+
+#########################################  IAM Policy for Secrets Manager Get Secret  ###################################################
+
+data "aws_iam_policy_document" "secret_manager_policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:*"
+  }
+
+}
+resource "aws_iam_policy" "secret_manager_policy" {
+  name   = "secret_manager_policy"
+  policy = data.aws_iam_policy_document.secret_manager_policy.json
+
+}
+
+resource "aws_iam_policy_attachment" "secret_manager_attach_policy" {
+  name       = "secret_manager_attach_policy"
+  roles      = [aws_iam_role.lambda_iam.name]
+  policy_arn = aws_iam_policy.secret_manager_policy.arn
+}
