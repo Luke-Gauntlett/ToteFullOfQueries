@@ -1,7 +1,5 @@
 name: ToteFullOfQueries
 
-name: ToteFullOfQueries
-
 on:
   pull_request:
     branches:
