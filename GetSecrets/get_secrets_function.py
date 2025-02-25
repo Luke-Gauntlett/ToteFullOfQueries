@@ -1,5 +1,5 @@
-import boto3
 import json
+import boto3
 
 def get_db_credentials(secret_name, region_name="eu-west-2"):
     """
