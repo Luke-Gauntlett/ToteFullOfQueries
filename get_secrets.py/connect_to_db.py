@@ -6,7 +6,7 @@ import pg8000
 
 def connect_to_database():
     """
-    Connects to the PostgreSQL database using SQLAlchemy and pg8000.
+    Connects to the PostgreSQL database using pg8000.
     """
     secret_name = "project_database_credentials"  
     region_name = "eu-west-2"  
