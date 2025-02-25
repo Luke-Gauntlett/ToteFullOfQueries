@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "sns_policy" {
   statement {
     effect    = "Allow"
     actions   = ["sns:Publish"]
-    resources = "arn:aws:sns:eu-west-2:${data.aws_caller_identity.current.account_id}:IAM-Change-Notifications"
+    resources = ["arn:aws:sns:eu-west-2:${data.aws_caller_identity.current.account_id}:IAM-Change-Notifications"]
   }
 
 }
@@ -73,7 +73,7 @@ data "aws_iam_policy_document" "secret_manager_policy" {
   statement {
     effect    = "Allow"
     actions   = ["secretsmanager:GetSecretValue"]
-    resources = "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:*"
+    resources = ["arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:*"]
   }
 
 }
