@@ -1,0 +1,63 @@
+name: ToteFullOfQueries
+
+on:
+  pull_request:
+    branches:
+      - main  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          python -m venv venv  # Create a virtual environment
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Audit Python Dependencies
+        uses: pypa/gh-action-pip-audit@v1.1.0
+        with:
+          virtual-environment: venv  # Specify the correct virtual environment
+
+      - name: Set AWS Region
+        run: |
+          echo "AWS_REGION=eu-west-2" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=eu-west-2" >> $GITHUB_ENV
+          
+      - name: Auto-fix Formatting Issues
+        run: |
+          source venv/bin/activate  # Activate the virtual environment
+          black src/ tests/
+          flake8 src/ tests/
+          bandit -r src/ tests/
+          
+      - name: Run Tests
+        run: |
+          source venv/bin/activate  # Activate the virtual environment
+          pytest tests/ --cov=src --cov-report=term-missing --cov-report=xml:pytest-coverage.xml --junitxml=pytest.xml
+          
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./pytest-coverage.xml
+          junitxml-path: ./pytest.xml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          title: Coverage Report
+          badge-title: Coverage
+          hide-badge: false
+          hide-report: false
+          hide-comment: false
+          xml-skip-covered: false
+          report-only-changed-files: false
+          create-new-comment: false
+          default-branch: main
+          remove-link-from-badge: false
