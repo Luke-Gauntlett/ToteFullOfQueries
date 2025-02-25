@@ -12,7 +12,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -20,14 +19,14 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          python -m venv env  # Ensure consistent naming of the virtual environment
-          source env/bin/activate
+          python -m venv venv  # Create a virtual environment
+          source venv/bin/activate
           pip install -r requirements.txt
 
       - name: Audit Python Dependencies
         uses: pypa/gh-action-pip-audit@v1.1.0
         with:
-          virtual-environment: env  # Correct the virtual environment path
+          virtual-environment: venv  # Specify the correct virtual environment
 
       - name: Set AWS Region
         run: |
@@ -36,19 +35,19 @@ jobs:
           
       - name: Auto-fix Formatting Issues
         run: |
-          source env/bin/activate  # Correct the virtual environment path
+          source venv/bin/activate  # Activate the virtual environment
           black src/ tests/
           flake8 src/ tests/
           bandit -r src/ tests/
 
       - name: Run Tests
         run: |
-          source env/bin/activate  # Correct the virtual environment path
-          pytest --cov=my_package --junitxml=pytest.xml tests/
+          source venv/bin/activate  # Activate the virtual environment
+          pytest tests/ --cov=src --cov-report=term-missing --cov-report=xml:pytest-coverage.xml --junitxml=pytest.xml
           
+
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
         with:
+          pytest-coverage-path: ./pytest-coverage.xml
           junitxml-path: ./pytest.xml
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          title: Coverage Report
