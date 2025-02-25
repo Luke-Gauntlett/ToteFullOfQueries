@@ -1,4 +1,3 @@
-
 name: ToteFullOfQueries
 
 on:
@@ -30,7 +29,7 @@ jobs:
       - name: Audit Python Dependencies
         uses: pypa/gh-action-pip-audit@v1.1.0
         with:
-          virtual-environment: venv  # Specify the correct virtual environment
+          virtual-environment: venv
 
       - name: Set AWS Region
         run: |
@@ -39,20 +38,26 @@ jobs:
           
       - name: Auto-fix Formatting Issues
         run: |
-          source venv/bin/activate  # Activate the virtual environment
+          source venv/bin/activate
           black src/ tests/
           flake8 src/ tests/
           bandit -r src/ tests/
           
       - name: Run Tests
         run: |
-          source venv/bin/activate  # Activate the virtual environment
-          pytest tests/ --cov=src --cov-report=term-missing --cov-report=xml:pytest-coverage.xml --junitxml=pytest.xml
+          source venv/bin/activate
+          # Run pytest with coverage and JUnit XML output.
+          pytest tests/ --cov=src --cov-report=term-missing --junitxml=pytest.xml
+          # Generate a plain text coverage report.
+          coverage report > pytest-coverage.txt
+          # Optionally, generate an XML coverage report if needed.
+          coverage xml -o pytest-coverage.xml
           
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
         with:
-          pytest-coverage-path: ./pytest-coverage.xml
+          # Use the text report for the coverage comment.
+          pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
           github-token: ${{ secrets.GITHUB_TOKEN }}
           title: Coverage Report
