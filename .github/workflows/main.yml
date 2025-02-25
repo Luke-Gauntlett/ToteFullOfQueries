@@ -9,7 +9,8 @@ jobs:
   build:
     runs-on: ubuntu-latest  
     permissions:
-      pull-requests: write  # Allow posting coverage comments on PRs
+      contents: read
+      pull-requests: write  
     
     steps:
       - name: Checkout Code
@@ -46,11 +47,10 @@ jobs:
       - name: Run Tests with Coverage
         run: |
           source venv/bin/activate
-          pytest tests/ --cov=src --cov-report=xml --cov-report=term --junitxml=pytest.xml
+          pytest tests/ --cov=src --cov-report=xml:coverage.xml --cov-report=term --junitxml=pytest.xml
 
       - name: Pytest Coverage Comment
         uses: MishaKav/pytest-coverage-comment@main
         with:
-          pytest-coverage-path: ./coverage.xml  # Fix incorrect file path
+          pytest-coverage-path: ./coverage.xml  
           junitxml-path: ./pytest.xml
-
