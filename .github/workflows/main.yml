@@ -44,10 +44,21 @@ jobs:
       - name: Run Tests
         run: |
           source env/bin/activate  # Correct the virtual environment path
-          pytest tests/
-
+          pytest tests/ --cov=my_package --cov-report=txt:pytest-coverage.txt --junitxml=pytest.xml
+          
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
         with:
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          title: Coverage Report
+          badge-title: Coverage
+          hide-badge: false
+          hide-report: false
+          hide-comment: false
+          xml-skip-covered: false
+          report-only-changed-files: false
+          create-new-comment: false
+          default-branch: main
+          remove-link-from-badge: false
