@@ -1,10 +1,9 @@
 
-# # bucket to store the lambda zip code and layer zip
+# bucket to store the lambda zip code and layer zip
 resource "aws_s3_bucket" "code_bucket" {
   bucket_prefix = "project-lambda-layer-and-functions-"
 }
 
-####################################
 
 #making the zip file for the extract lambda function
 data "archive_file" "extract_lambda" {
@@ -20,13 +19,11 @@ resource "aws_s3_object" "lambda_zip_code" {
   # currently waiting for vars file to be completed
   bucket = aws_s3_bucket.code_bucket.bucket
   key    = "${each.key}/function.zip"
-  source = "${path.module}/../packages/${each.key}_function/function.zip"
+  source = "${path.module}/../packages/${each.key}/function.zip"
   # each.key loops over items in for_each at the top
   etag = filemd5("${path.module}/../packages/${each.key}/function.zip")
 }
 
-
-# # # # # # # # # #########################################
 
 # making the zip file for lambda layer
 data "archive_file" "layer_code" {
