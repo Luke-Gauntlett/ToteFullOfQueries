@@ -52,12 +52,3 @@ jobs:
           junitxml-path: ./pytest.xml
           github-token: ${{ secrets.GITHUB_TOKEN }}
           title: Coverage Report
-          badge-title: Coverage
-          hide-badge: false
-          hide-report: false
-          hide-comment: false
-          xml-skip-covered: false
-          report-only-changed-files: false
-          create-new-comment: false
-          default-branch: main
-          remove-link-from-badge: false
