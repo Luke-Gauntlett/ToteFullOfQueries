@@ -1,3 +1,8 @@
+variable "extract" {
+  type    = string
+  default = "extract"
+}
+
 variable "extract_lambda" {
   type    = string
   default = "extract_lambda"
@@ -51,7 +56,7 @@ variable "default_timeout" {
 #commented out future steps
 
 variable "email_address" {
-  type = string
-  default = "testemail@gmail.com"
+  type      = string
+  default   = "testemail@gmail.com"
   sensitive = true
 }

@@ -8,10 +8,15 @@ resource "aws_s3_bucket" "code_bucket" {
 #making the zip file for the extract lambda function
 data "archive_file" "extract_lambda" {
   type        = "zip"
-  output_path = "${path.module}/../packages/extract/function.zip"
+  output_path = "${path.module}/../packages/extract_lambda/function.zip"
   source_file = "${path.module}/../src/extract_lambda.py"
+  depends_on  = [null_resource.trigger_lambda_update]
 }
-
+resource "null_resource" "trigger_lambda_update" {
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+}
 # lambda zip code being put in the above bucket
 resource "aws_s3_object" "lambda_zip_code" {
   for_each = toset([var.extract_lambda])
