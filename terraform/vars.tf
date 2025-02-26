@@ -32,6 +32,11 @@ variable "default_timeout" {
   type    = number
   default = 5
 }
+
+variable "email" {
+  type    = string
+  default = "nicole-rutherford@live.co.uk"
+}
 # variable "transform_lambda" {
 #   type    = string
 #   default = "transform"
