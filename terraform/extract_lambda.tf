@@ -1,5 +1,5 @@
 # making the main extract lambda function, bringing everything together
-resource "aws_lambda_function" "workflow_tasks_extract" {
+resource "aws_lambda_function" "totes_extract_lambda" {
   function_name    = var.extract_lambda
   source_code_hash = data.archive_file.extract_lambda.output_base64sha256
   s3_bucket        = aws_s3_bucket.code_bucket.bucket
