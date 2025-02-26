@@ -212,7 +212,38 @@ resource "aws_iam_role_policy_attachment" "step_function_lambda_policy_attachmen
   policy_arn = aws_iam_policy.step_function_policy.arn
 }
 
+#########################################  IAM Policy for Database Access/RDS  #################################################
 
+data "aws_iam_policy_document" "postgres_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "rds:DescribeDBInstances",
+      "rds:Connect"
+    ]
+    resources = [
+      "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:${var.database_id}/${var.database_user}"
+    ]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [
+      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.database_secret_name}"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "postgres_policy" {
+  name   = "postgres_lambda_policy"
+  policy = data.aws_iam_policy_document.postgres_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_postgres_policy_attachment" {
+  role       = aws_iam_role.lambda_iam.name
+  policy_arn = aws_iam_policy.postgres_policy.arn
+}
 
 
 
