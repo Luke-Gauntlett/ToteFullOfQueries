@@ -1,5 +1,10 @@
 
-#########################################  IAM Role and IAM Policy document   ###################################################
+#########################################  IAM Role and IAM Lambda Policy document   ###################################################
+resource "aws_iam_role" "lambda_iam" {
+  name                  = "lambda_iam"
+  assume_role_policy    = data.aws_iam_policy_document.assume_role.json
+  force_detach_policies = true
+}
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
@@ -14,14 +19,9 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-resource "aws_iam_role" "lambda_iam" {
-  name                  = "lambda_iam"
-  assume_role_policy    = data.aws_iam_policy_document.assume_role.json
-  force_detach_policies = true
-}
 
 
-#########################################  IAM Policy for S3 Read/Write   ###################################################
+#######################################################              IAM Policy for S3 Read/Write   #######################################################
 
 data "aws_iam_policy_document" "s3_policy" {
   statement {
@@ -93,9 +93,9 @@ resource "aws_iam_policy_attachment" "secret_manager_attach_policy" {
 #########################################  IAM Policy for Cloud Watch  ###################################################
 
 
-data "aws_iam_policy_document" "cloudwatch_policy" { 
+data "aws_iam_policy_document" "cloudwatch_policy" {
 
-#this adds the new document which defines what our lambda is allowed to do with cloudwatch - ie log groups, streams or write log events
+  #this adds the new document which defines what our lambda is allowed to do with cloudwatch - ie log groups, streams or write log events
 
   statement {
     effect = "Allow"
@@ -107,7 +107,7 @@ data "aws_iam_policy_document" "cloudwatch_policy" {
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*:*"
     ]
-# resources (above) limits the policy to lambda related log streams
+    # resources (above) limits the policy to lambda related log streams
   }
 }
 
@@ -124,6 +124,79 @@ resource "aws_iam_policy_attachment" "cloudwatch_attach_policy" {
   policy_arn = aws_iam_policy.cloudwatch_policy.arn
 }
 
-#attach cloudwatch policy to lambda_iam role
+
+#########################################  IAM Policy for Database Access/RDS  #################################################
+
+data "aws_iam_policy_document" "postgres_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "rds:DescribeDBInstances",
+      "rds:Connect"
+    ]
+    resources = [
+      "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:${var.database_id}/${var.database_user}"
+    ]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [
+      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.database_secret_name}"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "postgres_policy" {
+  name   = "postgres_lambda_policy"
+  policy = data.aws_iam_policy_document.postgres_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_postgres_policy_attachment" {
+  role       = aws_iam_role.lambda_iam.name
+  policy_arn = aws_iam_policy.postgres_policy.arn
+}
 
 
+#######################################################  IAM Policy for Step Function #################################################
+#The role
+resource "aws_iam_role" "step_function_role" {
+  name = "StepFunctionRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "states.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+#The policy Document
+data "aws_iam_policy_document" "step_function_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["lambda:InvokeFunction"]
+    resources = [
+      "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:your-lambda-function-name"
+    ]
+  }
+}
+
+#Create the policy
+resource "aws_iam_policy" "step_function_policy" {
+  name   = "step_function_lambda_invoke_policy"
+  policy = data.aws_iam_policy_document.step_function_policy.json
+}
+
+#Attach the policy
+resource "aws_iam_role_policy_attachment" "step_function_lambda_policy_attachment" {
+  role       = aws_iam_role.step_function_role.name
+  policy_arn = aws_iam_policy.step_function_policy.arn
+}
