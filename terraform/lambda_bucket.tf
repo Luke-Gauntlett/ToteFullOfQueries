@@ -40,3 +40,5 @@ resource "aws_s3_object" "lambda_layer" {
   etag       = filemd5(data.archive_file.layer_code.output_path)
   depends_on = [data.archive_file.layer_code]
 }
+
+

@@ -1,8 +1,8 @@
 resource "aws_s3_bucket" "extract_bucket" {
-  bucket_prefix = "totes-extract"
-  
-    tags = {
-    Name        = "Extract Bucket"
+  bucket_prefix = var.extract_bucket_prefix
+
+  tags = {
+    Name = "Extract Bucket"
   }
 
 }
