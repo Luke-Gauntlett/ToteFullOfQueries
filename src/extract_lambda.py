@@ -23,7 +23,7 @@ def lambda_handler():
         "transaction",
     ]
     for table in table_list:
-        query_string = f"SELECT * FROM {table} WHERE "
+        query_string = f"SELECT * FROM {table}"
         data = db.run(query_string)
         with db.cursor() as cursor:
             cursor.execute(query_string)
