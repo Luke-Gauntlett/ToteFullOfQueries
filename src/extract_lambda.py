@@ -4,6 +4,7 @@ from GetSecrets.connect_db import connect_to_database
 import json
 import boto3
 from datetime import datetime
+from pg8000.native import identifier
 
 """ Function should query the DB and format data into JSON file"""
 
@@ -64,7 +65,6 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
     ]
 
     db = connect_to_database()
-
     for table in table_list:
         columns_query = """SELECT column_name FROM information_schema.columns
                             WHERE table_name = :table_name
@@ -74,9 +74,9 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
 
         columns = [row[0] for row in columnsdata]
 
-        query_string = """SELECT * FROM {}
+        query_string = f"""SELECT * FROM {identifier(table)}
                         WHERE created_at > :last_extract_time
-                        OR last_updated > :last_extract_time""".format(table)
+                        OR last_updated > :last_extract_time"""
 
         data = db.run(query_string, last_extract_time=last_extraction_time)
 
