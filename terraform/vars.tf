@@ -3,6 +3,16 @@ variable "extract_lambda" {
   default = "extract"
 }
 
+variable "extract_bucket_prefix" {
+  type    = string
+  default = "totes-extract-bucket-"
+}
+
+variable "transform_bucket_prefix" {
+  type    = string
+  default = "totes-transform-bucket-"
+}
+
 # variable "transform_lambda" {
 #   type    = string
 #   default = "transform"
