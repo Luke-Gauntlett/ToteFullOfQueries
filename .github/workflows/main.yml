@@ -41,7 +41,7 @@ jobs:
           source venv/bin/activate
           black src/ tests/ terraform/
           flake8 src/ tests/ terraform/
-          bandit -r src/ tests/ terraform/
+          bandit -r src/ terraform/ venv/
           
       - name: Run Tests
         run: |
