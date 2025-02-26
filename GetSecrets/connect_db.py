@@ -21,7 +21,7 @@ def connect_to_database():
             port=int(credentials["port"]),
             database=credentials["database"],
         )
-        conn.run()
+        
         print("Database connection successful!")
         return conn
 
