@@ -12,7 +12,7 @@ sns_client = boto3.client("sns", region_name="eu-west-2")
 ###Get topic arn from secrets manager
 
 def get_topic_arn():
-    response = sns_client.get_secret_value(SecretId=<secretname>)
+    response = sns_client.get_secret_value(SecretId="secretname")
     secret = json.loads(response["SecretString"])
     return secret["sns_topic_arn"]
 
