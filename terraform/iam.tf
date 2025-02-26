@@ -26,7 +26,7 @@ resource "aws_iam_role" "lambda_iam" {
 data "aws_iam_policy_document" "s3_policy" {
   statement {
     effect    = "Allow"
-    actions   = ["s3:PutObject", "s3:GetObject"]
+    actions   = ["s3:PutObject", "s3:GetObject", "s3:ListBucket"]
     resources = ["${resource.aws_s3_bucket.extract_bucket.arn}/*"]
   }
 }
@@ -51,8 +51,9 @@ data "aws_iam_policy_document" "sns_policy" {
   statement {
     effect    = "Allow"
     actions   = ["sns:Publish"]
-    resources = ["arn:aws:sns:eu-west-2:${data.aws_caller_identity.current.account_id}:IAM-Change-Notifications"]
+    resources = ["arn:aws:sns:eu-west-2:${data.aws_caller_identity.current.account_id}:extraction-updates"]
   }
+  
 
 }
 resource "aws_iam_policy" "sns_policy" {
@@ -75,7 +76,7 @@ data "aws_iam_policy_document" "secret_manager_policy" {
     actions   = ["secretsmanager:GetSecretValue"]
     resources = ["arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:*"]
   }
-
+##The above policy is currently using the * wildcard, where all secrets can be accessed
 }
 resource "aws_iam_policy" "secret_manager_policy" {
   name   = "secret_manager_policy"

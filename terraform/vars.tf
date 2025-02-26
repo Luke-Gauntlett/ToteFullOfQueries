@@ -34,3 +34,9 @@ variable "default_timeout" {
 # }
 
 #commented out future steps
+
+variable "email_address" {
+  type = string
+  default = "testemail@gmail.com"
+  sensitive = true
+}
