@@ -74,12 +74,11 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
 
         columns = [row[0] for row in columnsdata]
 
-        query_string = f"""SELECT * FROM :tablename
+        query_string = """SELECT * FROM {}
                         WHERE created_at > :last_extract_time
-                        OR last_updated > :last_extract_time
-                        ORDER BY :tablename_id"""
+                        OR last_updated > :last_extract_time""".format(table)
 
-        data = db.run(query_string, last_extract_time=last_extraction_time, tablename=table)
+        data = db.run(query_string, last_extract_time=last_extraction_time, tablename = table)
 
         formatted = [dict(zip(columns, row)) for row in data]
 
