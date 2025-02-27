@@ -74,7 +74,7 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
 
         columns = [row[0] for row in columnsdata]
 
-        query_string = f"""SELECT * FROM {identifier(table)}  
+        query_string = f"""SELECT * FROM {identifier(table)}
                         WHERE created_at > :last_extract_time
                         OR last_updated > :last_extract_time""" # nosec
 
