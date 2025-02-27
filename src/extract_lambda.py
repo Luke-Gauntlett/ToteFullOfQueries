@@ -11,10 +11,10 @@ from pg8000.native import identifier
 
 def lambda_handler():
 
-    get_time()
+    updating_last_ingesting_time()
 
 
-def get_time():
+def updating_last_ingesting_time():
 
     this_extraction_time = str(datetime.now())
 
@@ -48,6 +48,15 @@ def get_time():
     write_data(last_extraction_time, this_extraction_time, s3_client)
 
 
+
+
+
+
+
+
+
+
+
 def write_data(last_extraction_time, this_extraction_time, s3_client):
 
     table_list = [
@@ -76,7 +85,7 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
 
         query_string = f"""SELECT * FROM {identifier(table)}
                         WHERE created_at > :last_extract_time
-                        OR last_updated > :last_extract_time""" # nosec
+                        OR last_updated > :last_extract_time"""
 
         data = db.run(query_string, last_extract_time=last_extraction_time)
 
