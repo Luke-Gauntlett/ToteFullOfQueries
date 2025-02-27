@@ -43,8 +43,9 @@ jobs:
       - name: Auto-fix Formatting Issues
         run: |
           source venv/bin/activate
+          export PYTHONPATH=$(pwd)
           black src/ tests/ terraform/
-          flake8 src/ tests/ terraform/
+          flake8 src/ tests/ terraform/  --max-line-length=100
           bandit -r src/ terraform/
           
       - name: Run Tests
