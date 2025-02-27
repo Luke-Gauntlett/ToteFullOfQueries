@@ -20,6 +20,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: PythonPath
+        run: |
+          export PYTHONPATH=$(pwd)
+
       - name: Install Dependencies
         run: |
           python -m venv venv  # Create a virtual environment
