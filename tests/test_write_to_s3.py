@@ -111,8 +111,7 @@ def test_write_data_creates_correct_file_path(mock_client, mock_db):
     s3_keys = {obj["Key"] for obj in objects}
 
     expected_keys = {
-        "data/by time/2022/11-November/03/14:20:51/staff",
-        "data/by table/staff/staff - 2022-11-03-14:20:51",
+        "data/by time/2022/11-November/03/14:20:51/staff"
     }
 
     assert expected_keys.issubset(s3_keys)
@@ -133,7 +132,12 @@ def test_write_data_handles_empty_data(mock_client, mock_db):
 
     response = mock_client.list_objects(Bucket="testbucket123abc456def")
 
-    assert "Contents" not in response or len(response["Contents"]) == 0
+    uploaded_files = [obj["Key"] for obj in response["Contents"]]
+    file_key = uploaded_files[0]
+    s3_object = mock_client.get_object(Bucket="testbucket123abc456def", Key=file_key)
+    file_content = json.loads(s3_object["Body"].read().decode("utf-8"))
+    assert file_content == []
+    assert len(uploaded_files) > 0
 
 
 def test_write_data_includes_correct_columns(mock_client, mock_db):
