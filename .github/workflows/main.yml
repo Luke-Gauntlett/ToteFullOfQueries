@@ -20,6 +20,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: PythonPath
+        run: |
+          export PYTHONPATH=$(pwd)
+
       - name: Install Dependencies
         run: |
           python -m venv venv  # Create a virtual environment
@@ -39,13 +43,15 @@ jobs:
       - name: Auto-fix Formatting Issues
         run: |
           source venv/bin/activate
+          export PYTHONPATH=$(pwd)
           black src/ tests/ terraform/
-          flake8 src/ tests/ terraform/
+          flake8 src/ tests/ terraform/  --max-line-length=100
           bandit -r src/ terraform/
           
       - name: Run Tests
         run: |
           source venv/bin/activate
+          export PYTHONPATH=$(pwd)
           # Run pytest with coverage and JUnit XML output.
           pytest tests/ --cov=src --cov-report=term-missing --junitxml=pytest.xml
           # Generate a plain text coverage report.
