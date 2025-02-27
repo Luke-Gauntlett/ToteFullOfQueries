@@ -4,19 +4,14 @@ resource "aws_s3_bucket" "code_bucket" {
   bucket_prefix = "project-lambda-layer-and-functions-"
 }
 
-
 #making the zip file for the extract lambda function
 data "archive_file" "extract_lambda" {
   type        = "zip"
   output_path = "${path.module}/../packages/extract_lambda/function.zip"
   source_file = "${path.module}/../src/extract_lambda.py"
-  depends_on  = [null_resource.trigger_lambda_update]
+
 }
-resource "null_resource" "trigger_lambda_update" {
-  triggers = {
-    always_run = "${timestamp()}"
-  }
-}
+
 # lambda zip code being put in the above bucket
 resource "aws_s3_object" "lambda_zip_code" {
   for_each = toset([var.extract_lambda])
@@ -28,7 +23,6 @@ resource "aws_s3_object" "lambda_zip_code" {
   # each.key loops over items in for_each at the top
   etag = filemd5("${path.module}/../packages/${each.key}/function.zip")
 }
-
 
 # making the zip file for lambda layer
 data "archive_file" "layer_code" {
@@ -45,5 +39,3 @@ resource "aws_s3_object" "lambda_layer" {
   etag       = filemd5(data.archive_file.layer_code.output_path)
   depends_on = [data.archive_file.layer_code]
 }
-
-
