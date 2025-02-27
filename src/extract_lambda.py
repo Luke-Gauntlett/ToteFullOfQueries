@@ -45,10 +45,14 @@ def get_time():
         ContentType="application/json",
     )
 
-    write_data(last_extraction_time, this_extraction_time, s3_client)
+    # write_data(last_extraction_time, this_extraction_time, s3_client)
 
 
-def write_data(last_extraction_time, this_extraction_time, s3_client):
+def write_data(last_extraction_time, this_extraction_time, s3_client, db_connection):
+    def connect_to_database():
+        return db_connection
+
+    db = connect_to_database()
 
     table_list = [
         "counterparty",
@@ -64,7 +68,6 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
         "transaction",
     ]
 
-    db = connect_to_database()
     for table in table_list:
         columns_query = """SELECT column_name FROM information_schema.columns
                             WHERE table_name = :table_name
@@ -72,13 +75,21 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
 
         columnsdata = db.run(columns_query, table_name=table)
 
+        
+        if not columnsdata:
+            continue
+
         columns = [row[0] for row in columnsdata]
 
         query_string = f"""SELECT * FROM {identifier(table)}
                         WHERE created_at > :last_extract_time
-                        OR last_updated > :last_extract_time""" # nosec
+                        OR last_updated > :last_extract_time"""  # nosec
 
         data = db.run(query_string, last_extract_time=last_extraction_time)
+
+        
+        if not data:
+            continue
 
         formatted = [dict(zip(columns, row)) for row in data]
 
@@ -114,8 +125,7 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
         )
         s3_client.put_object(
             Bucket="testbucket123abc456def",
-            Key=f"""data/by table/{table}/{table}
-            - {year}-{month}-{day}-{time}""",
+            Key=f"data/by table/{table}/{table} - {year}-{month}-{day}-{time}",
             Body=json.dumps(formatted, indent=4, default=str),
             ContentType="application/json",
         )

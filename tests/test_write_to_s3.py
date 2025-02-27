@@ -27,9 +27,9 @@ def mock_db():
                     ("department_id",), ("email_address",), ("created_at",), ("last_updated",)]
         elif "SELECT * FROM" in query:
             return [
-                [8, "Oswaldo", "Bergstrom", 7, "oswaldo.bergstrom@terrifictotes.com",
+                [8, "Ozzy", "Osbourne", 7, "ozzy.osbourne@terrifictotes.com",
                  datetime(2022, 11, 3, 14, 20, 51, 563000), datetime(2022, 11, 3, 14, 20, 51, 563000)],
-                [9, "Brody", "Ratke", 2, "brody.ratke@terrifictotes.com",
+                [9, "Lebron", "James", 2, "lebron.james@terrifictotes.com",
                  datetime(2022, 11, 3, 14, 20, 51, 563000), datetime(2022, 11, 3, 14, 20, 51, 563000)]
             ]
         return []
@@ -47,7 +47,7 @@ def test_write_data_correctly_writes_to_s3(mock_aws_client, mock_db):
 
     write_data(last_extraction_time, this_extraction_time, mock_aws_client, mock_db)
 
-    # Retrieve file from S3
+    
     response = mock_aws_client.get_object(
         Bucket="testbucket123abc456def",
         Key="data/by time/2022/11-November/03/14:20:51/staff",
@@ -108,7 +108,7 @@ def test_write_data_handles_empty_data(mock_aws_client, mock_db):
 
     write_data(last_extraction_time, this_extraction_time, mock_aws_client, mock_db)
 
-    # Attempt to retrieve from S3
+    
     response = mock_aws_client.list_objects(Bucket="testbucket123abc456def")
 
     assert 'Contents' not in response or len(response['Contents']) == 0  
