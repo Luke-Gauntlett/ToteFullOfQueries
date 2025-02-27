@@ -7,8 +7,6 @@ import boto3
 import json
 from datetime import datetime
 
-
-
 @pytest.fixture(scope="function")
 def aws_credentials():
     """Mocked AWS Credentials for moto"""
