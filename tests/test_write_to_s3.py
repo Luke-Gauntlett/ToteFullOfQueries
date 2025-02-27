@@ -58,19 +58,19 @@ def test_write_data_correctly_writes_to_s3(mock_aws_client, mock_db):
     expected_data = [
         {
             "staff_id": 8,
-            "first_name": "Oswaldo",
-            "last_name": "Bergstrom",
+            "first_name": "Ozzy",
+            "last_name": "Osbourne",
             "department_id": 7,
-            "email_address": "oswaldo.bergstrom@terrifictotes.com",
+            "email_address": "ozzy.osbourne@terrifictotes.com",
             "created_at": "2022-11-03 14:20:51.563000",
             "last_updated": "2022-11-03 14:20:51.563000",
         },
         {
             "staff_id": 9,
-            "first_name": "Brody",
-            "last_name": "Ratke",
+            "first_name": "Lebron",
+            "last_name": "James",
             "department_id": 2,
-            "email_address": "brody.ratke@terrifictotes.com",
+            "email_address": "lebron.james@terrifictotes.com",
             "created_at": "2022-11-03 14:20:51.563000",
             "last_updated": "2022-11-03 14:20:51.563000",
         }
