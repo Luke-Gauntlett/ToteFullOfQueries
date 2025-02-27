@@ -5,47 +5,64 @@ import json
 import boto3
 from datetime import datetime
 from pg8000.native import identifier
+from botocore.exceptions import ClientError
+
 
 """ Function should query the DB and format data into JSON file"""
 
 
 def lambda_handler():
 
-    get_time()
+    s3_client = boto3.client("s3")
 
 
-def get_time():
+    time_result = get_time(s3_client)
+
+    last_extraction_time = time_result[0]
+    this_extraction_time = time_result[1]
+        
+
+    write_data(last_extraction_time,this_extraction_time,s3_client)
+
+
+def get_time(s3_client,bucketname ="testbucket123abc456def"):
 
     this_extraction_time = str(datetime.now())
 
-    s3_client = boto3.client("s3")
+    last_extraction_times = []
 
     try:
         get_last_extraction_file = s3_client.get_object(
-            Bucket="testbucket123abc456def", Key="last_extraction_times.json"
+            Bucket=bucketname, Key="last_extraction_times.json"
         )
 
         last_extraction_times = json.loads(
-            get_last_extraction_file["Body"].readlines()[-1].decode("utf-8")
+            get_last_extraction_file["Body"].read().decode("utf-8")
         )
 
         last_extraction_time = str(last_extraction_times[-1])
 
-    except Exception:
-        last_extraction_time = "0001-01-01"
 
-        last_extraction_times = []
+    except ClientError as e:
+        if e.response["Error"]["Code"] == 'NoSuchKey':
+            last_extraction_time = "0001-01-01 00:00:00.000000"
 
+            last_extraction_times.append(last_extraction_time)
+        else:
+            print("Error!")
+            raise ClientError(e)
+    
     last_extraction_times.append(this_extraction_time)
 
     s3_client.put_object(
-        Bucket="testbucket123abc456def",
+        Bucket=bucketname,
         Key="last_extraction_times.json",
         Body=json.dumps(last_extraction_times),
         ContentType="application/json",
     )
 
-    write_data(last_extraction_time, this_extraction_time, s3_client)
+    return (last_extraction_time, this_extraction_time)
+
 
 
 def write_data(last_extraction_time, this_extraction_time, s3_client):
@@ -112,13 +129,20 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
             Body=json.dumps(formatted, indent=4, default=str),
             ContentType="application/json",
         )
-        s3_client.put_object(
-            Bucket="testbucket123abc456def",
-            Key=f"""data/by table/{table}/{table}
-            - {year}-{month}-{day}-{time}""",
-            Body=json.dumps(formatted, indent=4, default=str),
-            ContentType="application/json",
-        )
+        # s3_client.put_object(
+        #     Bucket="testbucket123abc456def",
+        #     Key=f"""data/by table/{table}/{table}
+        #     - {year}-{month}-{day}-{time}""",
+        #     Body=json.dumps(formatted, indent=4, default=str),
+        #     ContentType="application/json",
+        # )
+    
+
+if __name__ == "__main__":
+    lambda_handler()
 
 
-lambda_handler()
+# in the loop append key(file path and name) to a list if size 
+
+# after the loop return the  list of file names so theyre passed to
+#the transform lambda to be transformed 
