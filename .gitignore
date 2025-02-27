@@ -13,7 +13,7 @@ serverless-output.yaml
 **/*_cache
 **/*pycache
 *coverage*
-.venv/
+venv/
 **/.terraform
 **/.terraform*
 **/function.zip
