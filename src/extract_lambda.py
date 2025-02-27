@@ -60,12 +60,14 @@ def get_time(s3_client,bucketname ="testbucket123abc456def"):
         Body=json.dumps(last_extraction_times),
         ContentType="application/json",
     )
-
     return (last_extraction_time, this_extraction_time)
 
 
+def write_data(last_extraction_time, this_extraction_time, s3_client, db_connection):
+    def connect_to_database():
+        return db_connection
 
-def write_data(last_extraction_time, this_extraction_time, s3_client):
+    db = connect_to_database()
 
     table_list = [
         "counterparty",
@@ -81,7 +83,6 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
         "transaction",
     ]
 
-    db = connect_to_database()
     for table in table_list:
         columns_query = """SELECT column_name FROM information_schema.columns
                             WHERE table_name = :table_name
@@ -89,13 +90,21 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
 
         columnsdata = db.run(columns_query, table_name=table)
 
+        
+        if not columnsdata:
+            continue
+
         columns = [row[0] for row in columnsdata]
 
         query_string = f"""SELECT * FROM {identifier(table)}
                         WHERE created_at > :last_extract_time
-                        OR last_updated > :last_extract_time""" # nosec
+                        OR last_updated > :last_extract_time"""  # nosec
 
         data = db.run(query_string, last_extract_time=last_extraction_time)
+
+        
+        if not data:
+            continue
 
         formatted = [dict(zip(columns, row)) for row in data]
 
@@ -129,20 +138,10 @@ def write_data(last_extraction_time, this_extraction_time, s3_client):
             Body=json.dumps(formatted, indent=4, default=str),
             ContentType="application/json",
         )
-        # s3_client.put_object(
-        #     Bucket="testbucket123abc456def",
-        #     Key=f"""data/by table/{table}/{table}
-        #     - {year}-{month}-{day}-{time}""",
-        #     Body=json.dumps(formatted, indent=4, default=str),
-        #     ContentType="application/json",
-        # )
-    
-
-if __name__ == "__main__":
-    lambda_handler()
-
-
-# in the loop append key(file path and name) to a list if size 
-
-# after the loop return the  list of file names so theyre passed to
-#the transform lambda to be transformed 
+# <<<<<<< write_to_s3_test
+#         s3_client.put_object(
+#             Bucket="testbucket123abc456def",
+#             Key=f"data/by table/{table}/{table} - {year}-{month}-{day}-{time}",
+#             Body=json.dumps(formatted, indent=4, default=str),
+#             ContentType="application/json",
+#         )
