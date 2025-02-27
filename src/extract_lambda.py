@@ -7,25 +7,21 @@ from datetime import datetime
 from pg8000.native import identifier
 from botocore.exceptions import ClientError
 
-
-""" Function should query the DB and format data into JSON file"""
-
-
 def lambda_handler():
 
     s3_client = boto3.client("s3")
 
+    db = connect_to_database()
 
     time_result = get_time(s3_client)
 
     last_extraction_time = time_result[0]
     this_extraction_time = time_result[1]
-        
 
-    write_data(last_extraction_time,this_extraction_time,s3_client)
+    write_data(last_extraction_time, this_extraction_time, s3_client, db)
 
 
-def get_time(s3_client,bucketname ="testbucket123abc456def"):
+def get_time(s3_client, bucketname="testbucket123abc456def"):
 
     this_extraction_time = str(datetime.now())
 
@@ -42,16 +38,15 @@ def get_time(s3_client,bucketname ="testbucket123abc456def"):
 
         last_extraction_time = str(last_extraction_times[-1])
 
-
     except ClientError as e:
-        if e.response["Error"]["Code"] == 'NoSuchKey':
+        if e.response["Error"]["Code"] == "NoSuchKey":
             last_extraction_time = "0001-01-01 00:00:00.000000"
 
             last_extraction_times.append(last_extraction_time)
         else:
             print("Error!")
             raise ClientError(e)
-    
+
     last_extraction_times.append(this_extraction_time)
 
     s3_client.put_object(
@@ -63,11 +58,7 @@ def get_time(s3_client,bucketname ="testbucket123abc456def"):
     return (last_extraction_time, this_extraction_time)
 
 
-def write_data(last_extraction_time, this_extraction_time, s3_client, db_connection):
-    def connect_to_database():
-        return db_connection
-
-    db = connect_to_database()
+def write_data(last_extraction_time, this_extraction_time, s3_client, db):
 
     table_list = [
         "counterparty",
@@ -90,10 +81,6 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db_connect
 
         columnsdata = db.run(columns_query, table_name=table)
 
-        
-        if not columnsdata:
-            continue
-
         columns = [row[0] for row in columnsdata]
 
         query_string = f"""SELECT * FROM {identifier(table)}
@@ -101,10 +88,6 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db_connect
                         OR last_updated > :last_extract_time"""  # nosec
 
         data = db.run(query_string, last_extract_time=last_extraction_time)
-
-        
-        if not data:
-            continue
 
         formatted = [dict(zip(columns, row)) for row in data]
 
@@ -138,6 +121,8 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db_connect
             Body=json.dumps(formatted, indent=4, default=str),
             ContentType="application/json",
         )
+
+
 # <<<<<<< write_to_s3_test
 #         s3_client.put_object(
 #             Bucket="testbucket123abc456def",
