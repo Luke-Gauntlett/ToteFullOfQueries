@@ -8,9 +8,10 @@ resource "aws_s3_bucket" "code_bucket" {
 #making the zip file for the extract lambda function
 data "archive_file" "extract_lambda" {
   type        = "zip"
-  output_path = "${path.module}/../packages/extract_lambda/function.zip"
   source_file = "${path.module}/../src/extract_lambda.py"
-}
+  output_path = "${path.module}/../packages/extract_lambda/function.zip"
+  }
+  
 
 # lambda zip code being put in the above bucket
 resource "aws_s3_object" "lambda_zip_code" {
@@ -28,8 +29,9 @@ resource "aws_s3_object" "lambda_zip_code" {
 # making the zip file for lambda layer
 data "archive_file" "layer_code" {
   type        = "zip"
-  output_path = "${path.module}/../packages/extract_lambda/layer.zip"
   source_dir  = "${path.module}/../dependencies"
+  output_path = "${path.module}/../packages/extract_lambda/layer.zip"
+  
 }
 
 # lambda layer code uploading into the bucket
