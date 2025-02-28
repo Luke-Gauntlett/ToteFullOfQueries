@@ -1,13 +1,13 @@
 """Function should query the DB and format data into JSON file"""
-
-from GetSecrets.connect_db import connect_to_database
 import json
 import boto3
 from datetime import datetime
 from pg8000.native import identifier
 from botocore.exceptions import ClientError
+# from connections import connect_to_database 
+from GetSecrets.python.connections import connect_to_database
 
-def lambda_handler():
+def lambda_handler(event, context):
 
     s3_client = boto3.client("s3")
 
@@ -45,7 +45,7 @@ def get_time(s3_client, bucketname="testbucket123abc456def"):
             last_extraction_times.append(last_extraction_time)
         else:
             print("Error!")
-            raise ClientError(e)
+            raise ClientError(e.response, e.operation_name)
 
     last_extraction_times.append(this_extraction_time)
 
