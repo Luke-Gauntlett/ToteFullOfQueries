@@ -7,6 +7,7 @@ from datetime import datetime
 from src.extract_lambda import write_data
 
 
+
 @pytest.fixture
 def mock_client():
     """Mocks an S3 client with a test bucket."""
