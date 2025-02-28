@@ -1,8 +1,8 @@
 #making the zip file for the extract lambda function
 data "archive_file" "extract_lambda" {
   type        = "zip"
-  output_path = "${path.module}/../packages/extract_lambda/function.zip"
   source_file = "${path.module}/../src/extract_lambda.py"
+  output_path = "${path.module}/../packages/extract_lambda/function.zip"
 }
 
 # making the zip file for lambda layer
