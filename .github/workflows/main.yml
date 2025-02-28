@@ -76,10 +76,10 @@ jobs:
           create-new-comment: false
           default-branch: main
           remove-link-from-badge: false
-          
+
   terraform:
     needs: build
-    runs-on: ubuntu- latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
