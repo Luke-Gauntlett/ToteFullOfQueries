@@ -100,7 +100,7 @@ def test_last_time_is_mock_time(mock_datetime, aws_credentials):
         print(times)
 
 
-########################################################################################################################
+##################################################################################### # noqa
 
 
 @pytest.fixture
@@ -163,7 +163,7 @@ def test_write_data_correctly_writes_to_s3(mock_client, mock_db):
     last_extract_time = "2022-11-01 00:00:00"
     this_extract_time = "2022-11-03 14:20:51"
 
-    write_data(last_extract_time, this_extract_time, mock_client, mock_db, bucketname="testbucket123abc456def")
+    write_data(last_extract_time, this_extract_time, mock_client, mock_db, bucketname="testbucket123abc456def") # noqa
 
     response = mock_client.get_object(
         Bucket="testbucket123abc456def",
