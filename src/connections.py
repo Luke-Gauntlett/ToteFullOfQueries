@@ -24,7 +24,7 @@ def connect_to_database():
     """
 
     try:
-        secret_name = "project_database_credentials"
+        secret_name = "project_database_credentials" # noqa
         region_name = "eu-west-2"
 
         credentials = get_db_credentials(secret_name, region_name)
