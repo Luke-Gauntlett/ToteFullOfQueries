@@ -8,7 +8,7 @@ resource "aws_s3_bucket" "code_bucket" {
 #making the zip file for the extract lambda function
 data "archive_file" "extract_lambda" {
   type        = "zip"
-  output_path = "${path.module}/../packages/extract/function.zip"
+  output_path = "${path.module}/../packages/extract_lambda/function.zip"
   source_file = "${path.module}/../src/extract_lambda.py"
 }
 
@@ -28,7 +28,7 @@ resource "aws_s3_object" "lambda_zip_code" {
 # making the zip file for lambda layer
 data "archive_file" "layer_code" {
   type        = "zip"
-  output_path = "${path.module}/../packages/extract_layer/layer.zip"
+  output_path = "${path.module}/../packages/extract_lambda/layer.zip"
   source_dir  = "${path.module}/../dependencies"
 }
 
@@ -41,4 +41,20 @@ resource "aws_s3_object" "lambda_layer" {
   depends_on = [data.archive_file.layer_code]
 }
 
+# Layer to zip connection to secrets manager and db
 
+
+data "archive_file" "connection_resource" {
+  type        = "zip"
+  source_dir = "${path.module}/../GetSecrets"
+  output_path = "${path.module}/../connection_resource/connections.zip"
+  
+  
+}
+
+resource "aws_lambda_layer_version" "connection_resource_layer"{
+  layer_name = "connection_resource_layer"
+  description = "Layer to add connect to secrets manager and db"
+  filename = data.archive_file.connection_resource.output_path
+  compatible_runtimes = ["python3.12"]
+}

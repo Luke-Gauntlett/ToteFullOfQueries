@@ -10,7 +10,7 @@ resource "aws_lambda_function" "totes_extract_lambda" {
   handler    = "${var.extract_lambda}.lambda_handler"
   runtime    = "python3.12"
   timeout    = var.default_timeout
-  layers     = [aws_lambda_layer_version.dependencies.arn]
+  layers     = [aws_lambda_layer_version.dependencies.arn, aws_lambda_layer_version.connection_resource_layer.arn]
   depends_on = [aws_s3_object.lambda_zip_code, aws_s3_object.lambda_layer]
 }
 

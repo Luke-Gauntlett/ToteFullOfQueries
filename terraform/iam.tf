@@ -127,15 +127,15 @@ resource "aws_iam_policy_attachment" "cloudwatch_attach_policy" {
 #attach cloudwatch policy to lambda_iam role
 
 
-resource "aws_iam_policy" "postgres_policy" {
-  name   = "postgres_lambda_policy"
-  policy = data.aws_iam_policy_document.postgres_policy.json
-}
+# resource "aws_iam_policy" "postgres_policy" {
+#   name   = "postgres_lambda_policy"
+#   policy = data.aws_iam_policy_document.postgres_policy.json
+# }
 
-resource "aws_iam_role_policy_attachment" "lambda_postgres_policy_attachment" {
-  role       = aws_iam_role.lambda_iam.name
-  policy_arn = aws_iam_policy.postgres_policy.arn
-}
+# resource "aws_iam_role_policy_attachment" "lambda_postgres_policy_attachment" {
+#   role       = aws_iam_role.lambda_iam.name
+#   policy_arn = aws_iam_policy.postgres_policy.arn
+# }
 
 resource "aws_cloudwatch_log_group" "cw_log_group" {
   name = "cw_log_group"
@@ -144,7 +144,7 @@ resource "aws_cloudwatch_log_group" "cw_log_group" {
 
 resource "aws_cloudwatch_log_metric_filter" "cw_metric_filter" {
   name           = "cw_metric_filter"
-  pattern        = "%ERROR% %Failed% %Exception%"
+  pattern        = "?ERROR ?Failed ?Exception"
   log_group_name = aws_cloudwatch_log_group.cw_log_group.name
 
   metric_transformation {
