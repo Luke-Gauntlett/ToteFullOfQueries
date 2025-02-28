@@ -4,8 +4,8 @@ import boto3
 from datetime import datetime
 from pg8000.native import identifier
 from botocore.exceptions import ClientError
-# from connections import connect_to_database 
-from GetSecrets.python.connections import connect_to_database
+from connections import connect_to_database 
+
 
 def lambda_handler(event, context):
 
@@ -21,7 +21,7 @@ def lambda_handler(event, context):
     write_data(last_extraction_time, this_extraction_time, s3_client, db)
 
 
-def get_time(s3_client, bucketname="testbucket123abc456def"):
+def get_time(s3_client, bucketname='totes-extract-bucket-20250227154810549900000003' ):
 
     this_extraction_time = str(datetime.now())
 
@@ -58,7 +58,7 @@ def get_time(s3_client, bucketname="testbucket123abc456def"):
     return (last_extraction_time, this_extraction_time)
 
 
-def write_data(last_extraction_time, this_extraction_time, s3_client, db):
+def write_data(last_extraction_time, this_extraction_time, s3_client, db ,bucketname='totes-extract-bucket-20250227154810549900000003'):
 
     table_list = [
         "counterparty",
@@ -116,7 +116,7 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db):
         monthstr = f"{month}-{months[month]}"
 
         s3_client.put_object(
-            Bucket="testbucket123abc456def",
+            Bucket=bucketname,
             Key=f"data/by time/{year}/{monthstr}/{day}/{time}/{table}",
             Body=json.dumps(formatted, indent=4, default=str),
             ContentType="application/json",
@@ -125,8 +125,9 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db):
 
 # <<<<<<< write_to_s3_test
 #         s3_client.put_object(
-#             Bucket="testbucket123abc456def",
+#             Bucket=bucketname,
 #             Key=f"data/by table/{table}/{table} - {year}-{month}-{day}-{time}",
 #             Body=json.dumps(formatted, indent=4, default=str),
 #             ContentType="application/json",
 #         )
+
