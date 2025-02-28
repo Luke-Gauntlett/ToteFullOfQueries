@@ -1,17 +1,22 @@
-
-# bucket to store the lambda zip code and layer zip
-resource "aws_s3_bucket" "code_bucket" {
-  bucket_prefix = "project-lambda-layer-and-functions-"
-}
-
-
 #making the zip file for the extract lambda function
 data "archive_file" "extract_lambda" {
   type        = "zip"
   source_file = "${path.module}/../src/extract_lambda.py"
   output_path = "${path.module}/../packages/extract_lambda/function.zip"
-  }
-  
+}
+
+# making the zip file for lambda layer
+data "archive_file" "layer_code" {
+  type        = "zip"
+  output_path = "${path.module}/../packages/extract_lambda/layer.zip"
+  source_dir  = "${path.module}/../dependencies"
+}
+
+data "archive_file" "connection_resource" {
+  type        = "zip"
+  source_dir = "${path.module}/../GetSecrets"
+  output_path = "${path.module}/../connection_resource/connections.zip"
+}
 
 # lambda zip code being put in the above bucket
 resource "aws_s3_object" "lambda_zip_code" {
@@ -25,15 +30,6 @@ resource "aws_s3_object" "lambda_zip_code" {
   etag = filemd5("${path.module}/../packages/${each.key}/function.zip")
 }
 
-
-# making the zip file for lambda layer
-data "archive_file" "layer_code" {
-  type        = "zip"
-  source_dir  = "${path.module}/../dependencies"
-  output_path = "${path.module}/../packages/extract_lambda/layer.zip"
-  
-}
-
 # lambda layer code uploading into the bucket
 resource "aws_s3_object" "lambda_layer" {
   bucket     = aws_s3_bucket.code_bucket.bucket
@@ -44,19 +40,18 @@ resource "aws_s3_object" "lambda_layer" {
 }
 
 # Layer to zip connection to secrets manager and db
-
-
-data "archive_file" "connection_resource" {
-  type        = "zip"
-  source_dir = "${path.module}/../GetSecrets"
-  output_path = "${path.module}/../connection_resource/connections.zip"
-  
-  
-}
-
 resource "aws_lambda_layer_version" "connection_resource_layer"{
   layer_name = "connection_resource_layer"
   description = "Layer to add connect to secrets manager and db"
   filename = data.archive_file.connection_resource.output_path
   compatible_runtimes = ["python3.12"]
 }
+
+# references the layer zip code in the bucket, for the main lambda function
+# to point to under the key of 'layers'
+resource "aws_lambda_layer_version" "dependencies" {
+  layer_name = "requirements_layer"
+  s3_bucket  = aws_s3_object.lambda_layer.bucket
+  s3_key     = aws_s3_object.lambda_layer.key
+}
+
