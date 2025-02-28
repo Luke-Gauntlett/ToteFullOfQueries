@@ -26,15 +26,20 @@ resource "aws_iam_role" "lambda_iam" {
 data "aws_iam_policy_document" "s3_policy" {
   statement {
     effect    = "Allow"
-    actions   = ["s3:PutObject", "s3:GetObject", "s3:ListBucket"]
-    resources = ["${resource.aws_s3_bucket.extract_bucket.arn}/*"]
+    actions   = ["s3:ListBucket"] # ListBucket applies to the bucket itself
+    resources = ["${resource.aws_s3_bucket.extract_bucket.arn}"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:PutObject", "s3:GetObject"]
+    resources = ["${resource.aws_s3_bucket.extract_bucket.arn}/*"] # Applies to objects inside the bucket
   }
 }
 
 resource "aws_iam_policy" "s3_policy" {
   name   = "s3_bucket_policy"
   policy = data.aws_iam_policy_document.s3_policy.json
-
 }
 
 resource "aws_iam_policy_attachment" "s3_attach_policy" {
@@ -53,7 +58,7 @@ data "aws_iam_policy_document" "sns_policy" {
     actions   = ["sns:Publish"]
     resources = ["arn:aws:sns:eu-west-2:${data.aws_caller_identity.current.account_id}:"]
   }
-  
+
 
 }
 resource "aws_iam_policy" "sns_policy" {
@@ -76,7 +81,7 @@ data "aws_iam_policy_document" "secret_manager_policy" {
     actions   = ["secretsmanager:GetSecretValue"]
     resources = ["arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:*"]
   }
-##The above policy is currently using the * wildcard, where all secrets can be accessed
+  ##The above policy is currently using the * wildcard, where all secrets can be accessed
 }
 resource "aws_iam_policy" "secret_manager_policy" {
   name   = "secret_manager_policy"
@@ -93,9 +98,9 @@ resource "aws_iam_policy_attachment" "secret_manager_attach_policy" {
 #########################################  IAM Policy for Cloud Watch  ###################################################
 
 
-data "aws_iam_policy_document" "cloudwatch_policy" { 
+data "aws_iam_policy_document" "cloudwatch_policy" {
 
-#this adds the new document which defines what our lambda is allowed to do with cloudwatch - ie log groups, streams or write log events
+  #this adds the new document which defines what our lambda is allowed to do with cloudwatch - ie log groups, streams or write log events
 
   statement {
     effect = "Allow"
@@ -107,7 +112,7 @@ data "aws_iam_policy_document" "cloudwatch_policy" {
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*:*"
     ]
-# resources (above) limits the policy to lambda related log streams
+    # resources (above) limits the policy to lambda related log streams
   }
 }
 
@@ -154,19 +159,19 @@ resource "aws_cloudwatch_log_metric_filter" "cw_metric_filter" {
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "extract_lambda_alert"{
-  alarm_name                = "extract_lambda_alert"
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = 1
-  metric_name               = aws_cloudwatch_log_metric_filter.cw_metric_filter.name
-  namespace                 = "cw_metrics"
-  period                    = 300
-  statistic                 = "Sum"
-  threshold                 = 1
-  alarm_description         = "This metric monitors errors for extract lambda"
-  alarm_actions = [aws_sns_topic.extraction_updates.arn]
-  
-  
+resource "aws_cloudwatch_metric_alarm" "extract_lambda_alert" {
+  alarm_name          = "extract_lambda_alert"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = aws_cloudwatch_log_metric_filter.cw_metric_filter.name
+  namespace           = "cw_metrics"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_description   = "This metric monitors errors for extract lambda"
+  alarm_actions       = [aws_sns_topic.extraction_updates.arn]
+
+
 }
 
 #######################################################  IAM Policy for Step Function #################################################
