@@ -5,7 +5,11 @@ from moto import mock_aws
 import boto3
 from datetime import datetime
 from src.extract_lambda import write_data
+import logging
 
+logger = logging.getLogger("test")
+logger.setLevel(logging.INFO)
+logger.propagate = True
 
 @pytest.fixture
 def mock_client():
@@ -194,3 +198,10 @@ def test_write_data_handles_missing_timestamps(mock_client, mock_db):
 
     assert file_content[0]["created_at"] is None
     assert file_content[0]["last_updated"] is None
+
+def test_write_data_logs_correct_text(mock_client, mock_db, caplog):
+    last_extraction_time = "0001-01-01 00:00:00.000000"
+    this_extraction_time = "0001-01-03 00:00:00.000000"
+    with caplog.at_level(logging.INFO):
+        write_data(last_extraction_time, this_extraction_time, mock_client, mock_db)
+        assert "Successfully written to bucket! fingers crossed..." in caplog.text

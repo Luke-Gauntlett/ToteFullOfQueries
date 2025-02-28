@@ -6,6 +6,12 @@ import os
 import boto3
 import json
 from datetime import datetime
+import logging
+from botocore.exceptions import ClientError
+
+logger = logging.getLogger("test")
+logger.setLevel(logging.INFO)
+logger.propagate = True
 
 @pytest.fixture(scope="function")
 def aws_credentials():
@@ -96,3 +102,28 @@ def test_last_time_is_mock_time(mock_datetime, aws_credentials):
             str(faketime2),
         ]
         print(times)
+
+def test_get_time_logs_correct_text_for_extraction_time_error(caplog, aws_credentials):
+    with mock_aws():
+        client = boto3.client("s3")
+
+        client.create_bucket(
+            Bucket="testingBucket",
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+        )
+        with caplog.at_level(logging.INFO):
+            get_time(client, bucketname="testingBucket")
+            assert "No most recent extraction time." in caplog.text
+
+def test_get_time_logs_correct_text_for_any_other_error(caplog, aws_credentials):
+    with mock_aws():
+        client = boto3.client("s3")
+
+        client.create_bucket(
+            Bucket="testingBucket",
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+        )
+        with caplog.at_level(logging.INFO):
+            with pytest.raises(ClientError):
+                get_time(client, bucketname="noBucket")
+            assert "Error! Issues getting extraction time." in caplog.text
