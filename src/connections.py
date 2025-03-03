@@ -22,11 +22,12 @@ def connect_to_database():
     """
     Connects to the PostgreSQL database using pg8000.
     """
+    print('hello')
 
     try:
         # secret_name = "project_database_credentials"  #nosec
         # region_name = "eu-west-2"                     #nosec  
-
+        
         credentials = get_db_credentials(
             secret_name = 'project_database_credentials', region_name = "eu-west-2")   #nosec
 
@@ -37,6 +38,7 @@ def connect_to_database():
             port=int(credentials["port"]),
             database=credentials["database"],
         )
+        print("try")
         
         print("Database connection successful!") #nosec
         return conn
@@ -46,3 +48,6 @@ def connect_to_database():
     except Exception as e:
         print(f"Database connection failed: {e}")
         return None
+    
+
+connect_to_database()
