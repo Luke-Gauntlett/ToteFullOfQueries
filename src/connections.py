@@ -36,8 +36,6 @@ def connect_to_database(secret_name = "project_database_credentials",region_name
         )
         
         print("Database connection successful!") #nosec
-        print(type(conn))
-        print(conn)
         return conn
         
 
