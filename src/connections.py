@@ -38,10 +38,12 @@ def connect_to_database():
             port=int(credentials["port"]),
             database=credentials["database"],
         )
-        print("try")
         
         print("Database connection successful!") #nosec
+        print(type(conn))
+        print(conn)
         return conn
+        
 
     except ClientError as err:
         print(f"Failed to retrieve database credentials:{err}")
