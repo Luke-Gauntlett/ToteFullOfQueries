@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 from src.connections import connect_to_database
 import logging
 
-logger = logging.getLogger("MyLogger")
+logger = logging.getLogger("extract_logger")
 logger.setLevel(logging.INFO) 
 
 
