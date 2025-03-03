@@ -22,7 +22,6 @@ def connect_to_database():
     """
     Connects to the PostgreSQL database using pg8000.
     """
-    print('hello')
 
     try:
         # secret_name = "project_database_credentials"  #nosec

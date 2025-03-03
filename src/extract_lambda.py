@@ -139,4 +139,5 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db ,bucket
 #             ContentType="application/json",
 #         )
 
-lambda_handler(1,2)
+if 'name' == '__main__':
+    lambda_handler(1,2)

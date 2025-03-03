@@ -2,21 +2,21 @@ from src.extract_lambda import get_time,write_data
 from moto import mock_aws
 from unittest.mock import patch,Mock
 import pytest
-#import os
+import os
 import boto3
 import json
 from datetime import datetime
 
 
 
-# @pytest.fixture(scope="function")
-# def aws_credentials():
-#     """Mocked AWS Credentials for moto"""
-#     os.environ["AWS_ACCESS_KEY_ID"] = "test"
-#     os.environ["AWS_SECRET_ACCESS_KEY"] = "test"
-#     os.environ["AWS_SECURITY_TOKEN"] = "test"
-#     os.environ["AWS_SESSION_TOKEN"] = "test"
-#     os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
+@pytest.fixture(scope="function")
+def aws_credentials():
+    """Mocked AWS Credentials for moto"""
+    os.environ["AWS_ACCESS_KEY_ID"] = "test"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "test"
+    os.environ["AWS_SECURITY_TOKEN"] = "test"
+    os.environ["AWS_SESSION_TOKEN"] = "test"
+    os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
 
 
 def test_time_no_file(aws_credentials):
@@ -158,7 +158,7 @@ def mock_db():
     return db_mock
 
 
-def test_write_data_correctly_writes_to_s3(mock_client, mock_db):
+def test_write_data_correctly_writes_to_s3(mock_client, mock_db,aws_credentials):
     """Test that data is correctly written to S3."""
     last_extract_time = "2022-11-01 00:00:00"
     this_extract_time = "2022-11-03 14:20:51"
@@ -196,7 +196,7 @@ def test_write_data_correctly_writes_to_s3(mock_client, mock_db):
     assert file_content == expected_data
 
 
-def test_write_data_creates_correct_file_path(mock_client, mock_db):
+def test_write_data_creates_correct_file_path(mock_client, mock_db,aws_credentials):
     """Test that the correct file paths are created in S3."""
     last_extraction_time = "2022-11-01 00:00:00"
     this_extraction_time = "2022-11-03 14:20:51"
@@ -213,7 +213,7 @@ def test_write_data_creates_correct_file_path(mock_client, mock_db):
     assert expected_keys.issubset(s3_keys)
 
 
-def test_write_data_handles_empty_data(mock_client, mock_db):
+def test_write_data_handles_empty_data(mock_client, mock_db,aws_credentials):
     """Test that write_data handles empty data properly."""
     mock_db.run.side_effect = lambda query, table_name=None, last_extract_time=None: (  # noqa
         [("staff_id",), ("first_name",), ("last_name",)]
@@ -236,7 +236,7 @@ def test_write_data_handles_empty_data(mock_client, mock_db):
     assert len(uploaded_files) > 0
 
 
-def test_write_data_includes_correct_columns(mock_client, mock_db):
+def test_write_data_includes_correct_columns(mock_client, mock_db,aws_credentials):
     """Test that write_data includes all expected columns."""
     last_extraction_time = "2022-11-01 00:00:00"
     this_extraction_time = "2022-11-03 14:20:51"
@@ -263,7 +263,7 @@ def test_write_data_includes_correct_columns(mock_client, mock_db):
         assert set(row.keys()) == expected_keys
 
 
-def test_write_data_handles_missing_timestamps(mock_client, mock_db):
+def test_write_data_handles_missing_timestamps(mock_client, mock_db,aws_credentials):
     """Test that missing timestamps are handled correctly."""
     mock_db.run.side_effect = lambda query, table_name=None, last_extract_time=None: ( # noqa
         [
