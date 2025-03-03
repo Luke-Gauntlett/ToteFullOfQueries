@@ -4,7 +4,7 @@ import boto3
 from datetime import datetime
 from pg8000.native import identifier
 from botocore.exceptions import ClientError
-from src.connections import connect_to_database
+from connections import connect_to_database
 import logging
 
 logger = logging.getLogger("extract_logger")
