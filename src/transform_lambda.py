@@ -37,7 +37,7 @@ def lambda_handler(event, context):
 
 
     transformed_loction = transform_location(address)
-    transformed_staff = transform_staff(staff, department)
+    # transformed_staff = transform_staff(staff, department)
 
     write(transformed_loction, client, 
           f"data/by time/{year}/{month}/{day}/1{time}/dim_location")
