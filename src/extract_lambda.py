@@ -6,15 +6,15 @@ from pg8000.native import identifier
 from botocore.exceptions import ClientError
 import logging
 
-try:        # nosec
-    from src.connections import connect_to_database # nosec
-except:     # nosec
-    pass        # nosec
-
-try:        # nosec
-    from connections import connect_to_database  # nosec
-except:     # nosec
-    pass        # nosec
+try:        # nosec   # noqa
+    from src.connections import connect_to_database # nosec  # noqa
+except:     # nosec  # noqa
+    pass        # nosec # noqa
+ 
+try:        # nosec  # noqa
+    from connections import connect_to_database  # nosec  # noqa
+except:     # nosec   # noqa
+    pass        # nosec  # noqa
 
 logger = logging.getLogger("extract_logger")
 logger.setLevel(logging.INFO) 
