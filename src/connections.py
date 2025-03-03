@@ -18,15 +18,13 @@ def get_db_credentials(secret_name, region_name="eu-west-2"):
         return None
 
 
-def connect_to_database():
+def connect_to_database(secret_name = "project_database_credentials",region_name = "eu-west-2"):
     """
     Connects to the PostgreSQL database using pg8000.
     """
 
     try:
-        secret_name = "project_database_credentials"
-        region_name = "eu-west-2"
-
+        
         credentials = get_db_credentials(secret_name, region_name)
 
         conn = pg8000.connect(
@@ -37,11 +35,17 @@ def connect_to_database():
             database=credentials["database"],
         )
         
-        print("Database connection successful!")
+        print("Database connection successful!") #nosec
+        print(type(conn))
+        print(conn)
         return conn
+        
 
     except ClientError as err:
         print(f"Failed to retrieve database credentials:{err}")
     except Exception as e:
         print(f"Database connection failed: {e}")
         return None
+    
+
+connect_to_database()
