@@ -4,7 +4,11 @@ import boto3
 from datetime import datetime
 from pg8000.native import identifier
 from botocore.exceptions import ClientError
-from connections import connect_to_database 
+from src.connections import connect_to_database
+import logging
+
+logger = logging.getLogger("MyLogger")
+logger.setLevel(logging.INFO) 
 
 
 def lambda_handler(event, context):
@@ -43,8 +47,10 @@ def get_time(s3_client, bucketname='totes-extract-bucket-20250227154810549900000
             last_extraction_time = "0001-01-01 00:00:00.000000"
 
             last_extraction_times.append(last_extraction_time)
+            logger.error("No most recent extraction time.")
         else:
             print("Error!")
+            logger.error("Error! Issues getting extraction time.")
             raise ClientError(e.response, e.operation_name)
 
     last_extraction_times.append(this_extraction_time)
@@ -122,6 +128,8 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db ,bucket
             ContentType="application/json",
         )
 
+    logger.info("Successfully written to bucket!")
+
 
 # <<<<<<< write_to_s3_test
 #         s3_client.put_object(
@@ -131,3 +139,5 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db ,bucket
 #             ContentType="application/json",
 #         )
 
+if 'name' == '__main__':
+    lambda_handler(1,2)
