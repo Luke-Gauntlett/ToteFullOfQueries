@@ -52,17 +52,29 @@ def lambda_handler(event, context):
 
     transformed_loction = transform_location(address)
 
+
     write(transformed_loction, client, f"data/by time/{year}/{month}/{day}/1{time}/dim_location")
 
-# ################################ read each of the json files ######################################################## # noqa
+    transformed_staff = transform_staff(staff, department)
 
-def read(file_paths, client , bucketname="totes-extract-bucket-20250227154810549900000003"):
+    write(transformed_loction, client, 
+          f"data/by time/{year}/{month}/{day}/1{time}/dim_location")
+    
+    write(transformed_staff, client, 
+          f"data/by time/{year}/{month}/{day}/1{time}/dim_staff")
+
+
+################################ read each of the json files ######################################################## # noqa
+
+
+def read(file_paths, client ,
+          bucketname="totes-extract-bucket-20250227154810549900000003"):
 
     file_dict = {}
 
-    for file_path in file_paths:
+    for file_path in file_paths.values():
         
-        file = client.get_object(Bucket=bucketname, Key={file_path})
+        file = client.get_object(Bucket=bucketname, Key=file_path)
 
         file_loaded = json.loads(file["Body"].read().decode("utf-8"))
 
@@ -73,7 +85,7 @@ def read(file_paths, client , bucketname="totes-extract-bucket-20250227154810549
     return file_dict
 
 
-# ################################# write parquet file to the s3 bucket ############################################### # noqa
+################################# write parquet file to the s3 bucket ############################################### # noqa
 
 
 def write(transformed_data,client,filename,bucketname = "totes-transform-bucket-20250227154810549700000001"):   # noqa
@@ -86,7 +98,7 @@ def write(transformed_data,client,filename,bucketname = "totes-transform-bucket-
                 Body=parquet_data,
             )
 
-# ###################################### transform the data for dim location table ###################################   # noqa
+###################################### transform the data for dim location table ###################################   # noqa
 
 
 def transform_location(file_data):
@@ -101,3 +113,49 @@ def transform_location(file_data):
     df.rename(columns={'address_id': 'location_id'}, inplace=True)
 
     return df
+
+###################################### transform the data for dim staff table ###################################   # noqa
+
+def transform_staff(staff_data, department_data):
+    if staff_data and department_data:
+        staff_df = pd.DataFrame(staff_data)
+        del staff_df['created_at']
+        del staff_df['last_updated']    
+
+        dep_df = pd.DataFrame(department_data)
+        del dep_df['created_at']
+        del dep_df['last_updated']    
+        
+        merged = staff_df.merge(dep_df, on='department_id', how='outer')
+        merged.set_index("staff_id", inplace=True)   
+
+        del merged['manager']   
+        del merged['department_id'] 
+        
+        print(merged.to_string())
+
+        df_reordered = merged[['first_name', 'last_name',
+                                'department_name', 'location', 'email_address']]
+
+        print(df_reordered.to_string())
+
+        return df_reordered
+    else:
+        return pd.DataFrame([])
+
+
+
+
+
+
+#     dim_staff_df = pd.DataFrame({
+#     'staff_id': staff_df.staff_id
+#     , 'first_name': staff_df.first_name
+#     , 'last_name': staff_df.last_name
+#     , 'department_name': department
+#     , 'location':
+#     , 'email_address':
+# })
+
+
+
