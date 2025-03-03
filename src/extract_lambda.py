@@ -4,11 +4,15 @@ import boto3
 from datetime import datetime
 from pg8000.native import identifier
 from botocore.exceptions import ClientError
-from connections import connect_to_database
 import logging
 
 try:
     from src.connections import connect_to_database # nosec
+except:
+    pass
+
+try:
+    from connections import connect_to_database
 except:
     pass
 
@@ -18,7 +22,7 @@ logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
 
-    s3_client = boto3.client("s3")s
+    s3_client = boto3.client("s3")
 
     db = connect_to_database()
 
