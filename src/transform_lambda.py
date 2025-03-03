@@ -18,30 +18,15 @@ def lambda_handler(event, context):
 
     # counterparty = loaded__files["counterparty"]
     # currency = loaded__files["currency"]
-    # department = loaded__files["department"]
+    department = loaded__files["department"]
     # design = loaded__files["design"]
-    # staff = loaded__files["staff"]
+    staff = loaded__files["staff"]
     # sales_order = loaded__files["sales_order"]
-    # address = loaded__files["address"]
+    address = loaded__files["address"]
     # payment = loaded__files["payment"]
     # purchase_order = loaded__files["purchase_order"]
     # payment_type = loaded__files["payment_type"]
-    # transaction = loaded__files["transaction"]
-
-    months = {
-            "01": "January",
-            "02": "February",
-            "03": "March",
-            "04": "April",
-            "05": "May",
-            "06": "June",
-            "07": "July",
-            "08": "August",
-            "09": "September",
-            "10": "October",
-            "11": "November",
-            "12": "December",
-        }
+    # transaction = loaded__files["transaction"]  
 
     split = event["address"].split("/")
 
