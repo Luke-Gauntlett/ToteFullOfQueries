@@ -8,6 +8,13 @@ import json
 from datetime import datetime
 
 
+import logging
+from botocore.exceptions import ClientError
+
+logger = logging.getLogger("test")
+logger.setLevel(logging.INFO)
+logger.propagate = True
+
 
 @pytest.fixture(scope="function")
 def aws_credentials():
@@ -100,8 +107,7 @@ def test_last_time_is_mock_time(mock_datetime, aws_credentials):
         print(times)
 
 
-##################################################################################### # noqa
-
+######################################################################################################################## noqa
 
 @pytest.fixture
 def mock_client():
@@ -290,3 +296,42 @@ def test_write_data_handles_missing_timestamps(mock_client, mock_db,aws_credenti
 
     assert file_content[0]["created_at"] is None
     assert file_content[0]["last_updated"] is None
+
+
+##################################### log tests ################################################ noqa
+
+def test_get_time_logs_correct_text_for_extraction_time_error(caplog, aws_credentials):
+    with mock_aws():
+        client = boto3.client("s3")
+
+        client.create_bucket(
+            Bucket="testingBucket",
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+        )
+        with caplog.at_level(logging.INFO):
+            get_time(client, bucketname="testingBucket")
+            assert "No most recent extraction time." in caplog.text
+
+def test_get_time_logs_correct_text_for_any_other_error(caplog, aws_credentials):
+    with mock_aws():
+        client = boto3.client("s3")
+
+        client.create_bucket(
+            Bucket="testingBucket",
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+        )
+        with caplog.at_level(logging.INFO):
+            with pytest.raises(ClientError):
+                get_time(client, bucketname="noBucket")
+            assert "Error! Issues getting extraction time." in caplog.text
+
+
+def test_write_data_logs_correct_text(mock_client, mock_db, caplog):
+    last_extraction_time = "0001-01-01 00:00:00.000000"
+    this_extraction_time = "0001-01-03 00:00:00.000000"
+    with caplog.at_level(logging.INFO):
+        write_data(last_extraction_time, this_extraction_time, mock_client, mock_db, bucketname="testbucket123abc456def")
+        assert "Successfully written to bucket!" in caplog.text
+
+
+
