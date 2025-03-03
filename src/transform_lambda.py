@@ -3,11 +3,11 @@ transform/clean the data into a parquet file into s3 transform bucket"""
 
 import boto3
 import json
-from pprint import pprint
+# from pprint import pprint
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
-import pycountry
+# import pyarrow as pa
+# import pyarrow.parquet as pq
+# import pycountry
 
 
 def lambda_handler(event, context):
@@ -16,17 +16,17 @@ def lambda_handler(event, context):
 
     loaded__files = read(event,client)
 
-    counterparty = loaded__files["counterparty"]
-    currency = loaded__files["currency"]
-    department = loaded__files["department"]
-    design = loaded__files["design"]
-    staff = loaded__files["staff"]
-    sales_order = loaded__files["sales_order"]
-    address = loaded__files["address"]
-    payment = loaded__files["payment"]
-    purchase_order = loaded__files["purchase_order"]
-    payment_type = loaded__files["payment_type"]
-    transaction = loaded__files["transaction"]
+    # counterparty = loaded__files["counterparty"]
+    # currency = loaded__files["currency"]
+    # department = loaded__files["department"]
+    # design = loaded__files["design"]
+    # staff = loaded__files["staff"]
+    # sales_order = loaded__files["sales_order"]
+    # address = loaded__files["address"]
+    # payment = loaded__files["payment"]
+    # purchase_order = loaded__files["purchase_order"]
+    # payment_type = loaded__files["payment_type"]
+    # transaction = loaded__files["transaction"]
 
     months = {
             "01": "January",
@@ -54,11 +54,13 @@ def lambda_handler(event, context):
     transformed_loction = transform_location(address)
     transformed_staff = transform_staff(staff, department)
 
-    write(transformed_loction, client, f"data/by time/{year}/{month}/{day}/1{time}/dim_location")
+    write(transformed_loction, client, 
+          f"data/by time/{year}/{month}/{day}/1{time}/dim_location")
 
 ################################ read each of the json files ######################################################## # noqa
 
-def read(file_paths, client , bucketname="totes-extract-bucket-20250227154810549900000003"):
+def read(file_paths, client ,
+          bucketname="totes-extract-bucket-20250227154810549900000003"):
 
     file_dict = {}
 
@@ -124,7 +126,8 @@ def transform_staff(staff_data, department_data):
         
         print(merged.to_string())
 
-        df_reordered = merged[['first_name', 'last_name', 'department_name', 'location', 'email_address']]
+        df_reordered = merged[['first_name', 'last_name',
+                                'department_name', 'location', 'email_address']]
 
         print(df_reordered.to_string())
 
@@ -147,14 +150,3 @@ def transform_staff(staff_data, department_data):
 # })
 
 
-# lambda_handler({'address': "data/by time/2025/02-February/28/14:41:30.673526/address",
-#                 'staff':"data/by time/2025/02-February/28/14:41:30.673526/staff",
-#                 'counterparty': "data/by time/2025/02-February/28/14:41:30.673526/counterparty",
-#                 'currency': "data/by time/2025/02-February/28/14:41:30.673526/currency",
-#                 'department': "data/by time/2025/02-February/28/14:41:30.673526/department",
-#                 'design': "data/by time/2025/02-February/28/14:41:30.673526/design",
-#                 'sales_order': "data/by time/2025/02-February/28/14:41:30.673526/sales_order",
-#                 'payment': "data/by time/2025/02-February/28/14:41:30.673526/payment",
-#                 'purchase_order': "data/by time/2025/02-February/28/14:41:30.673526/purchase_order",
-#                 'payment_type': "data/by time/2025/02-February/28/14:41:30.673526/payment_type",
-#                 'transaction': "data/by time/2025/02-February/28/14:41:30.673526/transaction"}, {})
