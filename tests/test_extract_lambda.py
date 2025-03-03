@@ -2,7 +2,7 @@ from src.extract_lambda import get_time,write_data
 from moto import mock_aws
 from unittest.mock import patch,Mock
 import pytest
-import os
+#import os
 import boto3
 import json
 from datetime import datetime
