@@ -107,7 +107,7 @@ def test_last_time_is_mock_time(mock_datetime, aws_credentials):
         print(times)
 
 
-########################################################################################################################
+######################################################################################################################## noqa
 
 @pytest.fixture
 def mock_client():
@@ -332,3 +332,4 @@ def test_write_data_logs_correct_text(mock_client, mock_db, caplog):
     with caplog.at_level(logging.INFO):
         write_data(last_extraction_time, this_extraction_time, mock_client, mock_db, bucketname="testbucket123abc456def")
         assert "Successfully written to bucket!" in caplog.text
+        
