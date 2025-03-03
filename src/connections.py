@@ -24,10 +24,10 @@ def connect_to_database():
     """
 
     try:
-        secret_name = "project_database_credentials"  #nosec
-        region_name = "eu-west-2"                     #nosec  
+        # secret_name = "project_database_credentials"  #nosec
+        # region_name = "eu-west-2"                     #nosec  
 
-        credentials = get_db_credentials(secret_name, region_name)
+        credentials = get_db_credentials(secret_name = 'project_database_credentials', region_name = "eu-west-2")
 
         conn = pg8000.connect(
             user=credentials["user"],
