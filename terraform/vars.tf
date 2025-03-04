@@ -33,10 +33,10 @@ variable "default_timeout" {
   default = 60
 }
 
-# variable "transform_lambda" {
-#   type    = string
-#   default = "transform"
-# }
+variable "transform_lambda" {
+  type    = string
+  default = "transform_lambda"
+}
 
 # variable "load_lambda" {
 #   type    = string
@@ -52,6 +52,6 @@ variable "default_timeout" {
 
 variable "email_address" {
   type = string
-  default = "testemail@gmail.com"
+  default = "totefullofqueries@gmail.com"
   sensitive = true
 }

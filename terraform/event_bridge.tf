@@ -13,6 +13,7 @@ resource "aws_cloudwatch_event_target" "scheduler_target" {
   target_id = "lambda-target"
   arn       = aws_lambda_function.totes_extract_lambda.arn
 }
+
 #### Allow permission to lambda
 resource "aws_lambda_permission" "allow_cloudwatch" {
   statement_id  = "AllowExecutionFromCloudWatch"
