@@ -1,19 +1,28 @@
-""" Function should take files from extract s3 bucket 
+"""Function should take files from extract s3 bucket
 transform/clean the data into a parquet file into s3 transform bucket"""
 
+from botocore.exceptions import ClientError
 import boto3
 import json
-#from pprint import pprint
+from datetime import datetime
+
+# from pprint import pprint
 import pandas as pd
+
 # import pyarrow as pa
 # import pyarrow.parquet as pq
 # import pycountry
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 
 def lambda_handler(event, context):
 
     client = boto3.client("s3")
 
-    loaded__files = read(event,client)
+    loaded__files = read(event, client)
 
     # counterparty = loaded__files["counterparty"]
     # currency = loaded__files["currency"]
@@ -25,7 +34,7 @@ def lambda_handler(event, context):
     # payment = loaded__files["payment"]
     # purchase_order = loaded__files["purchase_order"]
     # payment_type = loaded__files["payment_type"]
-    # transaction = loaded__files["transaction"]  
+    # transaction = loaded__files["transaction"]
 
     split = event["address"].split("/")
 
@@ -38,48 +47,115 @@ def lambda_handler(event, context):
     day = split[4]
     time = split[5]
 
-
     transformed_loction = transform_location(address)
     transformed_staff = transform_staff(staff, department)
 
-    write(transformed_loction, client, 
-          f"data/by time/{year}/{month}/{day}/1{time}/dim_location")
-    
-    write(transformed_staff, client, 
-          f"data/by time/{year}/{month}/{day}/1{time}/dim_staff")
+    write(
+        transformed_loction,
+        client,
+        f"data/by time/{year}/{month}/{day}/1{time}/dim_location",
+    )
+
+    write(
+        transformed_staff,
+        client,
+        f"data/by time/{year}/{month}/{day}/1{time}/dim_staff",
+    )
+
 
 ################################ read each of the json files ######################################################## # noqa
 
-def read(file_paths, client ,
-          bucketname="totes-extract-bucket-20250227154810549900000003"):
+# def read(file_paths, client ,
+#           bucketname="totes-extract-bucket-20250227154810549900000003"):
 
+#     file_dict = {}
+
+#     for file_path in file_paths:
+
+#         file = client.get_object(Bucket=bucketname, Key=file_path)
+
+#         file_loaded = json.loads(file["Body"].read().decode("utf-8"))
+
+#         table_name = file_path.split("/")[-1]
+
+#         file_dict [table_name] = file_loaded
+
+
+#     return file_dict
+def read(
+    file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"
+):
     file_dict = {}
 
     for file_path in file_paths:
-        
-        file = client.get_object(Bucket=bucketname, Key={file_path})
-
-        file_loaded = json.loads(file["Body"].read().decode("utf-8"))
-
-        table_name = file_path.split("/")[-1]
-
-        file_dict [table_name] = file_loaded
+        try:
+            file = client.get_object(Bucket=bucketname, Key=file_path)
+            file_loaded = json.loads(file["Body"].read().decode("utf-8"))
+            table_name = file_path.split("/")[-1]
+            file_dict[table_name] = file_loaded
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "NoSuchKey":
+                logger.error(
+                    f"Warning: File {file_path} does not exist in S3. Skipping."
+                )
+                continue
+            else:
+                raise
 
     return file_dict
 
 
 ################################# write parquet file to the s3 bucket ############################################### # noqa
 
-def write(transformed_data,client,filename,bucketname = "totes-transform-bucket-20250227154810549700000001"):   # noqa
+# def write(transformed_data,client,filename,bucketname = "totes-transform-bucket-20250227154810549700000001"):   # noqa
 
-    parquet_data = transformed_data.to_parquet()
+#     parquet_data = transformed_data.to_parquet()
 
 
-    client.put_object(
-                Bucket=bucketname,
-                Key=f"{filename}.parquet",
-                Body=parquet_data,
-            )
+#     client.put_object(
+#                 Bucket=bucketname,
+#                 Key=f"{filename}.parquet",
+#                 Body=parquet_data,
+#             )
+
+
+def write(transformed_dataframe, s3_client, bucketname, filename):
+    try:
+
+        current_time = datetime.now()
+
+        months = {
+            "01": "January",
+            "02": "February",
+            "03": "March",
+            "04": "April",
+            "05": "May",
+            "06": "June",
+            "07": "July",
+            "08": "August",
+            "09": "September",
+            "10": "October",
+            "11": "November",
+            "12": "December",
+        }
+
+        split = current_time.strftime("%Y-%m-%d %H:%M:%S").split("-")
+        year = split[0]
+        month = split[1]
+        month_str = f"{month}-{months[month]}"
+        day = split[2].split(" ")[0]
+        time = split[2].split(" ")[1]
+
+        s3_key = f"data/by time/{year}/{month_str}/{day}/{time}/{filename}"
+
+        transformed_dataframe.to_parquet(
+            f"s3://{bucketname}/{s3_key}.parquet", index=False, engine="pyarrow"
+        )
+
+    except Exception as e:
+
+        logger.error(f"Failed to upload transformed data to S3. Error: {e}")
+
 
 ###################################### transform the data for dim location table ###################################   # noqa
 
@@ -88,37 +164,40 @@ def transform_location(file_data):
 
     df = pd.DataFrame(file_data)
 
-    del df['created_at']
-    del df['last_updated']
+    del df["created_at"]
+    del df["last_updated"]
 
-    df.rename(columns={'address_id': 'location_id'}, inplace=True)
+    df.rename(columns={"address_id": "location_id"}, inplace=True)
 
     df.set_index("location_id", inplace=True)
 
     return df
 
+
 ############################## transform the data for dim staff table #############################   # noqa
+
 
 def transform_staff(staff_data, department_data):
     if staff_data and department_data:
         staff_df = pd.DataFrame(staff_data)
-        del staff_df['created_at']
-        del staff_df['last_updated']    
+        del staff_df["created_at"]
+        del staff_df["last_updated"]
 
         dep_df = pd.DataFrame(department_data)
-        del dep_df['created_at']
-        del dep_df['last_updated']    
-        
-        merged = staff_df.merge(dep_df, on='department_id', how='outer')
-        merged.set_index("staff_id", inplace=True)   
+        del dep_df["created_at"]
+        del dep_df["last_updated"]
 
-        del merged['manager']   
-        del merged['department_id'] 
-        
+        merged = staff_df.merge(dep_df, on="department_id", how="outer")
+        merged.set_index("staff_id", inplace=True)
+
+        del merged["manager"]
+        del merged["department_id"]
+
         print(merged.to_string())
 
-        df_reordered = merged[['first_name', 'last_name',
-                                'department_name', 'location', 'email_address']]
+        df_reordered = merged[
+            ["first_name", "last_name", "department_name", "location", "email_address"]
+        ]
 
         print(df_reordered.to_string())
 
@@ -126,15 +205,18 @@ def transform_staff(staff_data, department_data):
     else:
         return pd.DataFrame([])
 
+
 ##################################### make a date #######################################  # noqa
 
 
-def create_date_table(start='2025-01-01', end='2025-12-31'):
-    start_ts = pd.to_datetime(start).date() # turns string into datetime format
+def create_date_table(start="2025-01-01", end="2025-12-31"):
+    start_ts = pd.to_datetime(start).date()  # turns string into datetime format
     end_ts = pd.to_datetime(end).date()
 
     # Construct DIM Date Dataframe
-    df_date = pd.DataFrame({"date": pd.date_range(start=f'{start_ts}', end=f'{end_ts}', freq='D')})
+    df_date = pd.DataFrame(
+        {"date": pd.date_range(start=f"{start_ts}", end=f"{end_ts}", freq="D")}
+    )
 
     df_date["year"] = df_date.date.dt.year
     df_date["month"] = df_date.date.dt.month
@@ -142,9 +224,8 @@ def create_date_table(start='2025-01-01', end='2025-12-31'):
     df_date["day_of_week"] = df_date.date.dt.day_of_week + 1
     df_date["day_name"] = df_date.date.dt.day_name()
     df_date["month_name"] = df_date.date.dt.month_name()
-    df_date["quarter"] = df_date.date.dt.quarter    
+    df_date["quarter"] = df_date.date.dt.quarter
 
     df_date.set_index("date", inplace=True)
 
     return df_date
-
