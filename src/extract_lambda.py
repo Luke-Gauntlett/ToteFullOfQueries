@@ -75,6 +75,8 @@ def get_time(s3_client, bucketname='totes-extract-bucket-20250227154810549900000
 
 def write_data(last_extraction_time, this_extraction_time, s3_client, db ,bucketname='totes-extract-bucket-20250227154810549900000003'):
 
+    filepaths = []
+
     table_list = [
         "counterparty",
         "currency",
@@ -130,23 +132,33 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db ,bucket
 
         monthstr = f"{month}-{months[month]}"
 
+        filepath = f"data/by time/{year}/{monthstr}/{day}/{time}/{table}"
+
+        filepaths.append(filepath)
+
         s3_client.put_object(
             Bucket=bucketname,
-            Key=f"data/by time/{year}/{monthstr}/{day}/{time}/{table}",
+            Key=filepath,
             Body=json.dumps(formatted, indent=4, default=str),
-            ContentType="application/json",
+            ContentType="application/json"
         )
 
     logger.info("Successfully written to bucket!")
+    
+    #print(filepaths)
+    return filepaths
 
 
-# <<<<<<< write_to_s3_test
+      
 #         s3_client.put_object(
-#             Bucket=bucketname,
-#             Key=f"data/by table/{table}/{table} - {year}-{month}-{day}-{time}",
-#             Body=json.dumps(formatted, indent=4, default=str),
-#             ContentType="application/json",
+#            Bucket=bucketname,
+#            Key=f"data/by table/{table}/{table} - {year}-{month}-{day}-{time}",
+#            Body=json.dumps(formatted, indent=4, default=str),
+#            ContentType="application/json",
 #         )
 
-if 'name' == '__main__':
-    lambda_handler(1,2)
+
+if __name__ == "__main__":
+    event = {}
+    context = {}
+    lambda_handler(event, context)
