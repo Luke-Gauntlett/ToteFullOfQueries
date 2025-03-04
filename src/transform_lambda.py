@@ -1,7 +1,7 @@
 """ Function should take files from extract s3 bucket 
 transform/clean the data into a parquet file into s3 transform bucket"""
 
-#import boto3
+# import boto3
 # import json
 # from pprint import pprint
 # import pandas as pd
@@ -59,35 +59,26 @@ transform/clean the data into a parquet file into s3 transform bucket"""
 
 #     for file_path in file_paths:
         
-#         file = client.get_object(Bucket=bucketname, Key={file_path})
+#         file = client.get_object(Bucket=bucketname, Key=file_path)
 
-#         file_loaded = json.loads(file["Body"].read().decode("utf-8"))
 #         file_loaded = json.loads(file["Body"].read().decode("utf-8"))
 
 #         table_name = file_path.split("/")[-1]
-#         table_name = file_path.split("/")[-1]
 
-#         file_dict [table_name] = file_loaded
 #         file_dict [table_name] = file_loaded
 
 #     return file_dict
-#     return file_dict
+
+# print(read(["data/by time/2025/03-March/04/10:43:43.533092/address"], client, bucketname="totes-extract-bucket-20250227154810549900000003"))
 
 
 # ################################# write parquet file to the s3 bucket ############################################### # noqa
 
 
 # def write(transformed_data,client,filename,bucketname = "totes-transform-bucket-20250227154810549700000001"):   # noqa
-# def write(transformed_data,client,filename,bucketname = "totes-transform-bucket-20250227154810549700000001"):   # noqa
 
 #     parquet_data = transformed_data.to_parquet()
-#     parquet_data = transformed_data.to_parquet()
 
-#     client.put_object(
-#                 Bucket=bucketname,
-#                 Key=f"{filename}.parquet",
-#                 Body=parquet_data,
-#             )
 #     client.put_object(
 #                 Bucket=bucketname,
 #                 Key=f"{filename}.parquet",
@@ -98,20 +89,14 @@ transform/clean the data into a parquet file into s3 transform bucket"""
 
 
 # def transform_location(file_data):
-# def transform_location(file_data):
 
-#     df = pd.DataFrame(file_data)
 #     df = pd.DataFrame(file_data)
 
 #     del df['created_at']
 #     del df['last_updated']
-#     del df['created_at']
-#     del df['last_updated']
 
 #     df.set_index("location_id", inplace=True)
-#     df.set_index("location_id", inplace=True)
 
-#     df.rename(columns={'address_id': 'location_id'}, inplace=True)
 #     df.rename(columns={'address_id': 'location_id'}, inplace=True)
 
 #     return df

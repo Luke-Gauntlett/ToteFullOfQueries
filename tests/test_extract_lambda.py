@@ -298,6 +298,7 @@ def test_write_data_handles_missing_timestamps(mock_client, mock_db,aws_credenti
     assert file_content[0]["last_updated"] is None
 
 
+
 ##################################### log tests ################################################ noqa
 
 def test_get_time_logs_correct_text_for_extraction_time_error(caplog, aws_credentials):
