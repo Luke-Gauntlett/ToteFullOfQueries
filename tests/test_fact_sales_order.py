@@ -28,6 +28,7 @@ class TestTransformFactsSalesORder:
         result = transform_fact_sales_order(sales_order)
 
         assert result.empty
+        assert isinstance(result, pd.DataFrame)
 
     def test_columns_are_correct(self):
         expected_columns = [
