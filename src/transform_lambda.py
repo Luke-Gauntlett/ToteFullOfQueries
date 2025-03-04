@@ -3,11 +3,11 @@ transform/clean the data into a parquet file into s3 transform bucket"""
 
 import boto3
 import json
-from pprint import pprint
+#from pprint import pprint
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
-import pycountry
+# import pyarrow as pa
+# import pyarrow.parquet as pq
+# import pycountry
 
 def lambda_handler(event, context):
 
@@ -142,14 +142,10 @@ def create_date_table(start='2025-01-01', end='2025-12-31'):
     df_date["day_of_week"] = df_date.date.dt.day_of_week + 1
     df_date["day_name"] = df_date.date.dt.day_name()
     df_date["month_name"] = df_date.date.dt.month_name()
-    df_date["quarter"] = df_date.date.dt.quarter
-    
-    
+    df_date["quarter"] = df_date.date.dt.quarter    
 
     df_date.set_index("date", inplace=True)
 
-    #print(df_date.to_string())
 
     return df_date
 
-create_date_table()
