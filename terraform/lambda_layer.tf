@@ -5,6 +5,13 @@ data "archive_file" "extract_lambda" {
   output_path = "${path.module}/../packages/extract_lambda/function.zip"
 }
 
+#making the zip file for the extract lambda function
+data "archive_file" "extract_lambda" {
+  type        = "zip"
+  source_file = "${path.module}/../src/transform_lambda.py"
+  output_path = "${path.module}/../packages/transform_lambda/function.zip"
+}
+
 # making the zip file for lambda layer
 data "archive_file" "layer_code" {
   type        = "zip"
@@ -20,7 +27,7 @@ data "archive_file" "connection_resource" {
 
 # lambda zip code being put in the above bucket
 resource "aws_s3_object" "lambda_zip_code" {
-  for_each = toset([var.extract_lambda])
+  for_each = toset([var.extract_lambda,var.transform_lambda])
   # add var.transform_lambda, var.load_lambda above when ready
   # currently waiting for vars file to be completed
   bucket = aws_s3_bucket.code_bucket.bucket
