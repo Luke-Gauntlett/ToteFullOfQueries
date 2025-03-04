@@ -4,7 +4,6 @@ from src.transform_currency import (
     transform_currency,
     transform_counterparty,
 )
-from pprint import pprint
 import pandas as pd
 
 
