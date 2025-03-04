@@ -4,8 +4,8 @@ import logging
 import boto3
 import json
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
+# import pyarrow as pa
+# import pyarrow.parquet as pq
 import pycountry
 
 logger = logging.getLogger()
