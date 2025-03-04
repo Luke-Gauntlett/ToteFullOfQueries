@@ -142,15 +142,18 @@ resource "aws_iam_policy_attachment" "cloudwatch_attach_policy" {
 #   policy_arn = aws_iam_policy.postgres_policy.arn
 # }
 
-resource "aws_cloudwatch_log_group" "cw_log_group" {
-  name = "cw_log_group"
-}
+# might need seperate log groups etc for each lambda
 
+# resource "aws_cloudwatch_log_group" "extract_lambda_logs" {
+#   name = "/aws/lambda/${var.extract_lambda}"
+# }
+
+# aws_cloudwatch_log_group.extract_lambda_logs.name for log_group_name
 
 resource "aws_cloudwatch_log_metric_filter" "cw_metric_filter" {
   name           = "cw_metric_filter"
   pattern        = "?ERROR ?Failed ?Exception"
-  log_group_name = aws_cloudwatch_log_group.cw_log_group.name
+  log_group_name = "/aws/lambda/${var.extract_lambda}"
 
   metric_transformation {
     name      = "EventCount"
