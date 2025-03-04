@@ -1,7 +1,7 @@
 """ Function should take files from extract s3 bucket 
 transform/clean the data into a parquet file into s3 transform bucket"""
 
-import boto3
+#import boto3
 # import json
 # from pprint import pprint
 # import pandas as pd
