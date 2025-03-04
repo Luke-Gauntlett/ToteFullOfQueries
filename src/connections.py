@@ -44,6 +44,3 @@ def connect_to_database(secret_name = "project_database_credentials",region_name
     except Exception as e:
         print(f"Database connection failed: {e}")
         return None
-    
-
-connect_to_database()
