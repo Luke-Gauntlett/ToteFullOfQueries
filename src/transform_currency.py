@@ -12,10 +12,12 @@ def transform_design(design):
     try:
         df = pd.DataFrame(design)
         df.drop(columns=["created_at", "last_updated"], inplace=True)
+
         if df.empty:
             return df[
                 ["design_id", "design_name", "file_location", "file_name"]
             ].drop_duplicates()
+        
         for col in expected_columns:
             if col not in df.columns:
                 df[col] = None
@@ -111,6 +113,7 @@ def transform_counterparty(counterparty, address):
         ]
         .rename(
             columns={
+                "counterparty_id": "counterparty_id",
                 "address_line_1": "counterparty_legal_address_line_1",
                 "address_line_2": "counterparty_legal_address_line_2",
                 "district": "counterparty_legal_district",

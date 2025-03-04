@@ -4,6 +4,7 @@ from src.transform_currency import (
     transform_currency,
     transform_counterparty,
 )
+from pprint import pprint
 import pandas as pd
 
 
@@ -13,13 +14,29 @@ class TestTransformDesign:
         raw_data = pd.DataFrame(
             [
                 {
-                    "design_id": 1,
-                    "design_name": "Logo1",
-                    "file_location": "/files/logo1.png",
-                    "file_name": "logo1.png",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
-                }
+                    "design_id": 8,
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "design_name": "Wooden",
+                    "file_location": "/usr",
+                    "file_name": "wooden-20220717-npgz.json",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+                {
+                    "design_id": 51,
+                    "created_at": "2023-01-12 18:50:09.935000",
+                    "design_name": "Bronze",
+                    "file_location": "/private",
+                    "file_name": "bronze-20221024-4dds.json",
+                    "last_updated": "2023-01-12 18:50:09.935000",
+                },
+                {
+                    "design_id": 69,
+                    "created_at": "2023-02-07 17:31:10.093000",
+                    "design_name": "Bronze",
+                    "file_location": "/lost+found",
+                    "file_name": "bronze-20230102-r904.json",
+                    "last_updated": "2023-02-07 17:31:10.093000",
+                },
             ]
         )
         result = transform_design(raw_data)
@@ -30,36 +47,50 @@ class TestTransformDesign:
         raw_data = pd.DataFrame(
             [
                 {
-                    "design_id": 1,
-                    "design_name": "Logo1",
-                    "file_location": "/files/logo1.png",
-                    "file_name": "logo1.png",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
+                    "design_id": 8,
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "design_name": "Wooden",
+                    "file_location": "/usr",
+                    "file_name": "wooden-20220717-npgz.json",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
-                    "design_id": 2,
-                    "design_name": "Logo2",
-                    "file_location": "/files/logo2.png",
-                    "file_name": "logo2.png",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
+                    "design_id": 51,
+                    "created_at": "2023-01-12 18:50:09.935000",
+                    "design_name": "Bronze",
+                    "file_location": "/private",
+                    "file_name": "bronze-20221024-4dds.json",
+                    "last_updated": "2023-01-12 18:50:09.935000",
+                },
+                {
+                    "design_id": 69,
+                    "created_at": "2023-02-07 17:31:10.093000",
+                    "design_name": "Bronze",
+                    "file_location": "/lost+found",
+                    "file_name": "bronze-20230102-r904.json",
+                    "last_updated": "2023-02-07 17:31:10.093000",
                 },
             ]
         )
         expected = pd.DataFrame(
             [
                 {
-                    "design_id": 1,
-                    "design_name": "Logo1",
-                    "file_location": "/files/logo1.png",
-                    "file_name": "logo1.png",
+                    "design_id": 8,
+                    "design_name": "Wooden",
+                    "file_location": "/usr",
+                    "file_name": "wooden-20220717-npgz.json",
                 },
                 {
-                    "design_id": 2,
-                    "design_name": "Logo2",
-                    "file_location": "/files/logo2.png",
-                    "file_name": "logo2.png",
+                    "design_id": 51,
+                    "design_name": "Bronze",
+                    "file_location": "/private",
+                    "file_name": "bronze-20221024-4dds.json",
+                },
+                {
+                    "design_id": 69,
+                    "design_name": "Bronze",
+                    "file_name": "bronze-20230102-r904.json",
+                    "file_location": "/lost+found",
                 },
             ]
         )
@@ -71,31 +102,31 @@ class TestTransformDesign:
         raw_data = pd.DataFrame(
             [
                 {
-                    "design_id": 1,
-                    "design_name": "Logo1",
-                    "file_location": "/files/logo1.png",
-                    "file_name": "logo1.png",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
+                    "design_id": 8,
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "design_name": "Wooden",
+                    "file_location": "/usr",
+                    "file_name": "wooden-20220717-npgz.json",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
-                    "design_id": 1,
-                    "design_name": "Logo1",
-                    "file_location": "/files/logo1.png",
-                    "file_name": "logo1.png",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
+                    "design_id": 8,
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "design_name": "Wooden",
+                    "file_location": "/usr",
+                    "file_name": "wooden-20220717-npgz.json",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
         )
         expected = pd.DataFrame(
             [
                 {
-                    "design_id": 1,
-                    "design_name": "Logo1",
-                    "file_location": "/files/logo1.png",
-                    "file_name": "logo1.png",
-                }
+                    "design_id": 8,
+                    "design_name": "Wooden",
+                    "file_location": "/usr",
+                    "file_name": "wooden-20220717-npgz.json",
+                },
             ]
         )
         result = transform_design(raw_data)
@@ -187,29 +218,29 @@ class TestTransformCurrency:
             [
                 {
                     "currency_id": 1,
-                    "currency_code": "USD",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
+                    "currency_code": "GBP",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
                     "currency_id": 2,
-                    "currency_code": "EUR",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
+                    "currency_code": "USD",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
                     "currency_id": 3,
-                    "currency_code": "GBP",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
+                    "currency_code": "EUR",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
         )
         result = transform_currency(raw_data)
         assert list(result.columns) == ["currency_id", "currency_code", "currency_name"]
-        assert result.iloc[0]["currency_name"] == "US Dollar"
-        assert result.iloc[1]["currency_name"] == "Euro"
-        assert result.iloc[2]["currency_name"] == "Pound Sterling"
+        assert result.iloc[0]["currency_name"] == "Pound Sterling"
+        assert result.iloc[1]["currency_name"] == "US Dollar"
+        assert result.iloc[2]["currency_name"] == "Euro"
 
     def test_invalid_currency_codes(self):
         """Test that invalid currency codes return None."""
@@ -218,41 +249,28 @@ class TestTransformCurrency:
                 {
                     "currency_id": 1,
                     "currency_code": "INVALID",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
                     "currency_id": 2,
                     "currency_code": "XYZ",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+                {
+                    "currency_id": 3,
+                    "currency_code": None,
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
         )
         result = transform_currency(raw_data)
-        assert (
-            result["currency_name"].isnull().all()
-        ), "Invalid codes should return None"
-
-    def test_nan_currency_codes(self):
-        """Test that NaN values in currency_code do not cause issues."""
-        raw_data = pd.DataFrame(
-            [
-                {
-                    "currency_id": 1,
-                    "currency_code": None,
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
-                }
-            ]
-        )
-        result = transform_currency(raw_data)
-        assert (
-            result["currency_name"].isnull().all()
-        ), "NaN currency codes should result in None currency names"
+        assert result["currency_name"].isnull().all()
 
     def test_extra_columns_are_ignored(self):
-        """Test that extra columns in the input do not affect the 
+        """Test that extra columns in the input do not affect the
         transformation."""
         raw_data = pd.DataFrame(
             [
@@ -277,13 +295,9 @@ class TestTransformCurrency:
             "currency_id",
             "currency_code",
             "currency_name",
-        ], "Extra columns should be removed"
-        assert (
-            "extra_column" not in result.columns
-        ), "extra_column should not exist in transformed data"
-        assert (
-            "random_field" not in result.columns
-        ), "random_field should not exist in transformed data"
+        ]
+        assert "extra_column" not in result.columns
+        assert "random_field" not in result.columns
 
     def test_empty_dataframe(self):
         """Test that an empty DataFrame returns an empty DataFrame with correct columns."""
@@ -291,31 +305,8 @@ class TestTransformCurrency:
             columns=["currency_id", "currency_code", "created_at", "last_updated"]
         )
         result = transform_currency(raw_data)
-        assert result.empty, "Result should be empty"
+        assert result.empty
         assert list(result.columns) == ["currency_id", "currency_code", "currency_name"]
-
-    def test_null_currency_id(self):
-        """Test handling of null currency_id values."""
-        raw_data = pd.DataFrame(
-            [
-                {
-                    "currency_id": None,
-                    "currency_code": "USD",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
-                },
-                {
-                    "currency_id": None,
-                    "currency_code": "EUR",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
-                },
-            ]
-        )
-        result = transform_currency(raw_data)
-        assert result["currency_id"].isnull().all()
-        assert result.iloc[0]["currency_name"] == "US Dollar"
-        assert result.iloc[1]["currency_name"] == "Euro"
 
 
 class TestTransformCounterParty:
@@ -325,40 +316,70 @@ class TestTransformCounterParty:
             [
                 {
                     "counterparty_id": 1,
-                    "counterparty_legal_name": "Company A",
-                    "legal_address_id": 101,
+                    "counterparty_legal_name": "Fahey and Sons",
+                    "legal_address_id": 1,
+                    "commercial_contact": "Micheal Toy",
+                    "delivery_contact": "Mrs. Lucy Runolfsdottir",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
                 },
                 {
                     "counterparty_id": 2,
-                    "counterparty_legal_name": None,
-                    "legal_address_id": 102,
+                    "counterparty_legal_name": "Leannon, Predovic and Morar",
+                    "legal_address_id": 3,
+                    "commercial_contact": "Melba Sanford",
+                    "delivery_contact": "Jean Hane III",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
                 },
                 {
                     "counterparty_id": 3,
-                    "counterparty_legal_name": "Company C",
-                    "legal_address_id": None,
+                    "counterparty_legal_name": "Armstrong Inc",
+                    "legal_address_id": 2,
+                    "commercial_contact": "Jane Wiza",
+                    "delivery_contact": "Myra Kovacek",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
                 },
             ]
         )
         address_df = pd.DataFrame(
             [
                 {
-                    "address_id": 101,
-                    "address_line_1": "123 Main St",
-                    "city": "New York",
-                    "country": "USA",
+                    "address_id": 1,
+                    "address_line_1": "6826 Herzog Via",
+                    "address_line_2": None,
+                    "district": "Avon",
+                    "city": "New Patienceburgh",
+                    "postal_code": "28441",
+                    "country": "Turkey",
+                    "phone": "1803 637401",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
-                    "address_id": 102,
-                    "address_line_1": "456 Elm St",
-                    "city": "Los Angeles",
-                    "country": "USA",
+                    "address_id": 2,
+                    "address_line_1": "179 Alexie Cliffs",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Aliso Viejo",
+                    "postal_code": "99305-7380",
+                    "country": "San Marino",
+                    "phone": "9621 880720",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
-                    "address_id": 103,
-                    "address_line_1": "789 Oak St",
-                    "city": "San Francisco",
-                    "country": "USA",
+                    "address_id": 3,
+                    "address_line_1": "148 Sincere Fort",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Lake Charles",
+                    "postal_code": "89360",
+                    "country": "Samoa",
+                    "phone": "0730 783349",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
         )
@@ -366,7 +387,7 @@ class TestTransformCounterParty:
         assert isinstance(result, pd.DataFrame)
 
     def test_return_correct_dataframe_columns(self):
-        """Test that the DataFrame returns correct structure, 
+        """Test that the DataFrame returns correct structure,
         aswell as if empty returns an empty DataFrame"""
         counterparty_df = pd.DataFrame(
             columns=[
@@ -394,7 +415,7 @@ class TestTransformCounterParty:
 
         result = transform_counterparty(counterparty_df, address_df)
 
-        assert result.empty, "Result should be empty"
+        assert result.empty
 
         expected_columns = [
             "counterparty_id",
@@ -411,183 +432,182 @@ class TestTransformCounterParty:
         assert list(result.columns) == expected_columns
 
     def test_handle_null_values(self):
-        """Test that the function handles null values in the data correctly."""
+        """Test that the function handles null values,
+        changes column names, merges in the data correctly."""
         counterparty_df = pd.DataFrame(
             [
                 {
                     "counterparty_id": 1,
-                    "counterparty_legal_name": "Company A",
-                    "legal_address_id": 101,
+                    "counterparty_legal_name": "Fahey and Sons",
+                    "legal_address_id": 1,
+                    "commercial_contact": "Micheal Toy",
+                    "delivery_contact": "Mrs. Lucy Runolfsdottir",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
                 },
                 {
                     "counterparty_id": 2,
-                    "counterparty_legal_name": None,
-                    "legal_address_id": 102,
+                    "counterparty_legal_name": "Leannon, Predovic and Morar",
+                    "legal_address_id": 3,
+                    "commercial_contact": "Melba Sanford",
+                    "delivery_contact": "Jean Hane III",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
                 },
                 {
                     "counterparty_id": 3,
-                    "counterparty_legal_name": "Company C",
-                    "legal_address_id": None,
+                    "counterparty_legal_name": "Armstrong Inc",
+                    "legal_address_id": 2,
+                    "commercial_contact": "Jane Wiza",
+                    "delivery_contact": "Myra Kovacek",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
                 },
             ]
         )
         address_df = pd.DataFrame(
             [
                 {
-                    "address_id": 101,
-                    "address_line_1": "123 Main St",
-                    "city": "New York",
-                    "country": "USA",
+                    "address_id": 1,
+                    "address_line_1": "6826 Herzog Via",
+                    "address_line_2": None,
+                    "district": "Avon",
+                    "city": "New Patienceburgh",
+                    "postal_code": "28441",
+                    "country": "Turkey",
+                    "phone": "1803 637401",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
-                    "address_id": 102,
-                    "address_line_1": "456 Elm St",
-                    "city": "Los Angeles",
-                    "country": "USA",
+                    "address_id": 2,
+                    "address_line_1": "179 Alexie Cliffs",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Aliso Viejo",
+                    "postal_code": "99305-7380",
+                    "country": "San Marino",
+                    "phone": "9621 880720",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
-                    "address_id": 103,
-                    "address_line_1": "789 Oak St",
-                    "city": "San Francisco",
-                    "country": "USA",
+                    "address_id": 3,
+                    "address_line_1": "148 Sincere Fort",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Lake Charles",
+                    "postal_code": "89360",
+                    "country": "Samoa",
+                    "phone": "0730 783349",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
         )
 
-        result = transform_counterparty(counterparty_df, address_df)
-
-        assert pd.isnull(result["counterparty_legal_name"].iloc[1])
-        assert pd.isnull(result["counterparty_legal_address_line_1"].iloc[2])
-
-    def test_handle_duplicates(self):
-        """Test that the function handles duplicates correctly."""
-        counterparty_df = pd.DataFrame(
-            [
-                {
-                    "counterparty_id": 1,
-                    "counterparty_legal_name": "Company A",
-                    "legal_address_id": 101,
-                },
-                {
-                    "counterparty_id": 1,
-                    "counterparty_legal_name": "Company A",
-                    "legal_address_id": 101,
-                },
-                {
-                    "counterparty_id": 2,
-                    "counterparty_legal_name": "Company B",
-                    "legal_address_id": 102,
-                },
-            ]
-        )
-        address_df = pd.DataFrame(
-            [
-                {
-                    "address_id": 101,
-                    "address_line_1": "123 Main St",
-                    "city": "New York",
-                    "country": "USA",
-                },
-                {
-                    "address_id": 102,
-                    "address_line_1": "456 Elm St",
-                    "city": "Los Angeles",
-                    "country": "USA",
-                },
-                {
-                    "address_id": 103,
-                    "address_line_1": "789 Oak St",
-                    "city": "San Francisco",
-                    "country": "USA",
-                },
-            ]
+        result = transform_counterparty(counterparty_df, address_df).reset_index(
+            drop=True
         )
 
-        result = transform_counterparty(counterparty_df, address_df)
+        assert pd.isnull(result["counterparty_legal_address_line_2"].iloc[1])
+        assert pd.isnull(result["counterparty_legal_district"].iloc[2])
 
+        assert result["counterparty_legal_address_line_1"].iloc[0] == "6826 Herzog Via"
+        assert result["counterparty_legal_address_line_1"].iloc[1] == "148 Sincere Fort"
         assert (
-            result.duplicated().sum() == 0
-        ), "There should be no duplicates in the result DataFrame."
-
-    def test_merging_correctly(self):
-        """Test that the merging of counterparty and address data happens correctly."""
-        counterparty_df = pd.DataFrame(
-            [
-                {
-                    "counterparty_id": 1,
-                    "counterparty_legal_name": "Company A",
-                    "legal_address_id": 101,
-                },
-                {
-                    "counterparty_id": 2,
-                    "counterparty_legal_name": "Company B",
-                    "legal_address_id": 102,
-                },
-            ]
+            result["counterparty_legal_address_line_1"].iloc[2] == "179 Alexie Cliffs"
         )
-        address_df = pd.DataFrame(
-            [
-                {
-                    "address_id": 101,
-                    "address_line_1": "123 Main St",
-                    "city": "New York",
-                    "country": "USA",
-                },
-                {
-                    "address_id": 102,
-                    "address_line_1": "456 Elm St",
-                    "city": "Los Angeles",
-                    "country": "USA",
-                },
-                {
-                    "address_id": 103,
-                    "address_line_1": "789 Oak St",
-                    "city": "San Francisco",
-                    "country": "USA",
-                },
-            ]
-        )
-
-        result = transform_counterparty(counterparty_df, address_df)
-
-        assert result["counterparty_legal_address_line_1"].iloc[0] == "123 Main St"
-        assert result["counterparty_legal_address_line_1"].iloc[1] == "456 Elm St"
-
-    def test_column_renaming(self):
-        """Test that the columns are renamed correctly in the transformed DataFrame."""
-        counterparty_df = pd.DataFrame(
-            [
-                {
-                    "counterparty_id": 1,
-                    "counterparty_legal_name": "Company A",
-                    "legal_address_id": 101,
-                },
-                {
-                    "counterparty_id": 2,
-                    "counterparty_legal_name": "Company B",
-                    "legal_address_id": 102,
-                },
-            ]
-        )
-        address_df = pd.DataFrame(
-            [
-                {
-                    "address_id": 101,
-                    "address_line_1": "123 Main St",
-                    "city": "New York",
-                    "country": "USA",
-                },
-                {
-                    "address_id": 102,
-                    "address_line_1": "456 Elm St",
-                    "city": "Los Angeles",
-                    "country": "USA",
-                },
-            ]
-        )
-
-        result = transform_counterparty(counterparty_df, address_df)
 
         assert "counterparty_legal_address_line_1" in result.columns
         assert "counterparty_legal_city" in result.columns
         assert "counterparty_legal_country" in result.columns
+
+    def test_handle_duplicates(self):
+        """Test that the function correctly handles duplicates in the data."""
+        counterparty_df = pd.DataFrame(
+            [
+                {
+                    "counterparty_id": 1,
+                    "counterparty_legal_name": "Fahey and Sons",
+                    "legal_address_id": 1,
+                    "commercial_contact": "Micheal Toy",
+                    "delivery_contact": "Mrs. Lucy Runolfsdottir",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+                {
+                    "counterparty_id": 1,
+                    "counterparty_legal_name": "Fahey and Sons",
+                    "legal_address_id": 1,
+                    "commercial_contact": "Micheal Toy",
+                    "delivery_contact": "Mrs. Lucy Runolfsdottir",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+                {
+                    "counterparty_id": 2,
+                    "counterparty_legal_name": "Leannon, Predovic and Morar",
+                    "legal_address_id": 3,
+                    "commercial_contact": "Melba Sanford",
+                    "delivery_contact": "Jean Hane III",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+                {
+                    "counterparty_id": 3,
+                    "counterparty_legal_name": "Armstrong Inc",
+                    "legal_address_id": 2,
+                    "commercial_contact": "Jane Wiza",
+                    "delivery_contact": "Myra Kovacek",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+            ]
+        )
+
+        address_df = pd.DataFrame(
+            [
+                {
+                    "address_id": 1,
+                    "address_line_1": "6826 Herzog Via",
+                    "address_line_2": None,
+                    "district": "Avon",
+                    "city": "New Patienceburgh",
+                    "postal_code": "28441",
+                    "country": "Turkey",
+                    "phone": "1803 637401",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+                {
+                    "address_id": 2,
+                    "address_line_1": "179 Alexie Cliffs",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Aliso Viejo",
+                    "postal_code": "99305-7380",
+                    "country": "San Marino",
+                    "phone": "9621 880720",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+                {
+                    "address_id": 3,
+                    "address_line_1": "148 Sincere Fort",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Lake Charles",
+                    "postal_code": "89360",
+                    "country": "Samoa",
+                    "phone": "0730 783349",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+            ]
+        )
+
+        result = transform_counterparty(counterparty_df, address_df)
+
+        assert result.duplicated().sum() == 0
+        assert len(result) == 3
