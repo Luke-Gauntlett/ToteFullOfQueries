@@ -8,23 +8,12 @@ logger.setLevel(logging.INFO)
 
 def transform_design(design):
     """Returns DataFrame for transforming design table."""
-    expected_columns = {"design_id", "design_name", "file_location", "file_name"}
     try:
         df = pd.DataFrame(design)
         df.drop(columns=["created_at", "last_updated"], inplace=True)
+        df.set_index("design_id", inplace=True)
 
-        if df.empty:
-            return df[
-                ["design_id", "design_name", "file_location", "file_name"]
-            ].drop_duplicates()
-        
-        for col in expected_columns:
-            if col not in df.columns:
-                df[col] = None
-
-        return df[
-            ["design_id", "design_name", "file_location", "file_name"]
-        ].drop_duplicates()
+        return df[["design_name", "file_location", "file_name"]].drop_duplicates()
 
     except KeyError as e:
         logger.error("Error! Issues transforming data due to invalid column headers.")
@@ -35,7 +24,10 @@ def get_currency_name(currency_code: str):
     """Returns the full currency name given a currency code."""
     try:
         currency = pycountry.currencies.get(alpha_3=currency_code.upper())
-        return currency.name if currency else None
+        if currency:
+            return currency.name
+        else:
+            return None
     except AttributeError:
         return None
 
@@ -49,12 +41,10 @@ def transform_currency(currency):
     else:
         df["currency_name"] = None
 
-    if df.empty:
-        df[["currency_id", "currency_code", "currency_name"]].drop_duplicates()
-
     df.drop(columns=["created_at", "last_updated"], inplace=True)
+    df.set_index("currency_id", inplace=True)
 
-    return df[["currency_id", "currency_code", "currency_name"]].drop_duplicates()
+    return df[["currency_code", "currency_name"]].drop_duplicates()
 
 
 def transform_counterparty(counterparty, address):
@@ -125,4 +115,6 @@ def transform_counterparty(counterparty, address):
         )
         .drop_duplicates()
     )
+    transformed_df.set_index("counterparty_id", inplace=True)
+    
     return transformed_df

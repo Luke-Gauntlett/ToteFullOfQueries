@@ -12,8 +12,7 @@ class TestTransformDesign:
         """Test returns a dataframe structure."""
         raw_data = pd.DataFrame(
             [
-                {
-                    "design_id": 8,
+                {   "design_id": 1,
                     "created_at": "2022-11-03 14:20:49.962000",
                     "design_name": "Wooden",
                     "file_location": "/usr",
@@ -21,15 +20,14 @@ class TestTransformDesign:
                     "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
-                    "design_id": 51,
+                    "design_id": 2,
                     "created_at": "2023-01-12 18:50:09.935000",
                     "design_name": "Bronze",
                     "file_location": "/private",
                     "file_name": "bronze-20221024-4dds.json",
                     "last_updated": "2023-01-12 18:50:09.935000",
                 },
-                {
-                    "design_id": 69,
+                {   "design_id": 3,
                     "created_at": "2023-02-07 17:31:10.093000",
                     "design_name": "Bronze",
                     "file_location": "/lost+found",
@@ -46,7 +44,7 @@ class TestTransformDesign:
         raw_data = pd.DataFrame(
             [
                 {
-                    "design_id": 8,
+                    "design_id": 10,
                     "created_at": "2022-11-03 14:20:49.962000",
                     "design_name": "Wooden",
                     "file_location": "/usr",
@@ -54,7 +52,7 @@ class TestTransformDesign:
                     "last_updated": "2022-11-03 14:20:49.962000",
                 },
                 {
-                    "design_id": 51,
+                    "design_id": 20,
                     "created_at": "2023-01-12 18:50:09.935000",
                     "design_name": "Bronze",
                     "file_location": "/private",
@@ -62,7 +60,7 @@ class TestTransformDesign:
                     "last_updated": "2023-01-12 18:50:09.935000",
                 },
                 {
-                    "design_id": 69,
+                    "design_id": 30,
                     "created_at": "2023-02-07 17:31:10.093000",
                     "design_name": "Bronze",
                     "file_location": "/lost+found",
@@ -72,27 +70,28 @@ class TestTransformDesign:
             ]
         )
         expected = pd.DataFrame(
-            [
-                {
-                    "design_id": 8,
-                    "design_name": "Wooden",
-                    "file_location": "/usr",
-                    "file_name": "wooden-20220717-npgz.json",
-                },
-                {
-                    "design_id": 51,
-                    "design_name": "Bronze",
-                    "file_location": "/private",
-                    "file_name": "bronze-20221024-4dds.json",
-                },
-                {
-                    "design_id": 69,
-                    "design_name": "Bronze",
-                    "file_name": "bronze-20230102-r904.json",
-                    "file_location": "/lost+found",
-                },
-            ]
-        )
+        [
+            {   
+                "design_id": 10,
+                "design_name": "Wooden",
+                "file_location": "/usr",
+                "file_name": "wooden-20220717-npgz.json",
+            },
+            {   
+                "design_id": 20,
+                "design_name": "Bronze",
+                "file_location": "/private",
+                "file_name": "bronze-20221024-4dds.json",
+            },
+            {  
+                "design_id": 30,
+                "file_location": "/lost+found",
+                "design_name": "Bronze",
+                "file_name": "bronze-20230102-r904.json",
+            },
+        ]
+    ).set_index("design_id")
+        
         result = transform_design(raw_data)
         pd.testing.assert_frame_equal(result, expected)
 
@@ -127,7 +126,7 @@ class TestTransformDesign:
                     "file_name": "wooden-20220717-npgz.json",
                 },
             ]
-        )
+        ).set_index("design_id") 
         result = transform_design(raw_data)
         pd.testing.assert_frame_equal(result, expected)
 
@@ -170,27 +169,13 @@ class TestTransformDesign:
                     "file_name": "logo1.png",
                 }
             ]
-        )
+        ).set_index("design_id") 
+
         result = transform_design(raw_data)
         pd.testing.assert_frame_equal(result, expected)
 
 
 class TestGetCurrency:
-    def test_returns_a_dataframe(self):
-        """Test returns a dataframe structure."""
-        raw_data = pd.DataFrame(
-            [
-                {
-                    "currency_id": 1,
-                    "currency_code": "EUR",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
-                }
-            ]
-        )
-        result = transform_design(raw_data)
-        assert isinstance(result, pd.DataFrame)
-
     def test_valid_currency_codes(self):
         """Test that valid currency codes return correct currency names."""
         assert get_currency_name("USD") == "US Dollar"
@@ -213,30 +198,28 @@ class TestGetCurrency:
 class TestTransformCurrency:
     def test_basic_transformation(self):
         """Test basic transformation with valid data."""
-        raw_data = pd.DataFrame(
-            [
-                {
-                    "currency_id": 1,
-                    "currency_code": "GBP",
-                    "created_at": "2022-11-03 14:20:49.962000",
-                    "last_updated": "2022-11-03 14:20:49.962000",
-                },
-                {
-                    "currency_id": 2,
-                    "currency_code": "USD",
-                    "created_at": "2022-11-03 14:20:49.962000",
-                    "last_updated": "2022-11-03 14:20:49.962000",
-                },
-                {
-                    "currency_id": 3,
-                    "currency_code": "EUR",
-                    "created_at": "2022-11-03 14:20:49.962000",
-                    "last_updated": "2022-11-03 14:20:49.962000",
-                },
-            ]
-        )
+        raw_data = [
+            {
+                "currency_id": 1,
+                "currency_code": "GBP",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+            {
+                "currency_id": 2,
+                "currency_code": "USD",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+            {
+                "currency_id": 3,
+                "currency_code": "EUR",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+        ]
         result = transform_currency(raw_data)
-        assert list(result.columns) == ["currency_id", "currency_code", "currency_name"]
+        assert list(result.columns) == ["currency_code", "currency_name"]
         assert result.iloc[0]["currency_name"] == "Pound Sterling"
         assert result.iloc[1]["currency_name"] == "US Dollar"
         assert result.iloc[2]["currency_name"] == "Euro"
@@ -291,7 +274,6 @@ class TestTransformCurrency:
         )
         result = transform_currency(raw_data)
         assert list(result.columns) == [
-            "currency_id",
             "currency_code",
             "currency_name",
         ]
@@ -305,7 +287,7 @@ class TestTransformCurrency:
         )
         result = transform_currency(raw_data)
         assert result.empty
-        assert list(result.columns) == ["currency_id", "currency_code", "currency_name"]
+        assert list(result.columns) == ["currency_code", "currency_name"]
 
 
 class TestTransformCounterParty:
@@ -417,7 +399,6 @@ class TestTransformCounterParty:
         assert result.empty
 
         expected_columns = [
-            "counterparty_id",
             "counterparty_legal_name",
             "counterparty_legal_address_line_1",
             "counterparty_legal_address_line_2",
