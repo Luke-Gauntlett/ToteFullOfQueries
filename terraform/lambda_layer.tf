@@ -6,7 +6,7 @@ data "archive_file" "extract_lambda" {
 }
 
 #making the zip file for the extract lambda function
-data "archive_file" "extract_lambda" {
+data "archive_file" "transform_lambda" {
   type        = "zip"
   source_file = "${path.module}/../src/transform_lambda.py"
   output_path = "${path.module}/../packages/transform_lambda/function.zip"
