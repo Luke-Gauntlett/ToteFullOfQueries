@@ -4,7 +4,6 @@ from src.transform_currency import (
     transform_currency,
     transform_counterparty,
 )
-import pytest
 import pandas as pd
 
 
@@ -366,7 +365,8 @@ class TestTransformCounterParty:
         assert isinstance(result, pd.DataFrame)
 
     def test_return_correct_dataframe_columns(self):
-        """Test that the DataFrame returns correct structure, aswell as if empty returns an empty DataFrame"""
+        """Test that the DataFrame returns correct structure, 
+        aswell as if empty returns an empty DataFrame"""
         counterparty_df = pd.DataFrame(
             columns=[
                 "counterparty_id",
