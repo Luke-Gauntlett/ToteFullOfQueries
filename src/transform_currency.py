@@ -1,6 +1,3 @@
-from src.transform_lambda import write, read
-import pandas as pd
-import boto3
 import logging
 import pandas as pd
 import pycountry
