@@ -6,6 +6,7 @@ class TestTransformFactsSalesORder:
     """Test suite for transform_fact_sales_order function"""
 
     def test_empty_dataframe(self):
+        """Tests an empty dataframe is returned when no data is provided."""
         sales_order = pd.DataFrame(
             columns=[
                 "sales_order_id",
@@ -27,10 +28,11 @@ class TestTransformFactsSalesORder:
 
         result = transform_fact_sales_order(sales_order)
 
-        assert result.empty
         assert isinstance(result, pd.DataFrame)
+        assert result.empty
 
     def test_columns_are_correct(self):
+        """Test to assert dataframe is populated with correct columns"""
         expected_columns = [
             "sales_order_id",
             "created_date",
@@ -70,7 +72,8 @@ class TestTransformFactsSalesORder:
         assert list(result.columns) == expected_columns
 
     def test_single_data_set_is_transformed(self):
-
+        """Test single row of data correctly transforms,
+        including checking for correct parsing of date and time columns"""
         sales_order_df = pd.DataFrame(
             [
                 {
@@ -101,6 +104,7 @@ class TestTransformFactsSalesORder:
         )
 
     def test_missing_columns(self):
+        """Test missingle columns are handled appropiately"""
 
         sales_order_df = pd.DataFrame(
             [
@@ -121,6 +125,7 @@ class TestTransformFactsSalesORder:
         assert result.isnull().sum().sum() > 0
 
     def test_multiple_sales_orders(self):
+        """Test multiple rows of data is correctly transformed"""
 
         sales_order_df = pd.DataFrame(
             [
@@ -161,7 +166,7 @@ class TestTransformFactsSalesORder:
         assert set(result["sales_order_id"]) == {1, 2}
 
     def test_partial_null_values(self):
-
+        """Test Null values are handled appropiately"""
         sales_order_df = pd.DataFrame(
             [
                 {
@@ -190,7 +195,7 @@ class TestTransformFactsSalesORder:
         assert result.iloc[0]["units_sold"] == 10
 
     def test_missing_columns_filled(self):
-
+        """Test missing columns in raw data are handled appropiately"""
         sales_order_df = pd.DataFrame(
             [
                 {
@@ -210,7 +215,7 @@ class TestTransformFactsSalesORder:
         assert result.isnull().sum().sum() > 0
 
     def test_duplicates_removal(self):
-
+        """Test to check duplicates are successfully removed"""
         sales_order_df = pd.DataFrame(
             [
                 {
