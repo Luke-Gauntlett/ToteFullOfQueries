@@ -252,7 +252,8 @@ class TestTransformCurrency:
         ), "NaN currency codes should result in None currency names"
 
     def test_extra_columns_are_ignored(self):
-        """Test that extra columns in the input do not affect the transformation."""
+        """Test that extra columns in the input do not affect the 
+        transformation."""
         raw_data = pd.DataFrame(
             [
                 {
