@@ -126,7 +126,7 @@ def transform_staff(staff_data, department_data):
     else:
         return pd.DataFrame([])
 
-##################################### make a date ###################################
+##################################### make a date #######################################  # noqa
 
 
 def create_date_table(start='2025-01-01', end='2025-12-31'):
@@ -145,7 +145,6 @@ def create_date_table(start='2025-01-01', end='2025-12-31'):
     df_date["quarter"] = df_date.date.dt.quarter    
 
     df_date.set_index("date", inplace=True)
-
 
     return df_date
 
