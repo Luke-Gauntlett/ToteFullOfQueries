@@ -44,7 +44,7 @@ location_data = [
         "last_updated": "2022-11-03 14:20:49.962000"
     }]
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="function", autouse=True)
 def aws_credentials():
     """Mocked AWS Credentials for moto"""
     os.environ["AWS_ACCESS_KEY_ID"] = "test"
