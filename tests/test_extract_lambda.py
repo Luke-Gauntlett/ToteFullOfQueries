@@ -307,7 +307,7 @@ def test_correct_filepaths(mock_client, mock_db, aws_credentials):
 
     result = write_data(last_extraction_time, this_extraction_time, mock_client, mock_db, bucketname="testbucket123abc456def") # noqa
 
-    expected = ["data/by time/2222/02-February/02/14:22:22/counterparty",
+    expected ={"filepaths":["data/by time/2222/02-February/02/14:22:22/counterparty",
                 "data/by time/2222/02-February/02/14:22:22/currency",
                 "data/by time/2222/02-February/02/14:22:22/department",
                 "data/by time/2222/02-February/02/14:22:22/design",
@@ -317,7 +317,7 @@ def test_correct_filepaths(mock_client, mock_db, aws_credentials):
                 "data/by time/2222/02-February/02/14:22:22/payment",
                 "data/by time/2222/02-February/02/14:22:22/purchase_order",
                 "data/by time/2222/02-February/02/14:22:22/payment_type",
-                "data/by time/2222/02-February/02/14:22:22/transaction"]
+                "data/by time/2222/02-February/02/14:22:22/transaction"]}
     
     assert result == expected
     
