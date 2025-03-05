@@ -1,175 +1,190 @@
-from src.transform_lambda import (transform_staff, 
-                                  transform_location, 
-                                  create_date_table, transform_design,
-                                  get_currency_name,transform_currency, 
-                                  transform_counterparty, 
-                                  transform_fact_sales_order )
+from src.transform_lambda import (
+    transform_staff,
+    transform_location,
+    transform_design,
+    get_currency_name,
+    transform_currency,
+    transform_counterparty,
+    transform_fact_sales_order,
+)
 import pandas as pd
+
 
 def test_transform_staff():
     sample_staff = [
-    {
-        "staff_id": 1,
-        "first_name": "Jeremie",
-        "last_name": "Franey",
-        "department_id": 1,
-        "email_address": "jeremie.franey@terrifictotes.com",
-        "created_at": "2022-11-03 14:20:51.563000",
-        "last_updated": "2022-11-03 14:20:51.563000"
-    },
-    {
-        "staff_id": 2,
-        "first_name": "Deron",
-        "last_name": "Beier",
-        "department_id": 2,
-        "email_address": "deron.beier@terrifictotes.com",
-        "created_at": "2022-11-03 14:20:51.563000",
-        "last_updated": "2022-11-03 14:20:51.563000"
-    },
-    {
-        "staff_id": 3,
-        "first_name": "Jeanette",
-        "last_name": "Erdman",
-        "department_id": 3,
-        "email_address": "jeanette.erdman@terrifictotes.com",
-        "created_at": "2022-11-03 14:20:51.563000",
-        "last_updated": "2022-11-03 14:20:51.563000"
-    }]
+        {
+            "staff_id": 1,
+            "first_name": "Jeremie",
+            "last_name": "Franey",
+            "department_id": 1,
+            "email_address": "jeremie.franey@terrifictotes.com",
+            "created_at": "2022-11-03 14:20:51.563000",
+            "last_updated": "2022-11-03 14:20:51.563000",
+        },
+        {
+            "staff_id": 2,
+            "first_name": "Deron",
+            "last_name": "Beier",
+            "department_id": 2,
+            "email_address": "deron.beier@terrifictotes.com",
+            "created_at": "2022-11-03 14:20:51.563000",
+            "last_updated": "2022-11-03 14:20:51.563000",
+        },
+        {
+            "staff_id": 3,
+            "first_name": "Jeanette",
+            "last_name": "Erdman",
+            "department_id": 3,
+            "email_address": "jeanette.erdman@terrifictotes.com",
+            "created_at": "2022-11-03 14:20:51.563000",
+            "last_updated": "2022-11-03 14:20:51.563000",
+        },
+    ]
 
     sample_department = [
-    {
-        "department_id": 1,
-        "department_name": "Sales",
-        "location": "Manchester",
-        "manager": "Richard Roma",
-        "created_at": "2022-11-03 14:20:49.962000",
-        "last_updated": "2022-11-03 14:20:49.962000"
-    },
-    {
-        "department_id": 2,
-        "department_name": "Purchasing",
-        "location": "Manchester",
-        "manager": "Naomi Lapaglia",
-        "created_at": "2022-11-03 14:20:49.962000",
-        "last_updated": "2022-11-03 14:20:49.962000"
-    },
-    {
-        "department_id": 3,
-        "department_name": "Production",
-        "location": "Leeds",
-        "manager": "Chester Ming",
-        "created_at": "2022-11-03 14:20:49.962000",
-        "last_updated": "2022-11-03 14:20:49.962000"
-    }]
+        {
+            "department_id": 1,
+            "department_name": "Sales",
+            "location": "Manchester",
+            "manager": "Richard Roma",
+            "created_at": "2022-11-03 14:20:49.962000",
+            "last_updated": "2022-11-03 14:20:49.962000",
+        },
+        {
+            "department_id": 2,
+            "department_name": "Purchasing",
+            "location": "Manchester",
+            "manager": "Naomi Lapaglia",
+            "created_at": "2022-11-03 14:20:49.962000",
+            "last_updated": "2022-11-03 14:20:49.962000",
+        },
+        {
+            "department_id": 3,
+            "department_name": "Production",
+            "location": "Leeds",
+            "manager": "Chester Ming",
+            "created_at": "2022-11-03 14:20:49.962000",
+            "last_updated": "2022-11-03 14:20:49.962000",
+        },
+    ]
 
     result = transform_staff(sample_staff, sample_department)
 
-   
-    expected_df_first_entry = pd.DataFrame([{"staff_id": 1,
-            "first_name": "Jeremie",
-            "last_name": "Franey",
-            "department_name": "Sales",
-            "location" : "Manchester",
-            "email_address": "jeremie.franey@terrifictotes.com"},
+    expected_df_first_entry = pd.DataFrame(
+        [
+            {
+                "staff_id": 1,
+                "first_name": "Jeremie",
+                "last_name": "Franey",
+                "department_name": "Sales",
+                "location": "Manchester",
+                "email_address": "jeremie.franey@terrifictotes.com",
+            },
+            {
+                "staff_id": 2,
+                "first_name": "Deron",
+                "last_name": "Beier",
+                "department_name": "Purchasing",
+                "location": "Manchester",
+                "email_address": "deron.beier@terrifictotes.com",
+            },
+            {
+                "staff_id": 3,
+                "first_name": "Jeanette",
+                "last_name": "Erdman",
+                "department_name": "Production",
+                "location": "Leeds",
+                "email_address": "jeanette.erdman@terrifictotes.com",
+            },
+        ]
+    )
 
-            {"staff_id": 2,
-            "first_name": "Deron",
-            "last_name": "Beier",
-            "department_name": "Purchasing",
-            "location" : "Manchester",
-            "email_address": "deron.beier@terrifictotes.com"},
-
-            {"staff_id": 3,
-            "first_name": "Jeanette",
-            "last_name": "Erdman",
-            "department_name": "Production",
-            "location" : "Leeds",
-            "email_address": "jeanette.erdman@terrifictotes.com"}])   
-    
     expected_df_first_entry.set_index("staff_id", inplace=True)
-    
+
     # print(expected_df_first_entry.to_string())
-    # print(result.to_string()) 
-    
+    # print(result.to_string())
+
     pd.testing.assert_frame_equal(expected_df_first_entry, result)
 
 
-def test_transform_staff_empty_input():     
-    result = transform_staff([], [])        
+def test_transform_staff_empty_input():
+    result = transform_staff([], [])
     assert result.empty
 
 
 def test_location():
 
     sample_addresses = [
-    {
-        "address_id": 1,
-        "address_line_1": "6826 Herzog Via",
-        "address_line_2": None,
-        "district": "Avon",
-        "city": "New Patienceburgh",
-        "postal_code": "28441",
-        "country": "Turkey",
-        "phone": "1803 637401",
-        "created_at": "2022-11-03 14:20:49.962000",
-        "last_updated": "2022-11-03 14:20:49.962000"
-    },
-    {
-        "address_id": 2,
-        "address_line_1": "179 Alexie Cliffs",
-        "address_line_2": None,
-        "district": None,
-        "city": "Aliso Viejo",
-        "postal_code": "99305-7380",
-        "country": "San Marino",
-        "phone": "9621 880720",
-        "created_at": "2022-11-03 14:20:49.962000",
-        "last_updated": "2022-11-03 14:20:49.962000"
-    },
-    {
-        "address_id": 3,
-        "address_line_1": "148 Sincere Fort",
-        "address_line_2": None,
-        "district": None,
-        "city": "Lake Charles",
-        "postal_code": "89360",
-        "country": "Samoa",
-        "phone": "0730 783349",
-        "created_at": "2022-11-03 14:20:49.962000",
-        "last_updated": "2022-11-03 14:20:49.962000"
-    }]
+        {
+            "address_id": 1,
+            "address_line_1": "6826 Herzog Via",
+            "address_line_2": None,
+            "district": "Avon",
+            "city": "New Patienceburgh",
+            "postal_code": "28441",
+            "country": "Turkey",
+            "phone": "1803 637401",
+            "created_at": "2022-11-03 14:20:49.962000",
+            "last_updated": "2022-11-03 14:20:49.962000",
+        },
+        {
+            "address_id": 2,
+            "address_line_1": "179 Alexie Cliffs",
+            "address_line_2": None,
+            "district": None,
+            "city": "Aliso Viejo",
+            "postal_code": "99305-7380",
+            "country": "San Marino",
+            "phone": "9621 880720",
+            "created_at": "2022-11-03 14:20:49.962000",
+            "last_updated": "2022-11-03 14:20:49.962000",
+        },
+        {
+            "address_id": 3,
+            "address_line_1": "148 Sincere Fort",
+            "address_line_2": None,
+            "district": None,
+            "city": "Lake Charles",
+            "postal_code": "89360",
+            "country": "Samoa",
+            "phone": "0730 783349",
+            "created_at": "2022-11-03 14:20:49.962000",
+            "last_updated": "2022-11-03 14:20:49.962000",
+        },
+    ]
 
     expected_location = [
-    {
-        "location_id": 1,
-        "address_line_1": "6826 Herzog Via",
-        "address_line_2": None,
-        "district": "Avon",
-        "city": "New Patienceburgh",
-        "postal_code": "28441",
-        "country": "Turkey",
-        "phone": "1803 637401"
-    },
-    {
-        "location_id": 2,
-        "address_line_1": "179 Alexie Cliffs",
-        "address_line_2": None,
-        "district": None,
-        "city": "Aliso Viejo",
-        "postal_code": "99305-7380",
-        "country": "San Marino",
-        "phone": "9621 880720"
-    },
-    {
-        "location_id": 3,
-        "address_line_1": "148 Sincere Fort",
-        "address_line_2": None,
-        "district": None,
-        "city": "Lake Charles",
-        "postal_code": "89360",
-        "country": "Samoa",
-        "phone": "0730 783349"
-    }]
+        {
+            "location_id": 1,
+            "address_line_1": "6826 Herzog Via",
+            "address_line_2": None,
+            "district": "Avon",
+            "city": "New Patienceburgh",
+            "postal_code": "28441",
+            "country": "Turkey",
+            "phone": "1803 637401",
+        },
+        {
+            "location_id": 2,
+            "address_line_1": "179 Alexie Cliffs",
+            "address_line_2": None,
+            "district": None,
+            "city": "Aliso Viejo",
+            "postal_code": "99305-7380",
+            "country": "San Marino",
+            "phone": "9621 880720",
+        },
+        {
+            "location_id": 3,
+            "address_line_1": "148 Sincere Fort",
+            "address_line_2": None,
+            "district": None,
+            "city": "Lake Charles",
+            "postal_code": "89360",
+            "country": "Samoa",
+            "phone": "0730 783349",
+        },
+    ]
 
     result = transform_location(sample_addresses)
 
@@ -180,20 +195,19 @@ def test_location():
     pd.testing.assert_frame_equal(expected_df, result)
 
 
-
 # def test_make_a_date():
-    
+
 #     result = create_date_table()
 
 #     date_as_datetime = pd.to_datetime("2025-03-04")
 
-#     expected = pd.DataFrame({"date":date_as_datetime,"year":2025,"month":3,"day":4,"day_of_week":2,"day_name":"Tuesday","month_name":"March","quarter":1},index=[0])
-    
+#     expected = pd.DataFrame({"date":date_as_datetime,"year":2025,"month":3,"day":4,"day_of_week":2,"day_name":"Tuesday","month_name":"March","quarter":1},index=[0])  # noqa
+
 #     expected.set_index("date", inplace=True)
 
 #     row_expected = expected.loc['2025-03-04'] # make it a series
 
-#     row = result.loc['2025-03-04'] # get single row of dataframe 
+#     row = result.loc['2025-03-04'] # get single row of dataframe
 
 
 #     pd.testing.assert_series_equal(row, row_expected)
@@ -204,7 +218,8 @@ class TestTransformDesign:
         """Test returns a dataframe structure."""
         raw_data = pd.DataFrame(
             [
-                {   "design_id": 1,
+                {
+                    "design_id": 1,
                     "created_at": "2022-11-03 14:20:49.962000",
                     "design_name": "Wooden",
                     "file_location": "/usr",
@@ -219,7 +234,8 @@ class TestTransformDesign:
                     "file_name": "bronze-20221024-4dds.json",
                     "last_updated": "2023-01-12 18:50:09.935000",
                 },
-                {   "design_id": 3,
+                {
+                    "design_id": 3,
                     "created_at": "2023-02-07 17:31:10.093000",
                     "design_name": "Bronze",
                     "file_location": "/lost+found",
@@ -262,28 +278,28 @@ class TestTransformDesign:
             ]
         )
         expected = pd.DataFrame(
-        [
-            {   
-                "design_id": 10,
-                "design_name": "Wooden",
-                "file_location": "/usr",
-                "file_name": "wooden-20220717-npgz.json",
-            },
-            {   
-                "design_id": 20,
-                "design_name": "Bronze",
-                "file_location": "/private",
-                "file_name": "bronze-20221024-4dds.json",
-            },
-            {  
-                "design_id": 30,
-                "file_location": "/lost+found",
-                "design_name": "Bronze",
-                "file_name": "bronze-20230102-r904.json",
-            },
-        ]
-    ).set_index("design_id")
-        
+            [
+                {
+                    "design_id": 10,
+                    "design_name": "Wooden",
+                    "file_location": "/usr",
+                    "file_name": "wooden-20220717-npgz.json",
+                },
+                {
+                    "design_id": 20,
+                    "design_name": "Bronze",
+                    "file_location": "/private",
+                    "file_name": "bronze-20221024-4dds.json",
+                },
+                {
+                    "design_id": 30,
+                    "file_location": "/lost+found",
+                    "design_name": "Bronze",
+                    "file_name": "bronze-20230102-r904.json",
+                },
+            ]
+        ).set_index("design_id")
+
         result = transform_design(raw_data)
         pd.testing.assert_frame_equal(result, expected)
 
@@ -318,7 +334,7 @@ class TestTransformDesign:
                     "file_name": "wooden-20220717-npgz.json",
                 },
             ]
-        ).set_index("design_id") 
+        ).set_index("design_id")
         result = transform_design(raw_data)
         pd.testing.assert_frame_equal(result, expected)
 
@@ -361,7 +377,7 @@ class TestTransformDesign:
                     "file_name": "logo1.png",
                 }
             ]
-        ).set_index("design_id") 
+        ).set_index("design_id")
 
         result = transform_design(raw_data)
         pd.testing.assert_frame_equal(result, expected)
@@ -783,6 +799,7 @@ class TestTransformCounterParty:
 
         assert result.duplicated().sum() == 0
         assert len(result) == 3
+
 
 class TestTransformFactsSalesOrder:
     """Test suite for transform_fact_sales_order function"""
