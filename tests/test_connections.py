@@ -1,4 +1,4 @@
-from ToteFullOfQueries.src.utils import connect_to_database
+from src.utils import connect_to_database
 import boto3
 import json
 from moto import mock_aws
