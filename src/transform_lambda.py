@@ -1,18 +1,16 @@
 """Function should take files from extract s3 bucket
 transform/clean the data into a parquet file into s3 transform bucket"""
 
-from botocore.exceptions import ClientError
+import logging
 import boto3
 import json
+from botocore.exceptions import ClientError
 from datetime import datetime
-
-# from pprint import pprint
 import pandas as pd
-
+import pycountry
+# from pprint import pprint
 # import pyarrow as pa
 # import pyarrow.parquet as pq
-# import pycountry
-import logging
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -229,3 +227,203 @@ def create_date_table(start="2025-01-01", end="2025-12-31"):
     df_date.set_index("date", inplace=True)
 
     return df_date
+
+
+############################# transform date ############################## noqa
+
+def transform_design(design):
+    """Returns DataFrame for transforming design table."""
+    try:
+        df = pd.DataFrame(design)
+        df.drop(columns=["created_at", "last_updated"], inplace=True)
+        df.set_index("design_id", inplace=True)
+
+        return df[["design_name", "file_location", "file_name"]].drop_duplicates()
+
+    except KeyError as e:
+        logger.error("Error! Issues transforming data due to invalid column headers.")
+        raise KeyError(f"Missing column: {str(e)}")
+
+############################# transform currency ############################## noqa
+
+def get_currency_name(currency_code: str):
+    """Returns the full currency name given a currency code."""
+    try:
+        currency = pycountry.currencies.get(alpha_3=currency_code.upper())
+        if currency:
+            return currency.name
+        else:
+            return None
+    except AttributeError:
+        return None
+
+
+def transform_currency(currency):
+    """Returns DataFrame for transforming currency table."""
+    df = pd.DataFrame(currency)
+
+    if "currency_code" in df.columns:
+        df["currency_name"] = df["currency_code"].apply(get_currency_name)
+    else:
+        df["currency_name"] = None
+
+    df.drop(columns=["created_at", "last_updated"], inplace=True)
+    df.set_index("currency_id", inplace=True)
+
+    return df[["currency_code", "currency_name"]].drop_duplicates()
+
+############################# transform counterparty ############################## noqa
+
+
+def transform_counterparty(counterparty, address):
+    """Transforms counterparty and address data to match the warehouse schema."""
+
+    counterparty_df = pd.DataFrame(counterparty)
+    address_df = pd.DataFrame(address)
+
+    counterparty_columns = [
+        "counterparty_id",
+        "counterparty_legal_name",
+        "legal_address_id",
+        "created_at",
+        "last_updated",
+    ]
+    address_columns = [
+        "address_id",
+        "address_line_1",
+        "address_line_2",
+        "district",
+        "city",
+        "postal_code",
+        "country",
+        "phone",
+        "created_at",
+        "last_updated",
+    ]
+
+    for col in counterparty_columns:
+        if col not in counterparty_df.columns:
+            counterparty_df[col] = None
+    for col in address_columns:
+        if col not in address_df.columns:
+            address_df[col] = None
+
+    address_df.drop(columns=["created_at", "last_updated"], inplace=True)
+    counterparty_df.drop(columns=["created_at", "last_updated"], inplace=True)
+
+    transformed_df = counterparty_df.merge(
+        address_df, left_on="legal_address_id", right_on="address_id", how="left"
+    )
+
+    transformed_df = (
+        transformed_df[
+            [
+                "counterparty_id",
+                "counterparty_legal_name",
+                "address_line_1",
+                "address_line_2",
+                "district",
+                "city",
+                "postal_code",
+                "country",
+                "phone",
+            ]
+        ]
+        .rename(
+            columns={
+                "counterparty_id": "counterparty_id",
+                "address_line_1": "counterparty_legal_address_line_1",
+                "address_line_2": "counterparty_legal_address_line_2",
+                "district": "counterparty_legal_district",
+                "city": "counterparty_legal_city",
+                "postal_code": "counterparty_legal_postal_code",
+                "country": "counterparty_legal_country",
+                "phone": "counterparty_legal_phone_number",
+            }
+        )
+        .drop_duplicates()
+    )
+    transformed_df.set_index("counterparty_id", inplace=True)
+    
+    return transformed_df
+
+
+###################### facts sales table ###################### noqa
+
+def transform_fact_sales_order(sales_order):
+    """Transforms raw sales_order data to match warehouse schema"""
+
+    expected_columns = [
+        "sales_record_id",  
+        "sales_order_id",
+        "created_date",
+        "created_time",
+        "last_updated_date",
+        "last_updated_time",
+        "sales_staff_id",
+        "counterparty_id",
+        "units_sold",
+        "unit_price",
+        "currency_id",
+        "design_id",
+        "agreed_payment_date",
+        "agreed_delivery_date",
+        "agreed_delivery_location_id",
+    ]
+
+    try:
+        sales_order_df = pd.DataFrame(sales_order)
+
+        if sales_order_df.empty:
+            return pd.DataFrame(columns=expected_columns)
+
+        
+        required_raw_columns = [
+            "sales_order_id",
+            "created_at",
+            "last_updated",
+            "design_id",
+            "staff_id",
+            "counterparty_id",
+            "units_sold",
+            "unit_price",
+            "currency_id",
+            "agreed_delivery_date",
+            "agreed_payment_date",
+            "agreed_delivery_location_id",
+        ]
+
+        
+        for col in required_raw_columns:
+            if col not in sales_order_df.columns:
+                sales_order_df[col] = pd.NA
+
+        
+        sales_order_df["created_at"] = pd.to_datetime(sales_order_df["created_at"], errors="coerce")
+        sales_order_df["last_updated"] = pd.to_datetime(sales_order_df["last_updated"], errors="coerce")
+
+        
+        sales_order_df["created_date"] = sales_order_df["created_at"].dt.date
+        sales_order_df["created_time"] = sales_order_df["created_at"].dt.time
+        sales_order_df["last_updated_date"] = sales_order_df["last_updated"].dt.date
+        sales_order_df["last_updated_time"] = sales_order_df["last_updated"].dt.time
+
+        
+        sales_order_df.rename(columns={"staff_id": "sales_staff_id"}, inplace=True)
+
+        
+        sales_order_df = sales_order_df.drop_duplicates()
+
+        
+        sales_order_df.reset_index(drop=True, inplace=True)
+        sales_order_df["sales_record_id"] = sales_order_df.index + 1  
+
+        
+        transformed_df = sales_order_df[expected_columns].copy()
+
+        return transformed_df
+
+    except Exception as e:
+        logger.error(f"Error transforming fact_sales_order: {e}", exc_info=True)
+        return pd.DataFrame(columns=expected_columns)
+
