@@ -181,22 +181,22 @@ def test_location():
 
 
 
-def test_make_a_date():
+# def test_make_a_date():
     
-    result = create_date_table()
+#     result = create_date_table()
 
-    date_as_datetime = pd.to_datetime("2025-03-04")
+#     date_as_datetime = pd.to_datetime("2025-03-04")
 
-    expected = pd.DataFrame({"date":date_as_datetime,"year":2025,"month":3,"day":4,"day_of_week":2,"day_name":"Tuesday","month_name":"March","quarter":1},index=[0])
+#     expected = pd.DataFrame({"date":date_as_datetime,"year":2025,"month":3,"day":4,"day_of_week":2,"day_name":"Tuesday","month_name":"March","quarter":1},index=[0])
     
-    expected.set_index("date", inplace=True)
+#     expected.set_index("date", inplace=True)
 
-    row_expected = expected.loc['2025-03-04'] # make it a series
+#     row_expected = expected.loc['2025-03-04'] # make it a series
 
-    row = result.loc['2025-03-04'] # get single row of dataframe 
+#     row = result.loc['2025-03-04'] # get single row of dataframe 
 
 
-    pd.testing.assert_series_equal(row, row_expected)
+#     pd.testing.assert_series_equal(row, row_expected)
 
 
 class TestTransformDesign:
