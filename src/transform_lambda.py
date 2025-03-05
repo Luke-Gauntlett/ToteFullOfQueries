@@ -91,6 +91,7 @@ def read(
             file_loaded = json.loads(file["Body"].read().decode("utf-8"))
             table_name = file_path.split("/")[-1]
             file_dict[table_name] = file_loaded
+            logger.info('JSON file correctly read!')
         except ClientError as e:
             if e.response["Error"]["Code"] == "NoSuchKey":
                 logger.error(
@@ -149,6 +150,7 @@ def write(transformed_dataframe, s3_client, bucketname, filename):
         transformed_dataframe.to_parquet(
             f"s3://{bucketname}/{s3_key}.parquet", index=False, engine="pyarrow"
         )
+        logger.info(f"Writing to S3: {s3_key}")
 
     except Exception as e:
 
@@ -303,9 +305,11 @@ def transform_counterparty(counterparty, address):
 
     for col in counterparty_columns:
         if col not in counterparty_df.columns:
+            logger.warning(f"Column {col} missing in counterparty data. Adding None.")
             counterparty_df[col] = None
     for col in address_columns:
         if col not in address_df.columns:
+            logger.warning(f"Column {col} missing in address data. Adding None.")
             address_df[col] = None
 
     address_df.drop(columns=["created_at", "last_updated"], inplace=True)

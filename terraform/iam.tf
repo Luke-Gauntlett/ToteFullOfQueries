@@ -237,6 +237,56 @@ resource "aws_cloudwatch_metric_alarm" "extract_lambda_alert" {
 
 }
 
+resource "aws_cloudwatch_log_metric_filter" "transform_cw_metric_filter" {
+  name           = "transform_cw_metric_filter"
+  pattern        = "?ERROR ?Failed ?Exception"
+  log_group_name = "/aws/lambda/${var.transform_lambda}"
+
+  metric_transformation {
+    name      = "EventCount"
+    namespace = "cw_metrics"
+    value     = "1"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "transform_lambda_alert" {
+  alarm_name          = "transform_lambda_alert"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = aws_cloudwatch_log_metric_filter.transform_cw_metric_filter.name
+  namespace           = "cw_metrics"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_description   = "This metric monitors errors for transform lambda"
+  alarm_actions       = [aws_sns_topic.transform_updates.arn]
+}
+
+# resource "aws_cloudwatch_log_metric_filter" "load_cw_metric_filter" {
+#   name           = "transform_cw_metric_filter"
+#   pattern        = "?ERROR ?Failed ?Exception"
+#   log_group_name = "/aws/lambda/${var.load_lambda}"
+
+#   metric_transformation {
+#     name      = "EventCount"
+#     namespace = "cw_metrics"
+#     value     = "1"
+#   }
+# }
+
+# resource "aws_cloudwatch_metric_alarm" "load_lambda_alert" {
+#   alarm_name          = "load_lambda_alert"
+#   comparison_operator = "GreaterThanOrEqualToThreshold"
+#   evaluation_periods  = 1
+#   metric_name         = aws_cloudwatch_log_metric_filter.load_cw_metric_filter.name
+#   namespace           = "cw_metrics"
+#   period              = 300
+#   statistic           = "Sum"
+#   threshold           = 1
+#   alarm_description   = "This metric monitors errors for load lambda"
+#   alarm_actions       = [aws_sns_topic.load_updates.arn]
+# }
+
 #######################################################  IAM Policy for Step Function #################################################
 #The role
 resource "aws_iam_role" "step_function_role" {
