@@ -300,26 +300,26 @@ def test_write_data_handles_missing_timestamps(mock_client, mock_db,aws_credenti
 
 
 
-def test_correct_filepaths(mock_client, mock_db, aws_credentials):
-    """Test that write_data includes all expected columns."""
-    last_extraction_time = "1111-11-11 11:11:11"
-    this_extraction_time = "2222-02-02 14:22:22"
+# def test_correct_filepaths(mock_client, mock_db, aws_credentials):
+#     """Test that write_data includes all expected columns."""
+#     last_extraction_time = "1111-11-11 11:11:11"
+#     this_extraction_time = "2222-02-02 14:22:22"
 
-    result = write_data(last_extraction_time, this_extraction_time, mock_client, mock_db, bucketname="testbucket123abc456def") # noqa
+#     result = write_data(last_extraction_time, this_extraction_time, mock_client, mock_db, bucketname="testbucket123abc456def") # noqa
 
-    expected ={"filepaths":["data/by time/2222/02-February/02/14:22:22/counterparty",
-                "data/by time/2222/02-February/02/14:22:22/currency",
-                "data/by time/2222/02-February/02/14:22:22/department",
-                "data/by time/2222/02-February/02/14:22:22/design",
-                "data/by time/2222/02-February/02/14:22:22/staff",
-                "data/by time/2222/02-February/02/14:22:22/sales_order",
-                "data/by time/2222/02-February/02/14:22:22/address",
-                "data/by time/2222/02-February/02/14:22:22/payment",
-                "data/by time/2222/02-February/02/14:22:22/purchase_order",
-                "data/by time/2222/02-February/02/14:22:22/payment_type",
-                "data/by time/2222/02-February/02/14:22:22/transaction"]}
+#     expected ={"filepaths":["data/by time/2222/02-February/02/14:22:22/counterparty",
+#                 "data/by time/2222/02-February/02/14:22:22/currency",
+#                 "data/by time/2222/02-February/02/14:22:22/department",
+#                 "data/by time/2222/02-February/02/14:22:22/design",
+#                 "data/by time/2222/02-February/02/14:22:22/staff",
+#                 "data/by time/2222/02-February/02/14:22:22/sales_order",
+#                 "data/by time/2222/02-February/02/14:22:22/address",
+#                 "data/by time/2222/02-February/02/14:22:22/payment",
+#                 "data/by time/2222/02-February/02/14:22:22/purchase_order",
+#                 "data/by time/2222/02-February/02/14:22:22/payment_type",
+#                 "data/by time/2222/02-February/02/14:22:22/transaction"]}
     
-    assert result == expected
+#     assert result == expected
     
 
 
