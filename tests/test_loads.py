@@ -54,7 +54,7 @@ def aws_credentials():
     os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
 
 @pytest.fixture
-def mock_s3_client_read(aws_credentials):
+def mock_s3_client_read():
     """Fixture to mock the S3 client and prepopulate with test data."""
     with mock_aws():
         client = boto3.client("s3", region_name="eu-west-2")
@@ -75,7 +75,7 @@ def mock_s3_client_read(aws_credentials):
 
 
 class TestReadParquet: 
-    def test_transformed_parquet_file_into_data_frame(self, mock_s3_client_read, aws_credentials):
+    def test_transformed_parquet_file_into_data_frame(self, mock_s3_client_read):
         """Test reading a single parquet file from S3."""
         client, bucket_name, file_paths, file_name = mock_s3_client_read
 
@@ -83,14 +83,14 @@ class TestReadParquet:
 
         assert isinstance(result[file_name], pd.DataFrame)
 
-    def test_data_is_correctly_indexed(self, mock_s3_client_read, aws_credentials):
+    def test_data_is_correctly_indexed(self, mock_s3_client_read):
         client, bucket_name, file_paths, file_name = mock_s3_client_read
 
         result = read_parquet(file_paths, client, bucket_name)
 
         assert list(result[file_name].columns) == ["address_line_1", "address_line_2", "district", "city", "postal_code", "country", "phone"]
 
-    def test_data_is_inputted_correctly(self, mock_s3_client_read, aws_credentials):
+    def test_data_is_inputted_correctly(self, mock_s3_client_read):
         client, bucket_name, file_paths, file_name = mock_s3_client_read
 
         result = read_parquet(file_paths, client, bucket_name)
@@ -99,7 +99,7 @@ class TestReadParquet:
         assert result[file_name].iloc[1]["address_line_1"] == "179 Alexie Cliffs"
         assert result[file_name].iloc[2]["city"] == "Lake Charles"
 
-    def test_na_values_are_inputted_correctly(self, mock_s3_client_read, aws_credentials):
+    def test_na_values_are_inputted_correctly(self, mock_s3_client_read):
         client, bucket_name, file_paths, file_name = mock_s3_client_read
 
         result = read_parquet(file_paths, client, bucket_name)
