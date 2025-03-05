@@ -18,3 +18,4 @@ venv/
 **/.terraform*
 **/function.zip
 **/*.tfstate*
+deploy/**
