@@ -45,7 +45,9 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
         pprint(df_dict)
         return df_dict
 
-# read_parquet(["data/by time/2025/03-March/05/15:00:03/test.parquet"], client, bucketname="totes-transform-bucket-20250227154810549700000001")
+# read_parquet(["data/by time/2025/
+# 03-March/05/15:00:03/test.parquet"], client, 
+# bucketname="totes-transform-bucket-20250227154810549700000001")
 
 def load_df_to_warehouse():
     pass
