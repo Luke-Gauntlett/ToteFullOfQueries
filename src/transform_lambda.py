@@ -7,7 +7,7 @@ import json
 from botocore.exceptions import ClientError
 from datetime import datetime
 import pandas as pd
-import pycountry
+# import pycountry
 # from pprint import pprint
 # import pyarrow as pa
 # import pyarrow.parquet as pq
@@ -80,8 +80,7 @@ def lambda_handler(event, context):
 
 
 #     return file_dict
-def read(
-    file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"
+def read(file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"
 ):
     file_dict = {}
 
@@ -103,10 +102,10 @@ def read(
     return file_dict
 
 
-################################# write parquet file to the s3 bucket ############################################### # noqa
+################################ write parquet file to the s3 bucket ############################################### # noqa
 
 # def write(transformed_data,client,filename,bucketname = "totes-transform-bucket-20250227154810549700000001"):   # noqa
-
+    
 #     parquet_data = transformed_data.to_parquet()
 
 
@@ -147,7 +146,7 @@ def write(transformed_dataframe, s3_client, bucketname, filename):
         s3_key = f"data/by time/{year}/{month_str}/{day}/{time}/{filename}"
 
         transformed_dataframe.to_parquet(
-            f"s3://{bucketname}/{s3_key}.parquet", index=False, engine="pyarrow"
+            f"s3://{bucketname}/{s3_key}.parquet", index=True, engine="pyarrow"
         )
 
     except Exception as e:
@@ -171,6 +170,11 @@ def transform_location(file_data):
 
     return df
 
+# s3_client = boto3.client("s3")
+# file_data = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], s3_client, bucketname="totes-extract-bucket-20250227154810549900000003"
+# )
+# transformed_dataframe = transform_location(file_data["address"])
+# write(transformed_dataframe, s3_client,"totes-transform-bucket-20250227154810549700000001", "test")
 
 ############################## transform the data for dim staff table #############################   # noqa
 
