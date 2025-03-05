@@ -1,6 +1,3 @@
-""" 
-Function should take the transformed data from the lambda 
-and upload to transform s3 bucket"""
 import boto3
 import pyarrow.parquet as pa
 from pprint import pprint
