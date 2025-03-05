@@ -36,16 +36,16 @@ def lambda_handler(event, context):
     # payment_type = loaded__files["payment_type"]
     # transaction = loaded__files["transaction"]
 
-    split = event["address"].split("/")
+    # split = event["address"].split("/")
 
-    year = split[2]
-    month = split[3]
-    day = split[4]
-    time = split[5]
-    year = split[2]
-    month = split[3]
-    day = split[4]
-    time = split[5]
+    # year = split[2]
+    # month = split[3]
+    # day = split[4]
+    # time = split[5]
+    # year = split[2]
+    # month = split[3]
+    # day = split[4]
+    # time = split[5]
 
     transformed_date = create_date_table()
     transformed_sales_order = transform_fact_sales_order(sales_order)
