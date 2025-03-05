@@ -12,7 +12,7 @@ except:     # nosec  # noqa
     pass        # nosec # noqa
  
 try:        # nosec  # noqa
-    from ToteFullOfQueries.src.utils import connect_to_database  # nosec  # noqa
+    from utils import connect_to_database  # nosec  # noqa
 except:     # nosec   # noqa
     pass        # nosec  # noqa
 
