@@ -18,5 +18,4 @@ venv/
 **/.terraform*
 **/function.zip
 **/*.tfstate*
-dependencies/
 packages/

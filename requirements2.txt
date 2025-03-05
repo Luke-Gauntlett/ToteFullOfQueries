@@ -1,0 +1,4 @@
+pycountry==24.6.1
+botocore==1.36.22
+
+
