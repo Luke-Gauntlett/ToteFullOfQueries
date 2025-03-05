@@ -246,7 +246,7 @@ def create_date_table(start="2025-01-01", end="2025-12-31"):
     # current_date = datetime.now().date()
 
     # if current_date > end:
-    #     end = current_date
+    #     end = current_datee
 
     start_ts = pd.to_datetime(start).date()  # turns string into datetime format
     end_ts = pd.to_datetime(end).date()
