@@ -28,7 +28,7 @@ jobs:
         run: |
           python -m venv venv  # Create a virtual environment
           source venv/bin/activate
-          pip install -r requirements.txt
+          pip install -r ymlrequirements.txt
 
       - name: Audit Python Dependencies
         uses: pypa/gh-action-pip-audit@v1.1.0
@@ -88,7 +88,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Make Directory
-        run : pip install -r requirements.txt -t dependencies/python
+        run : pip install -r requirements.txt -t deploy/layers/unzipped/dependencies/python
 
       - name: Configure AWS Credentials
         run: |
