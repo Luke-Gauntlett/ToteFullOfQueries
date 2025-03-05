@@ -90,7 +90,7 @@ class TestReadParquet:
 
         assert list(result[file_name].columns) == ["address_line_1", "address_line_2", "district", "city", "postal_code", "country", "phone"]
 
-    def test_data_is_inputted_correctly(self, mock_s3_client_read):
+    def test_data_is_inputted_correctly(self, mock_s3_client_read, aws_credentials):
         client, bucket_name, file_paths, file_name = mock_s3_client_read
 
         result = read_parquet(file_paths, client, bucket_name)
@@ -99,7 +99,7 @@ class TestReadParquet:
         assert result[file_name].iloc[1]["address_line_1"] == "179 Alexie Cliffs"
         assert result[file_name].iloc[2]["city"] == "Lake Charles"
 
-    def test_na_values_are_inputted_correctly(self, mock_s3_client_read):
+    def test_na_values_are_inputted_correctly(self, mock_s3_client_read, aws_credentials):
         client, bucket_name, file_paths, file_name = mock_s3_client_read
 
         result = read_parquet(file_paths, client, bucket_name)
