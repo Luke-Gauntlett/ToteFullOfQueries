@@ -3,7 +3,6 @@ from src.transform_lambda import transform_location
 import boto3
 from moto import mock_aws
 import pandas as pd
-from unittest.mock import Mock
 import pytest
 import os
 

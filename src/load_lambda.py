@@ -5,7 +5,6 @@ import boto3
 import pyarrow.parquet as pa
 from pprint import pprint
 import pandas as pd
-import json
 import io
 from botocore.exceptions import ClientError
 import logging
@@ -18,7 +17,8 @@ logger.setLevel(logging.INFO)
 #     client = boto3.client("s3")
 
 #     #if event is a list/json of filepaths
-#     read_parquet(event, client, bucketname="totes-transform-bucket-20250227154810549700000001")
+#     read_parquet(event, client, bucketname=
+# "totes-transform-bucket-20250227154810549700000001")
 
 client = boto3.client("s3")
 
@@ -49,7 +49,3 @@ read_parquet(["data/by time/2025/03-March/05/15:00:03/test.parquet"], client, bu
 
 def load_df_to_warehouse():
     pass
-##pandas to datbase
-##Table name 
-##columns == data fram columns
-##SQL INSERT
