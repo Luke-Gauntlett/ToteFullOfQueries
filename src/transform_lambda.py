@@ -8,7 +8,6 @@ from botocore.exceptions import ClientError
 from datetime import datetime
 import pandas as pd
 import pycountry
-# from pprint import pprint
 # import pyarrow as pa
 # import pyarrow.parquet as pq
 
@@ -20,44 +19,75 @@ def lambda_handler(event, context):
 
     client = boto3.client("s3")
 
-    loaded__files = read(event, client)
+    loaded__files = read(event["filepaths"], client)
 
-    # counterparty = loaded__files["counterparty"]
-    # currency = loaded__files["currency"]
+    counterparty = loaded__files["counterparty"]
+    currency = loaded__files["currency"]
     department = loaded__files["department"]
-    # design = loaded__files["design"]
+    design = loaded__files["design"]
     staff = loaded__files["staff"]
-    # sales_order = loaded__files["sales_order"]
+    sales_order = loaded__files["sales_order"]
     address = loaded__files["address"]
+    
+    #only needed for extension
+
     # payment = loaded__files["payment"]
     # purchase_order = loaded__files["purchase_order"]
     # payment_type = loaded__files["payment_type"]
     # transaction = loaded__files["transaction"]
 
-    split = event["address"].split("/")
+    # split = event["address"].split("/")
 
-    year = split[2]
-    month = split[3]
-    day = split[4]
-    time = split[5]
-    year = split[2]
-    month = split[3]
-    day = split[4]
-    time = split[5]
+    # year = split[2]
+    # month = split[3]
+    # day = split[4]
+    # time = split[5]
+    # year = split[2]
+    # month = split[3]
+    # day = split[4]
+    # time = split[5]
 
-    transformed_loction = transform_location(address)
+    transformed_date = create_date_table()
+    transformed_sales_order = transform_fact_sales_order(sales_order)
     transformed_staff = transform_staff(staff, department)
+    transformed_location = transform_location(address)
+    transformed_design = transform_design(design)
+    transformed_currency = transform_currency(currency)
+    transformed_counterparty = transform_counterparty(address,counterparty)
 
     write(
-        transformed_loction,
-        client,
-        f"data/by time/{year}/{month}/{day}/1{time}/dim_location",
+        transformed_sales_order,
+        client, "fact_sales_order"
     )
 
     write(
         transformed_staff,
-        client,
-        f"data/by time/{year}/{month}/{day}/1{time}/dim_staff",
+        client, "dim_staff"
+    )
+
+    write(
+        transformed_location,
+        client, "dim_location"
+    )
+
+    write(
+        transformed_design,
+        client, "dim_design"
+    )
+
+    write(
+        transformed_currency,
+        client, "dim_currency"
+    )
+
+    write(
+        transformed_counterparty,
+        client, "dim_counterparty"
+    )
+
+    write(
+        transformed_date,
+        client, "dim_date"
     )
 
 
@@ -117,7 +147,7 @@ def read(
 #             )
 
 
-def write(transformed_dataframe, s3_client, bucketname, filename):
+def write(transformed_dataframe, client, filename,bucketname="totes-extract-bucket-20250227154810549900000003"):
     try:
 
         current_time = datetime.now()
@@ -144,11 +174,19 @@ def write(transformed_dataframe, s3_client, bucketname, filename):
         day = split[2].split(" ")[0]
         time = split[2].split(" ")[1]
 
-        s3_key = f"data/by time/{year}/{month_str}/{day}/{time}/{filename}"
+        file_name = f"data/by time/{year}/{month_str}/{day}/{time}/{filename}"
 
-        transformed_dataframe.to_parquet(
-            f"s3://{bucketname}/{s3_key}.parquet", index=False, engine="pyarrow"
-        )
+        # parquet_file = transformed_dataframe.to_parquet(
+        #     f"s3://{bucketname}/{s3_key}.parquet", index=False, engine="pyarrow"
+        # )
+
+        parquet_file = transformed_dataframe.to_parquet()
+
+        client.put_object(
+                Bucket=bucketname,
+                Key=f"{file_name}.parquet",
+                Body=parquet_file,
+            )
 
     except Exception as e:
 
@@ -191,23 +229,25 @@ def transform_staff(staff_data, department_data):
         del merged["manager"]
         del merged["department_id"]
 
-        print(merged.to_string())
-
         df_reordered = merged[
             ["first_name", "last_name", "department_name", "location", "email_address"]
         ]
 
-        print(df_reordered.to_string())
-
         return df_reordered
     else:
-        return pd.DataFrame([])
+        return pd.DataFrame([]) 
 
 
 ##################################### make a date #######################################  # noqa
 
 
 def create_date_table(start="2025-01-01", end="2025-12-31"):
+
+    # current_date = datetime.now().date()
+
+    # if current_date > end:
+    #     end = current_datee
+
     start_ts = pd.to_datetime(start).date()  # turns string into datetime format
     end_ts = pd.to_datetime(end).date()
 
