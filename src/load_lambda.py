@@ -49,5 +49,12 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
 # 03-March/05/15:00:03/test.parquet"], client, 
 # bucketname="totes-transform-bucket-20250227154810549700000001")
 
-def load_df_to_warehouse():
-    pass
+def load_df_to_warehouse(df_dict, db_name):
+    try:
+        for table_name, table_df in df_dict.items():
+            
+            
+
+    except:
+        print("Error")
+

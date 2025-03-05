@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 from datetime import datetime
 import pandas as pd
 import pycountry
-# from pprint import pprint
+from pprint import pprint
 # import pyarrow as pa
 # import pyarrow.parquet as pq
 
@@ -17,49 +17,70 @@ logger.setLevel(logging.INFO)
 
 
 def lambda_handler(event, context):
-
     client = boto3.client("s3")
 
-    loaded__files = read(event, client)
-
-    # counterparty = loaded__files["counterparty"]
-    # currency = loaded__files["currency"]
+    loaded__files = read(event["filepaths"], client)
+    counterparty = loaded__files["counterparty"]
+    currency = loaded__files["currency"]
     department = loaded__files["department"]
-    # design = loaded__files["design"]
+    design = loaded__files["design"]
     staff = loaded__files["staff"]
-    # sales_order = loaded__files["sales_order"]
+    sales_order = loaded__files["sales_order"]
     address = loaded__files["address"]
+    pprint(counterparty)
+
+    bucket_name = "totes-transform-bucket-20250227154810549700000001"
+
+    #only needed for extension
     # payment = loaded__files["payment"]
     # purchase_order = loaded__files["purchase_order"]
     # payment_type = loaded__files["payment_type"]
     # transaction = loaded__files["transaction"]
+    # split = event["address"].split("/")
+    # year = split[2]
+    # month = split[3]
+    # day = split[4]
+    # time = split[5]
+    # year = split[2]
+    # month = split[3]
+    # day = split[4]
+    # time = split[5]
 
-    split = event["address"].split("/")
-
-    year = split[2]
-    month = split[3]
-    day = split[4]
-    time = split[5]
-    year = split[2]
-    month = split[3]
-    day = split[4]
-    time = split[5]
-
-    transformed_loction = transform_location(address)
+    transformed_date = create_date_table()
+    transformed_sales_order = transform_fact_sales_order(sales_order)
     transformed_staff = transform_staff(staff, department)
-
+    transformed_location = transform_location(address)
+    transformed_design = transform_design(design)
+    transformed_currency = transform_currency(currency)
+    transformed_counterparty = transform_counterparty(address,counterparty)
     write(
-        transformed_loction,
-        client,
-        f"data/by time/{year}/{month}/{day}/1{time}/dim_location",
+        transformed_sales_order,
+        client, bucket_name, "fact_sales_order"
     )
-
     write(
         transformed_staff,
-        client,
-        f"data/by time/{year}/{month}/{day}/1{time}/dim_staff",
+        client, bucket_name, "dim_staff"
     )
-
+    write(
+        transformed_location,
+        client, bucket_name, "dim_location"
+    )
+    write(
+        transformed_design,
+        client, bucket_name,"dim_design"
+    )
+    write(
+        transformed_currency,
+        client, bucket_name, "dim_currency"
+    )
+    write(
+        transformed_counterparty,
+        client, bucket_name, "dim_counterparty"
+    )
+    write(
+        transformed_date,
+        client, bucket_name, "dim_date"
+    )
 
 ################################ read each of the json files ######################################################## # noqa
 
@@ -80,8 +101,7 @@ def lambda_handler(event, context):
 
 
 #     return file_dict
-def read(file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"
-):
+def read(file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"):
     file_dict = {}
 
     for file_path in file_paths:
@@ -100,6 +120,7 @@ def read(file_paths, client, bucketname="totes-extract-bucket-202502271548105499
                 raise
 
     return file_dict
+
 
 
 ################################ write parquet file to the s3 bucket ############################################### # noqa
@@ -143,11 +164,17 @@ def write(transformed_dataframe, s3_client, bucketname, filename):
         day = split[2].split(" ")[0]
         time = split[2].split(" ")[1]
 
-        s3_key = f"data/by time/{year}/{month_str}/{day}/{time}/{filename}"
+        file_name = f"data/by time/{year}/{month_str}/{day}/{time}/{filename}"
 
-        transformed_dataframe.to_parquet(
-            f"s3://{bucketname}/{s3_key}.parquet", index=True, engine="pyarrow"
-        )
+        # transformed_dataframe.to_parquet(
+        #     f"s3://{bucketname}/{s3_key}.parquet", index=True, engine="pyarrow"
+        # )
+        parquet_file = transformed_dataframe.to_parquet(index=True)
+        s3_client.put_object(
+                Bucket=bucketname,
+                Key=f"{file_name}.parquet",
+                Body=parquet_file,
+            )
 
     except Exception as e:
 
@@ -196,13 +223,13 @@ def transform_staff(staff_data, department_data):
         del merged["manager"]
         del merged["department_id"]
 
-        print(merged.to_string())
+        # print(merged.to_string())
 
         df_reordered = merged[
             ["first_name", "last_name", "department_name", "location", "email_address"]
         ]
 
-        print(df_reordered.to_string())
+        # print(df_reordered.to_string())
 
         return df_reordered
     else:
@@ -282,76 +309,50 @@ def transform_currency(currency):
 
 def transform_counterparty(counterparty, address):
     """Transforms counterparty and address data to match the warehouse schema."""
+    if counterparty and address:
+        counterparty_df = pd.DataFrame(counterparty)
+        address_df = pd.DataFrame(address)
 
-    counterparty_df = pd.DataFrame(counterparty)
-    address_df = pd.DataFrame(address)
+        print("Counterparty Columns:", counterparty_df.columns)
+        print("Address Columns:", address_df.columns)
 
-    counterparty_columns = [
-        "counterparty_id",
-        "counterparty_legal_name",
-        "legal_address_id",
-        "created_at",
-        "last_updated",
-    ]
-    address_columns = [
-        "address_id",
-        "address_line_1",
-        "address_line_2",
-        "district",
-        "city",
-        "postal_code",
-        "country",
-        "phone",
-        "created_at",
-        "last_updated",
-    ]
+        address_df.drop(columns=["created_at", "last_updated"], inplace=True)
+        counterparty_df.drop(columns=["created_at", "last_updated"], inplace=True)
 
-    for col in counterparty_columns:
-        if col not in counterparty_df.columns:
-            counterparty_df[col] = None
-    for col in address_columns:
-        if col not in address_df.columns:
-            address_df[col] = None
+        transformed_df = counterparty_df.merge(address_df, left_on="address_id", right_on="legal_address_id", how="left")
+        transformed_df.drop(columns=['address_id'], inplace=True)
+        transformed_df.drop(columns=['legal_address_id'], inplace=True)
+        transformed_df.drop(columns=['commercial_contact'], inplace=True)
+        transformed_df.drop(columns=['delivery_contact'], inplace=True)
+        # print(transformed_df.to_string())
 
-    address_df.drop(columns=["created_at", "last_updated"], inplace=True)
-    counterparty_df.drop(columns=["created_at", "last_updated"], inplace=True)
-
-    transformed_df = counterparty_df.merge(
-        address_df, left_on="legal_address_id", right_on="address_id", how="left"
-    )
-
-    transformed_df = (
-        transformed_df[
-            [
-                "counterparty_id",
-                "counterparty_legal_name",
-                "address_line_1",
-                "address_line_2",
-                "district",
-                "city",
-                "postal_code",
-                "country",
-                "phone",
-            ]
-        ]
-        .rename(
-            columns={
-                "counterparty_id": "counterparty_id",
-                "address_line_1": "counterparty_legal_address_line_1",
-                "address_line_2": "counterparty_legal_address_line_2",
-                "district": "counterparty_legal_district",
-                "city": "counterparty_legal_city",
-                "postal_code": "counterparty_legal_postal_code",
-                "country": "counterparty_legal_country",
-                "phone": "counterparty_legal_phone_number",
-            }
+        transformed_df = (
+            transformed_df.rename(
+                columns={
+                    "address_line_1": "counterparty_legal_address_line_1",
+                    "address_line_2": "counterparty_legal_address_line_2",
+                    "district": "counterparty_legal_district",
+                    "city": "counterparty_legal_city",
+                    "postal_code": "counterparty_legal_postal_code",
+                    "country": "counterparty_legal_country",
+                    "phone": "counterparty_legal_phone_number",
+                }
+            )
+            .drop_duplicates()
         )
-        .drop_duplicates()
-    )
-    transformed_df.set_index("counterparty_id", inplace=True)
-    
-    return transformed_df
+        transformed_df.set_index("counterparty_id", inplace=True)
+        print("Transformed Columns:", transformed_df.columns)
+        
+        return transformed_df
+    else:
+        return pd.DataFrame([])
 
+# s3_client = boto3.client("s3")
+# file_data = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
+# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
+# file_data2 = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
+# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
+# transform_counterparty(file_data["counterparty"],file_data2["address"])
 
 ###################### facts sales table ###################### noqa
 
@@ -432,3 +433,15 @@ def transform_fact_sales_order(sales_order):
         logger.error(f"Error transforming fact_sales_order: {e}", exc_info=True)
         return pd.DataFrame(columns=expected_columns)
 
+
+lambda_handler({"filepaths":["data/by time/2025/03-March/04/10:43:43.533092/address",
+"data/by time/2025/03-March/04/10:43:43.533092/counterparty",
+"data/by time/2025/03-March/04/10:43:43.533092/currency",
+"data/by time/2025/03-March/04/10:43:43.533092/department",
+"data/by time/2025/03-March/04/10:43:43.533092/design",
+"data/by time/2025/03-March/04/10:43:43.533092/payment",
+"data/by time/2025/03-March/04/10:43:43.533092/payment_type",
+"data/by time/2025/03-March/04/10:43:43.533092/purchase_order",
+"data/by time/2025/03-March/04/10:43:43.533092/sales_order",
+"data/by time/2025/03-March/04/10:43:43.533092/staff",
+"data/by time/2025/03-March/04/10:43:43.533092/transaction"]},"hello")
