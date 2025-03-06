@@ -4,7 +4,7 @@ from src.transform_lambda import (
     transform_design,
     get_currency_name,
     transform_currency,
-    transform_counterparty,
+    #transform_counterparty,
     transform_fact_sales_order,
 )
 import pandas as pd
