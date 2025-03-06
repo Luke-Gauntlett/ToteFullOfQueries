@@ -38,10 +38,10 @@ variable "transform_lambda" {
   default = "transform_lambda"
 }
 
-# variable "load_lambda" {
-#   type    = string
-#   default = "load_lambda"
-# }
+variable "load_lambda" {
+  type    = string
+  default = "load_lambda"
+}
 
 # variable "state_machine_name" {
 #   type    = string
