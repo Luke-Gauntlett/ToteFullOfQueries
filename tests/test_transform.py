@@ -7,7 +7,7 @@ from src.transform_lambda import (
     transform_counterparty,
     transform_fact_sales_order,
 )
-import pandas as pd
+#import pandas as pd
 
 
 def test_transform_staff():
