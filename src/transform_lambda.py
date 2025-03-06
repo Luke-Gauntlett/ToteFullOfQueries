@@ -37,7 +37,7 @@ def lambda_handler(event, context):
     transformed_staff = transform_staff(staff, department)
     transformed_location = transform_location(address)
     transformed_design = transform_design(design)
-    #transformed_currency = transform_currency(currency)
+    transformed_currency = transform_currency(currency)
     transformed_counterparty = transform_counterparty(address,counterparty)
 
     write(
@@ -59,10 +59,10 @@ def lambda_handler(event, context):
         client, f"data/by time/{year}/{month}/{day}/{time}/dim_design"
     )
 
-    # write(
-    #     transformed_currency,
-    #     client, f"data/by time/{year}/{month}/{day}/{time}/dim_currency"
-    # )
+    write(
+        transformed_currency,
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_currency"
+    )
 
     write(
         transformed_counterparty,
