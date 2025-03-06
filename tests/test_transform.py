@@ -198,19 +198,24 @@ class TestTransformAddress:
 
 def test_make_a_date():
 
-    result = generate_date_table(pd.to_datetime('2000-01-01'),pd.to_datetime('2075-01-01'))
+    result = generate_date_table(pd.to_datetime('2000-01-01'), pd.to_datetime('2075-01-01'))
+    
+    date_as_date = pd.to_datetime("2025-03-04").date()
+    
+    expected = pd.DataFrame({
+        "year": [2025],
+        "month": [3],
+        "day": [4],
+        "day_of_week": [2],
+        "day_name": ["Tuesday"],
+        "month_name": ["March"],
+        "quarter": [1]
+    }, index=[date_as_date])
+    
+    row_expected = expected.loc[date_as_date]  # expected Series
 
-    date_as_datetime = pd.to_datetime("2025-03-04")
-
-    expected = pd.DataFrame({"date":date_as_datetime,"year":2025,"month":3,"day":4,"day_of_week":2,"day_name":"Tuesday","month_name":"March","quarter":1},index=[0])  # noqa
-
-    expected.set_index("date", inplace=True)
-
-    row_expected = expected.loc['2025-03-04'] # make it a series
-
-    row = result.loc['2025-03-04'] # get single row of dataframe
-
-
+    row = result.loc[date_as_date]             # actual Series from generate_date_table
+    
     pd.testing.assert_series_equal(row, row_expected)
 
 
