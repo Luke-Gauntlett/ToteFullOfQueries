@@ -19,3 +19,4 @@ venv/
 **/function.zip
 **/*.tfstate*
 /deploy/
+dependencies
