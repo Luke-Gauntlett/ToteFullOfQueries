@@ -4,195 +4,195 @@ from src.transform_lambda import (
     transform_design,
     get_currency_name,
     transform_currency,
-    #transform_counterparty,
+    transform_counterparty,
     transform_fact_sales_order,
 )
 import pandas as pd
 
-
-def test_transform_staff():
-    sample_staff = [
-        {
-            "staff_id": 1,
-            "first_name": "Jeremie",
-            "last_name": "Franey",
-            "department_id": 1,
-            "email_address": "jeremie.franey@terrifictotes.com",
-            "created_at": "2022-11-03 14:20:51.563000",
-            "last_updated": "2022-11-03 14:20:51.563000",
-        },
-        {
-            "staff_id": 2,
-            "first_name": "Deron",
-            "last_name": "Beier",
-            "department_id": 2,
-            "email_address": "deron.beier@terrifictotes.com",
-            "created_at": "2022-11-03 14:20:51.563000",
-            "last_updated": "2022-11-03 14:20:51.563000",
-        },
-        {
-            "staff_id": 3,
-            "first_name": "Jeanette",
-            "last_name": "Erdman",
-            "department_id": 3,
-            "email_address": "jeanette.erdman@terrifictotes.com",
-            "created_at": "2022-11-03 14:20:51.563000",
-            "last_updated": "2022-11-03 14:20:51.563000",
-        },
-    ]
-
-    sample_department = [
-        {
-            "department_id": 1,
-            "department_name": "Sales",
-            "location": "Manchester",
-            "manager": "Richard Roma",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-        {
-            "department_id": 2,
-            "department_name": "Purchasing",
-            "location": "Manchester",
-            "manager": "Naomi Lapaglia",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-        {
-            "department_id": 3,
-            "department_name": "Production",
-            "location": "Leeds",
-            "manager": "Chester Ming",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-    ]
-
-    result = transform_staff(sample_staff, sample_department)
-
-    expected_df_first_entry = pd.DataFrame(
-        [
+class TestTransformStaff:
+    def test_transform_staff(self):
+        sample_staff = [
             {
                 "staff_id": 1,
                 "first_name": "Jeremie",
                 "last_name": "Franey",
-                "department_name": "Sales",
-                "location": "Manchester",
+                "department_id": 1,
                 "email_address": "jeremie.franey@terrifictotes.com",
+                "created_at": "2022-11-03 14:20:51.563000",
+                "last_updated": "2022-11-03 14:20:51.563000",
             },
             {
                 "staff_id": 2,
                 "first_name": "Deron",
                 "last_name": "Beier",
-                "department_name": "Purchasing",
-                "location": "Manchester",
+                "department_id": 2,
                 "email_address": "deron.beier@terrifictotes.com",
+                "created_at": "2022-11-03 14:20:51.563000",
+                "last_updated": "2022-11-03 14:20:51.563000",
             },
             {
                 "staff_id": 3,
                 "first_name": "Jeanette",
                 "last_name": "Erdman",
-                "department_name": "Production",
-                "location": "Leeds",
+                "department_id": 3,
                 "email_address": "jeanette.erdman@terrifictotes.com",
+                "created_at": "2022-11-03 14:20:51.563000",
+                "last_updated": "2022-11-03 14:20:51.563000",
             },
         ]
-    )
 
-    expected_df_first_entry.set_index("staff_id", inplace=True)
+        sample_department = [
+            {
+                "department_id": 1,
+                "department_name": "Sales",
+                "location": "Manchester",
+                "manager": "Richard Roma",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+            {
+                "department_id": 2,
+                "department_name": "Purchasing",
+                "location": "Manchester",
+                "manager": "Naomi Lapaglia",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+            {
+                "department_id": 3,
+                "department_name": "Production",
+                "location": "Leeds",
+                "manager": "Chester Ming",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+        ]
 
-    # print(expected_df_first_entry.to_string())
-    # print(result.to_string())
+        result = transform_staff(sample_staff, sample_department)
 
-    pd.testing.assert_frame_equal(expected_df_first_entry, result)
+        expected_df_first_entry = pd.DataFrame(
+            [
+                {
+                    "staff_id": 1,
+                    "first_name": "Jeremie",
+                    "last_name": "Franey",
+                    "department_name": "Sales",
+                    "location": "Manchester",
+                    "email_address": "jeremie.franey@terrifictotes.com",
+                },
+                {
+                    "staff_id": 2,
+                    "first_name": "Deron",
+                    "last_name": "Beier",
+                    "department_name": "Purchasing",
+                    "location": "Manchester",
+                    "email_address": "deron.beier@terrifictotes.com",
+                },
+                {
+                    "staff_id": 3,
+                    "first_name": "Jeanette",
+                    "last_name": "Erdman",
+                    "department_name": "Production",
+                    "location": "Leeds",
+                    "email_address": "jeanette.erdman@terrifictotes.com",
+                },
+            ]
+        )
+
+        expected_df_first_entry.set_index("staff_id", inplace=True)
+
+        # print(expected_df_first_entry.to_string())
+        # print(result.to_string())
+
+        pd.testing.assert_frame_equal(expected_df_first_entry, result)
 
 
-def test_transform_staff_empty_input():
-    result = transform_staff([], [])
-    assert result.empty
+    def test_transform_staff_empty_input(self):
+        result = transform_staff([], [])
+        assert result.empty
 
+class TestTransformAddress:
+    def test_location(self):
 
-def test_location():
+        sample_addresses = [
+            {
+                "address_id": 1,
+                "address_line_1": "6826 Herzog Via",
+                "address_line_2": None,
+                "district": "Avon",
+                "city": "New Patienceburgh",
+                "postal_code": "28441",
+                "country": "Turkey",
+                "phone": "1803 637401",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+            {
+                "address_id": 2,
+                "address_line_1": "179 Alexie Cliffs",
+                "address_line_2": None,
+                "district": None,
+                "city": "Aliso Viejo",
+                "postal_code": "99305-7380",
+                "country": "San Marino",
+                "phone": "9621 880720",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+            {
+                "address_id": 3,
+                "address_line_1": "148 Sincere Fort",
+                "address_line_2": None,
+                "district": None,
+                "city": "Lake Charles",
+                "postal_code": "89360",
+                "country": "Samoa",
+                "phone": "0730 783349",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+        ]
 
-    sample_addresses = [
-        {
-            "address_id": 1,
-            "address_line_1": "6826 Herzog Via",
-            "address_line_2": None,
-            "district": "Avon",
-            "city": "New Patienceburgh",
-            "postal_code": "28441",
-            "country": "Turkey",
-            "phone": "1803 637401",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-        {
-            "address_id": 2,
-            "address_line_1": "179 Alexie Cliffs",
-            "address_line_2": None,
-            "district": None,
-            "city": "Aliso Viejo",
-            "postal_code": "99305-7380",
-            "country": "San Marino",
-            "phone": "9621 880720",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-        {
-            "address_id": 3,
-            "address_line_1": "148 Sincere Fort",
-            "address_line_2": None,
-            "district": None,
-            "city": "Lake Charles",
-            "postal_code": "89360",
-            "country": "Samoa",
-            "phone": "0730 783349",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-    ]
+        expected_location = [
+            {
+                "location_id": 1,
+                "address_line_1": "6826 Herzog Via",
+                "address_line_2": None,
+                "district": "Avon",
+                "city": "New Patienceburgh",
+                "postal_code": "28441",
+                "country": "Turkey",
+                "phone": "1803 637401",
+            },
+            {
+                "location_id": 2,
+                "address_line_1": "179 Alexie Cliffs",
+                "address_line_2": None,
+                "district": None,
+                "city": "Aliso Viejo",
+                "postal_code": "99305-7380",
+                "country": "San Marino",
+                "phone": "9621 880720",
+            },
+            {
+                "location_id": 3,
+                "address_line_1": "148 Sincere Fort",
+                "address_line_2": None,
+                "district": None,
+                "city": "Lake Charles",
+                "postal_code": "89360",
+                "country": "Samoa",
+                "phone": "0730 783349",
+            },
+        ]
 
-    expected_location = [
-        {
-            "location_id": 1,
-            "address_line_1": "6826 Herzog Via",
-            "address_line_2": None,
-            "district": "Avon",
-            "city": "New Patienceburgh",
-            "postal_code": "28441",
-            "country": "Turkey",
-            "phone": "1803 637401",
-        },
-        {
-            "location_id": 2,
-            "address_line_1": "179 Alexie Cliffs",
-            "address_line_2": None,
-            "district": None,
-            "city": "Aliso Viejo",
-            "postal_code": "99305-7380",
-            "country": "San Marino",
-            "phone": "9621 880720",
-        },
-        {
-            "location_id": 3,
-            "address_line_1": "148 Sincere Fort",
-            "address_line_2": None,
-            "district": None,
-            "city": "Lake Charles",
-            "postal_code": "89360",
-            "country": "Samoa",
-            "phone": "0730 783349",
-        },
-    ]
+        result = transform_location(sample_addresses)
 
-    result = transform_location(sample_addresses)
+        expected_df = pd.DataFrame(expected_location)
 
-    expected_df = pd.DataFrame(expected_location)
+        expected_df.set_index("location_id", inplace=True)
 
-    expected_df.set_index("location_id", inplace=True)
-
-    pd.testing.assert_frame_equal(expected_df, result)
+        pd.testing.assert_frame_equal(expected_df, result)
 
 
 # def test_make_a_date():
@@ -216,8 +216,7 @@ def test_location():
 class TestTransformDesign:
     def test_returns_a_dataframe(self):
         """Test returns a dataframe structure."""
-        raw_data = pd.DataFrame(
-            [
+        raw_data = [
                 {
                     "design_id": 1,
                     "created_at": "2022-11-03 14:20:49.962000",
@@ -243,14 +242,13 @@ class TestTransformDesign:
                     "last_updated": "2023-02-07 17:31:10.093000",
                 },
             ]
-        )
+        
         result = transform_design(raw_data)
         assert isinstance(result, pd.DataFrame)
 
     def test_transform_design_basic(self):
         """Test basic transformation from raw to warehouse schema."""
-        raw_data = pd.DataFrame(
-            [
+        raw_data = [
                 {
                     "design_id": 10,
                     "created_at": "2022-11-03 14:20:49.962000",
@@ -276,7 +274,7 @@ class TestTransformDesign:
                     "last_updated": "2023-02-07 17:31:10.093000",
                 },
             ]
-        )
+        
         expected = pd.DataFrame(
             [
                 {
@@ -305,8 +303,7 @@ class TestTransformDesign:
 
     def test_transform_design_removes_duplicates(self):
         """Test that duplicate rows are removed."""
-        raw_data = pd.DataFrame(
-            [
+        raw_data = [
                 {
                     "design_id": 8,
                     "created_at": "2022-11-03 14:20:49.962000",
@@ -324,7 +321,7 @@ class TestTransformDesign:
                     "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
-        )
+        
         expected = pd.DataFrame(
             [
                 {
@@ -498,268 +495,268 @@ class TestTransformCurrency:
         assert list(result.columns) == ["currency_code", "currency_name"]
 
 
-# class TestTransformCounterParty:
-#     def test_returns_a_dataframe(self):
-#         """Test returns a dataframe structure."""
-#         counterparty = [
-#                 {
-#                     "counterparty_id": 1,
-#                     "counterparty_legal_name": "Fahey and Sons",
-#                     "legal_address_id": 1,
-#                     "commercial_contact": "Micheal Toy",
-#                     "delivery_contact": "Mrs. Lucy Runolfsdottir",
-#                     "created_at": "2022-11-03 14:20:51.563000",
-#                     "last_updated": "2022-11-03 14:20:51.563000",
-#                 },
-#                 {
-#                     "counterparty_id": 2,
-#                     "counterparty_legal_name": "Leannon, Predovic and Morar",
-#                     "legal_address_id": 3,
-#                     "commercial_contact": "Melba Sanford",
-#                     "delivery_contact": "Jean Hane III",
-#                     "created_at": "2022-11-03 14:20:51.563000",
-#                     "last_updated": "2022-11-03 14:20:51.563000",
-#                 },
-#                 {
-#                     "counterparty_id": 3,
-#                     "counterparty_legal_name": "Armstrong Inc",
-#                     "legal_address_id": 2,
-#                     "commercial_contact": "Jane Wiza",
-#                     "delivery_contact": "Myra Kovacek",
-#                     "created_at": "2022-11-03 14:20:51.563000",
-#                     "last_updated": "2022-11-03 14:20:51.563000",
-#                 },
-#             ]
+class TestTransformCounterParty:
+    def test_returns_a_dataframe(self):
+        """Test returns a dataframe structure."""
+        counterparty = [
+                {
+                    "counterparty_id": 1,
+                    "counterparty_legal_name": "Fahey and Sons",
+                    "legal_address_id": 1,
+                    "commercial_contact": "Micheal Toy",
+                    "delivery_contact": "Mrs. Lucy Runolfsdottir",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+                {
+                    "counterparty_id": 2,
+                    "counterparty_legal_name": "Leannon, Predovic and Morar",
+                    "legal_address_id": 3,
+                    "commercial_contact": "Melba Sanford",
+                    "delivery_contact": "Jean Hane III",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+                {
+                    "counterparty_id": 3,
+                    "counterparty_legal_name": "Armstrong Inc",
+                    "legal_address_id": 2,
+                    "commercial_contact": "Jane Wiza",
+                    "delivery_contact": "Myra Kovacek",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+            ]
         
-#         address= [
-#                 {
-#                     "address_id": 1,
-#                     "address_line_1": "6826 Herzog Via",
-#                     "address_line_2": None,
-#                     "district": "Avon",
-#                     "city": "New Patienceburgh",
-#                     "postal_code": "28441",
-#                     "country": "Turkey",
-#                     "phone": "1803 637401",
-#                     "created_at": "2022-11-03 14:20:49.962000",
-#                     "last_updated": "2022-11-03 14:20:49.962000",
-#                 },
-#                 {
-#                     "address_id": 2,
-#                     "address_line_1": "179 Alexie Cliffs",
-#                     "address_line_2": None,
-#                     "district": None,
-#                     "city": "Aliso Viejo",
-#                     "postal_code": "99305-7380",
-#                     "country": "San Marino",
-#                     "phone": "9621 880720",
-#                     "created_at": "2022-11-03 14:20:49.962000",
-#                     "last_updated": "2022-11-03 14:20:49.962000",
-#                 },
-#                 {
-#                     "address_id": 3,
-#                     "address_line_1": "148 Sincere Fort",
-#                     "address_line_2": None,
-#                     "district": None,
-#                     "city": "Lake Charles",
-#                     "postal_code": "89360",
-#                     "country": "Samoa",
-#                     "phone": "0730 783349",
-#                     "created_at": "2022-11-03 14:20:49.962000",
-#                     "last_updated": "2022-11-03 14:20:49.962000",
-#                 },
-#             ]
+        address= [
+                {
+                    "address_id": 1,
+                    "address_line_1": "6826 Herzog Via",
+                    "address_line_2": None,
+                    "district": "Avon",
+                    "city": "New Patienceburgh",
+                    "postal_code": "28441",
+                    "country": "Turkey",
+                    "phone": "1803 637401",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+                {
+                    "address_id": 2,
+                    "address_line_1": "179 Alexie Cliffs",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Aliso Viejo",
+                    "postal_code": "99305-7380",
+                    "country": "San Marino",
+                    "phone": "9621 880720",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+                {
+                    "address_id": 3,
+                    "address_line_1": "148 Sincere Fort",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Lake Charles",
+                    "postal_code": "89360",
+                    "country": "Samoa",
+                    "phone": "0730 783349",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+            ]
         
-#         result = transform_counterparty(counterparty, address)
-#         assert isinstance(result, pd.DataFrame)
-#         expected_columns = [
-#             "counterparty_legal_name",
-#             "counterparty_legal_address_line_1",
-#             "counterparty_legal_address_line_2",
-#             "counterparty_legal_district",
-#             "counterparty_legal_city",
-#             "counterparty_legal_postal_code",
-#             "counterparty_legal_country",
-#             "counterparty_legal_phone_number",
-#         ]
+        result = transform_counterparty(address, counterparty)
+        assert isinstance(result, pd.DataFrame)
+        expected_columns = [
+            "counterparty_legal_name",
+            "counterparty_legal_address_line_1",
+            "counterparty_legal_address_line_2",
+            "counterparty_legal_district",
+            "counterparty_legal_city",
+            "counterparty_legal_postal_code",
+            "counterparty_legal_country",
+            "counterparty_legal_phone_number",
+        ]
 
-#         assert list(result.columns) == expected_columns
+        assert list(result.columns) == expected_columns
 
 
-#     def test_handle_null_values(self):
-#         """Test that the function handles null values,
-#         changes column names, merges in the data correctly."""
-#         counterparty =[
-#                 {
-#                     "counterparty_id": 1,
-#                     "counterparty_legal_name": "Fahey and Sons",
-#                     "legal_address_id": 1,
-#                     "commercial_contact": "Micheal Toy",
-#                     "delivery_contact": "Mrs. Lucy Runolfsdottir",
-#                     "created_at": "2022-11-03 14:20:51.563000",
-#                     "last_updated": "2022-11-03 14:20:51.563000",
-#                 },
-#                 {
-#                     "counterparty_id": 2,
-#                     "counterparty_legal_name": "Leannon, Predovic and Morar",
-#                     "legal_address_id": 3,
-#                     "commercial_contact": "Melba Sanford",
-#                     "delivery_contact": "Jean Hane III",
-#                     "created_at": "2022-11-03 14:20:51.563000",
-#                     "last_updated": "2022-11-03 14:20:51.563000",
-#                 },
-#                 {
-#                     "counterparty_id": 3,
-#                     "counterparty_legal_name": "Armstrong Inc",
-#                     "legal_address_id": 2,
-#                     "commercial_contact": "Jane Wiza",
-#                     "delivery_contact": "Myra Kovacek",
-#                     "created_at": "2022-11-03 14:20:51.563000",
-#                     "last_updated": "2022-11-03 14:20:51.563000",
-#                 },
-#             ]
+    def test_handle_null_values(self):
+        """Test that the function handles null values,
+        changes column names, merges in the data correctly."""
+        counterparty =[
+                {
+                    "counterparty_id": 1,
+                    "counterparty_legal_name": "Fahey and Sons",
+                    "legal_address_id": 1,
+                    "commercial_contact": "Micheal Toy",
+                    "delivery_contact": "Mrs. Lucy Runolfsdottir",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+                {
+                    "counterparty_id": 2,
+                    "counterparty_legal_name": "Leannon, Predovic and Morar",
+                    "legal_address_id": 3,
+                    "commercial_contact": "Melba Sanford",
+                    "delivery_contact": "Jean Hane III",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+                {
+                    "counterparty_id": 3,
+                    "counterparty_legal_name": "Armstrong Inc",
+                    "legal_address_id": 2,
+                    "commercial_contact": "Jane Wiza",
+                    "delivery_contact": "Myra Kovacek",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+            ]
         
-#         address = [
-#                 {
-#                     "address_id": 1,
-#                     "address_line_1": "6826 Herzog Via",
-#                     "address_line_2": None,
-#                     "district": "Avon",
-#                     "city": "New Patienceburgh",
-#                     "postal_code": "28441",
-#                     "country": "Turkey",
-#                     "phone": "1803 637401",
-#                     "created_at": "2022-11-03 14:20:49.962000",
-#                     "last_updated": "2022-11-03 14:20:49.962000",
-#                 },
-#                 {
-#                     "address_id": 2,
-#                     "address_line_1": "179 Alexie Cliffs",
-#                     "address_line_2": None,
-#                     "district": None,
-#                     "city": "Aliso Viejo",
-#                     "postal_code": "99305-7380",
-#                     "country": "San Marino",
-#                     "phone": "9621 880720",
-#                     "created_at": "2022-11-03 14:20:49.962000",
-#                     "last_updated": "2022-11-03 14:20:49.962000",
-#                 },
-#                 {
-#                     "address_id": 3,
-#                     "address_line_1": "148 Sincere Fort",
-#                     "address_line_2": None,
-#                     "district": None,
-#                     "city": "Lake Charles",
-#                     "postal_code": "89360",
-#                     "country": "Samoa",
-#                     "phone": "0730 783349",
-#                     "created_at": "2022-11-03 14:20:49.962000",
-#                     "last_updated": "2022-11-03 14:20:49.962000",
-#                 },
-#             ]
-        
-
-#         result = transform_counterparty(counterparty, address)
-
-#         assert pd.isnull(result["counterparty_legal_address_line_2"].iloc[1])
-#         assert pd.isnull(result["counterparty_legal_district"].iloc[2])
-
-#         assert result["counterparty_legal_address_line_1"].iloc[0] == "6826 Herzog Via"
-#         assert result["counterparty_legal_address_line_1"].iloc[1] == "148 Sincere Fort"
-#         assert (
-#             result["counterparty_legal_address_line_1"].iloc[2] == "179 Alexie Cliffs"
-#         )
-
-#         assert "counterparty_legal_address_line_1" in result.columns
-#         assert "counterparty_legal_city" in result.columns
-#         assert "counterparty_legal_country" in result.columns
-
-#     def test_handle_duplicates(self):
-#         """Test that the function correctly handles duplicates in the data."""
-#         counterparty =[
-#                 {
-#                     "counterparty_id": 1,
-#                     "counterparty_legal_name": "Fahey and Sons",
-#                     "legal_address_id": 1,
-#                     "commercial_contact": "Micheal Toy",
-#                     "delivery_contact": "Mrs. Lucy Runolfsdottir",
-#                     "created_at": "2022-11-03 14:20:51.563000",
-#                     "last_updated": "2022-11-03 14:20:51.563000",
-#                 },
-#                 {
-#                     "counterparty_id": 1,
-#                     "counterparty_legal_name": "Fahey and Sons",
-#                     "legal_address_id": 1,
-#                     "commercial_contact": "Micheal Toy",
-#                     "delivery_contact": "Mrs. Lucy Runolfsdottir",
-#                     "created_at": "2022-11-03 14:20:51.563000",
-#                     "last_updated": "2022-11-03 14:20:51.563000",
-#                 },
-#                 {
-#                     "counterparty_id": 2,
-#                     "counterparty_legal_name": "Leannon, Predovic and Morar",
-#                     "legal_address_id": 3,
-#                     "commercial_contact": "Melba Sanford",
-#                     "delivery_contact": "Jean Hane III",
-#                     "created_at": "2022-11-03 14:20:51.563000",
-#                     "last_updated": "2022-11-03 14:20:51.563000",
-#                 },
-#                 {
-#                     "counterparty_id": 3,
-#                     "counterparty_legal_name": "Armstrong Inc",
-#                     "legal_address_id": 2,
-#                     "commercial_contact": "Jane Wiza",
-#                     "delivery_contact": "Myra Kovacek",
-#                     "created_at": "2022-11-03 14:20:51.563000",
-#                     "last_updated": "2022-11-03 14:20:51.563000",
-#                 },
-#             ]
+        address = [
+                {
+                    "address_id": 1,
+                    "address_line_1": "6826 Herzog Via",
+                    "address_line_2": None,
+                    "district": "Avon",
+                    "city": "New Patienceburgh",
+                    "postal_code": "28441",
+                    "country": "Turkey",
+                    "phone": "1803 637401",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+                {
+                    "address_id": 2,
+                    "address_line_1": "179 Alexie Cliffs",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Aliso Viejo",
+                    "postal_code": "99305-7380",
+                    "country": "San Marino",
+                    "phone": "9621 880720",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+                {
+                    "address_id": 3,
+                    "address_line_1": "148 Sincere Fort",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Lake Charles",
+                    "postal_code": "89360",
+                    "country": "Samoa",
+                    "phone": "0730 783349",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+            ]
         
 
-#         address =[
-#                 {
-#                     "address_id": 1,
-#                     "address_line_1": "6826 Herzog Via",
-#                     "address_line_2": None,
-#                     "district": "Avon",
-#                     "city": "New Patienceburgh",
-#                     "postal_code": "28441",
-#                     "country": "Turkey",
-#                     "phone": "1803 637401",
-#                     "created_at": "2022-11-03 14:20:49.962000",
-#                     "last_updated": "2022-11-03 14:20:49.962000",
-#                 },
-#                 {
-#                     "address_id": 2,
-#                     "address_line_1": "179 Alexie Cliffs",
-#                     "address_line_2": None,
-#                     "district": None,
-#                     "city": "Aliso Viejo",
-#                     "postal_code": "99305-7380",
-#                     "country": "San Marino",
-#                     "phone": "9621 880720",
-#                     "created_at": "2022-11-03 14:20:49.962000",
-#                     "last_updated": "2022-11-03 14:20:49.962000",
-#                 },
-#                 {
-#                     "address_id": 3,
-#                     "address_line_1": "148 Sincere Fort",
-#                     "address_line_2": None,
-#                     "district": None,
-#                     "city": "Lake Charles",
-#                     "postal_code": "89360",
-#                     "country": "Samoa",
-#                     "phone": "0730 783349",
-#                     "created_at": "2022-11-03 14:20:49.962000",
-#                     "last_updated": "2022-11-03 14:20:49.962000",
-#                 },
-#             ]
+        result = transform_counterparty(address, counterparty)
+
+        assert pd.isnull(result["counterparty_legal_address_line_2"].iloc[1])
+        assert pd.isnull(result["counterparty_legal_district"].iloc[2])
+
+        assert result["counterparty_legal_address_line_1"].iloc[0] == "6826 Herzog Via"
+        assert result["counterparty_legal_address_line_1"].iloc[1] == "148 Sincere Fort"
+        assert (
+            result["counterparty_legal_address_line_1"].iloc[2] == "179 Alexie Cliffs"
+        )
+
+        assert "counterparty_legal_address_line_1" in result.columns
+        assert "counterparty_legal_city" in result.columns
+        assert "counterparty_legal_country" in result.columns
+
+    def test_handle_duplicates(self):
+        """Test that the function correctly handles duplicates in the data."""
+        counterparty =[
+                {
+                    "counterparty_id": 1,
+                    "counterparty_legal_name": "Fahey and Sons",
+                    "legal_address_id": 1,
+                    "commercial_contact": "Micheal Toy",
+                    "delivery_contact": "Mrs. Lucy Runolfsdottir",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+                {
+                    "counterparty_id": 1,
+                    "counterparty_legal_name": "Fahey and Sons",
+                    "legal_address_id": 1,
+                    "commercial_contact": "Micheal Toy",
+                    "delivery_contact": "Mrs. Lucy Runolfsdottir",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+                {
+                    "counterparty_id": 2,
+                    "counterparty_legal_name": "Leannon, Predovic and Morar",
+                    "legal_address_id": 3,
+                    "commercial_contact": "Melba Sanford",
+                    "delivery_contact": "Jean Hane III",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+                {
+                    "counterparty_id": 3,
+                    "counterparty_legal_name": "Armstrong Inc",
+                    "legal_address_id": 2,
+                    "commercial_contact": "Jane Wiza",
+                    "delivery_contact": "Myra Kovacek",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000",
+                },
+            ]
         
 
-#         result = transform_counterparty(counterparty, address)
+        address =[
+                {
+                    "address_id": 1,
+                    "address_line_1": "6826 Herzog Via",
+                    "address_line_2": None,
+                    "district": "Avon",
+                    "city": "New Patienceburgh",
+                    "postal_code": "28441",
+                    "country": "Turkey",
+                    "phone": "1803 637401",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+                {
+                    "address_id": 2,
+                    "address_line_1": "179 Alexie Cliffs",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Aliso Viejo",
+                    "postal_code": "99305-7380",
+                    "country": "San Marino",
+                    "phone": "9621 880720",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+                {
+                    "address_id": 3,
+                    "address_line_1": "148 Sincere Fort",
+                    "address_line_2": None,
+                    "district": None,
+                    "city": "Lake Charles",
+                    "postal_code": "89360",
+                    "country": "Samoa",
+                    "phone": "0730 783349",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000",
+                },
+            ]
+        
 
-#         assert result.duplicated().sum() == 0
-#         assert len(result) == 3
+        result = transform_counterparty(address, counterparty)
+
+        assert result.duplicated().sum() == 0
+        assert len(result) == 3
 
 
 class TestTransformFactsSalesOrder:

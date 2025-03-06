@@ -1,6 +1,3 @@
-"""Function should take files from extract s3 bucket
-transform/clean the data into a parquet file into s3 transform bucket"""
-
 import logging
 import boto3
 import json
@@ -239,20 +236,22 @@ def transform_currency(currency):
 ############################# transform counterparty ############################## noqa
 
 
-def transform_counterparty(counterparty, address):
+def transform_counterparty(address, counterparty):
     """Transforms counterparty and address data to match the warehouse schema."""
 
     if counterparty and address:
         counterparty_df = pd.DataFrame(counterparty)
         address_df = pd.DataFrame(address)
 
-
         address_df.drop(columns=["created_at"], inplace=True)
         address_df.drop(columns=["last_updated"], inplace=True)
         counterparty_df.drop(columns=["created_at"], inplace=True)
         counterparty_df.drop(columns=["last_updated"], inplace=True)
 
-        transformed_df = counterparty_df.merge(address_df, left_on="address_id", right_on="legal_address_id", how="left")
+        transformed_df = counterparty_df.merge(
+    address_df, left_on="legal_address_id", right_on="address_id", how="left"
+)
+
 
         transformed_df.drop(columns=['address_id'], inplace=True)
         transformed_df.drop(columns=['legal_address_id'], inplace=True)
@@ -275,12 +274,22 @@ def transform_counterparty(counterparty, address):
             .drop_duplicates()
         )
         transformed_df.set_index("counterparty_id", inplace=True)
-        #print("Transformed Columns:", transformed_df.columns)
-        
+        print("Transformed Columns:", transformed_df.columns)
+        print(transformed_df.head())
         return transformed_df
     else:
         return pd.DataFrame([])
 
+<<<<<<< HEAD
+=======
+# s3_client = boto3.client("s3")
+# file_data = read(["data/by time/2025/03-March/04/10:43:43.533092/counterparty"], 
+# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
+# file_data2 = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
+# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
+# print(transform_counterparty(file_data2['address'], file_data['counterparty']))
+
+>>>>>>> origin/main
 ###################### facts sales table ###################### noqa
 
 def transform_fact_sales_order(sales_order):
