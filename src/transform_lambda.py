@@ -8,8 +8,6 @@ from botocore.exceptions import ClientError
 from datetime import datetime
 import pandas as pd
 import pycountry
-# import pyarrow as pa
-# import pyarrow.parquet as pq
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -32,15 +30,9 @@ def lambda_handler(event, context):
     # purchase_order = loaded__files["purchase_order"]
     # payment_type = loaded__files["payment_type"]
     # transaction = loaded__files["transaction"]
-    # split = event["address"].split("/")
-    # year = split[2]
-    # month = split[3]
-    # day = split[4]
-    # time = split[5]
-    # year = split[2]
-    # month = split[3]
-    # day = split[4]
-    # time = split[5]
+
+    split = event["filespaths"]["address"].split("/")
+    year,month,day,time = split[2],split[3],split[4],split[5]
 
     transformed_date = create_date_table()
     transformed_sales_order = transform_fact_sales_order(sales_order)
@@ -49,59 +41,45 @@ def lambda_handler(event, context):
     transformed_design = transform_design(design)
     transformed_currency = transform_currency(currency)
     transformed_counterparty = transform_counterparty(address,counterparty)
+
     write(
         transformed_sales_order,
-        client,"fact_sales_order"
+        client,f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order"
     )
     write(
         transformed_staff,
-        client, "dim_staff"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_staff"
     )
 
     write(
         transformed_location,
-        client, "dim_location"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_location"
     )
 
     write(
         transformed_design,
-        client, "dim_design"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_design"
     )
 
     write(
         transformed_currency,
-        client, "dim_currency"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_currency"
     )
 
     write(
         transformed_counterparty,
-        client, "dim_counterparty"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_counterparty"
     )
 
+    
     write(
         transformed_date,
-        client, "dim_date"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_date"
     )
 
 ################################ read each of the json files ######################################################## # noqa
 
-# def read(file_paths, client ,
-#           bucketname="totes-extract-bucket-20250227154810549900000003"):
 
-#     file_dict = {}
-
-#     for file_path in file_paths:
-
-#         file = client.get_object(Bucket=bucketname, Key=file_path)
-
-#         file_loaded = json.loads(file["Body"].read().decode("utf-8"))
-
-#         table_name = file_path.split("/")[-1]
-
-#         file_dict [table_name] = file_loaded
-
-
-#     return file_dict
 def read(file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"):
     file_dict = {}
 
@@ -124,61 +102,18 @@ def read(file_paths, client, bucketname="totes-extract-bucket-202502271548105499
     return file_dict
 
 
-
-################################ write parquet file to the s3 bucket ############################################### # noqa
-
-# def write(transformed_data,client,filename,bucketname = "totes-transform-bucket-20250227154810549700000001"):   # noqa
-    
-#     parquet_data = transformed_data.to_parquet()
-
-
-#     client.put_object(
-#                 Bucket=bucketname,
-#                 Key=f"{filename}.parquet",
-#                 Body=parquet_data,
-#             )
-
-
-def write(transformed_dataframe, client, filename,bucketname="totes-transform-bucket-20250227154810549700000001"):
+def write(transformed_dataframe, client, filename, bucketname="totes-transform-bucket-20250227154810549700000001"):
     try:
 
-        current_time = datetime.now()
-
-        months = {
-            "01": "January",
-            "02": "February",
-            "03": "March",
-            "04": "April",
-            "05": "May",
-            "06": "June",
-            "07": "July",
-            "08": "August",
-            "09": "September",
-            "10": "October",
-            "11": "November",
-            "12": "December",
-        }
-
-        split = current_time.strftime("%Y-%m-%d %H:%M:%S").split("-")
-        year = split[0]
-        month = split[1]
-        month_str = f"{month}-{months[month]}"
-        day = split[2].split(" ")[0]
-        time = split[2].split(" ")[1]
-
-        file_name = f"data/by time/{year}/{month_str}/{day}/{time}/{filename}"
-        
         parquet_file = transformed_dataframe.to_parquet(index = True)
        
-        logger.info(f"Writing to S3: {file_name}")
+        logger.info(f"Writing to S3: {filename}")
         
-    
         client.put_object(
                 Bucket=bucketname,
-                Key=f"{file_name}.parquet",
+                Key=f"{filename}.parquet",
                 Body=parquet_file,
             )
-
 
     except Exception as e:
 
@@ -186,7 +121,6 @@ def write(transformed_dataframe, client, filename,bucketname="totes-transform-bu
 
 
 ###################################### transform the data for dim location table ###################################   # noqa
-
 
 def transform_location(file_data):
 
@@ -201,15 +135,7 @@ def transform_location(file_data):
 
     return df
 
-# s3_client = boto3.client("s3")
-# file_data = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
-# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
-# transformed_dataframe = transform_location(file_data["address"])
-# write(transformed_dataframe, s3_client,
-# "totes-transform-bucket-20250227154810549700000001", "test")
-
 ############################## transform the data for dim staff table #############################   # noqa
-
 
 def transform_staff(staff_data, department_data):
     if staff_data and department_data:
@@ -320,8 +246,6 @@ def transform_counterparty(counterparty, address):
         counterparty_df = pd.DataFrame(counterparty)
         address_df = pd.DataFrame(address)
 
-        # print("Counterparty Columns:", counterparty_df.columns)
-        # print("Address Columns:", address_df.columns)
 
         address_df.drop(columns=["created_at"], inplace=True)
         address_df.drop(columns=["last_updated"], inplace=True)
@@ -334,7 +258,7 @@ def transform_counterparty(counterparty, address):
         transformed_df.drop(columns=['legal_address_id'], inplace=True)
         transformed_df.drop(columns=['commercial_contact'], inplace=True)
         transformed_df.drop(columns=['delivery_contact'], inplace=True)
-        # print(transformed_df.to_string())
+
 
         transformed_df = (
             transformed_df.rename(
@@ -356,13 +280,6 @@ def transform_counterparty(counterparty, address):
         return transformed_df
     else:
         return pd.DataFrame([])
-
-# s3_client = boto3.client("s3")
-# file_data = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
-# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
-# file_data2 = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
-# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
-# transform_counterparty(file_data["counterparty"],file_data2["address"])
 
 ###################### facts sales table ###################### noqa
 
