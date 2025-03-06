@@ -31,7 +31,10 @@ def lambda_handler(event, context):
     last_extraction_time = time_result[0]
     this_extraction_time = time_result[1]
 
-    write_data(last_extraction_time, this_extraction_time, s3_client, db)
+    result = write_data(last_extraction_time, this_extraction_time, s3_client, db)
+    print(result)
+
+    return result
 
 
 def get_time(s3_client, bucketname='totes-extract-bucket-20250227154810549900000003' ):
@@ -158,7 +161,9 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db ,bucket
 #         )
 
 
-if __name__ == "__main__":
-    event = {}
-    context = {}
-    lambda_handler(event, context)
+# if __name__ == "__main__":
+#     event = {}
+#     context = {}
+#     lambda_handler(event, context)
+
+
