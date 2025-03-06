@@ -30,7 +30,7 @@ variable "database_user" {
 
 variable "default_timeout" {
   type    = number
-  default = 60
+  default = 600
 }
 
 variable "transform_lambda" {

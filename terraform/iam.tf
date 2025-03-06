@@ -46,17 +46,19 @@ resource "aws_iam_role" "lambda_iam2" {
 
 #########################################  IAM Policy for S3 Read/Write   ###################################################
 
+
+
 data "aws_iam_policy_document" "s3_policy" {
   statement {
     effect    = "Allow"
-    actions   = ["s3:ListBucket"] # ListBucket applies to the bucket itself
-    resources = ["${resource.aws_s3_bucket.extract_bucket.arn}"]
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.extract_bucket.arn]
   }
 
   statement {
     effect    = "Allow"
     actions   = ["s3:PutObject", "s3:GetObject"]
-    resources = ["${resource.aws_s3_bucket.extract_bucket.arn}/*"] # Applies to objects inside the bucket
+    resources = ["${resource.aws_s3_bucket.extract_bucket.arn}/*"]
   }
 }
 
@@ -67,7 +69,7 @@ resource "aws_iam_policy" "s3_policy" {
 
 resource "aws_iam_policy_attachment" "s3_attach_policy" {
   name       = "s3_attach_policy"
-  roles      = [aws_iam_role.lambda_iam.name]
+  roles      = [aws_iam_role.lambda_iam.name, aws_iam_role.lambda_iam2.name] # Fixed to attach to both roles
   policy_arn = aws_iam_policy.s3_policy.arn
 }
 
@@ -75,7 +77,7 @@ data "aws_iam_policy_document" "s3_transform_policy" {
   statement {
     effect    = "Allow"
     actions   = ["s3:ListBucket"]
-    resources = ["${resource.aws_s3_bucket.transform_bucket.arn}"]
+    resources = [aws_s3_bucket.transform_bucket.arn]
   }
 
   statement {
@@ -92,10 +94,9 @@ resource "aws_iam_policy" "s3_transform_policy" {
 
 resource "aws_iam_policy_attachment" "s3_transform_attach_policy" {
   name       = "s3_transform_attach_policy"
-  roles      = [aws_iam_role.lambda_iam2.name] 
+  roles      = [aws_iam_role.lambda_iam2.name]
   policy_arn = aws_iam_policy.s3_transform_policy.arn
 }
-
 
 ########################################################## IAM Policy for SNS Notification   ###########################################################
 

@@ -7,12 +7,12 @@ from botocore.exceptions import ClientError
 import logging
 
 try:        # nosec   # noqa
-    from src.connections import connect_to_database # nosec  # noqa
+    from ToteFullOfQueries.src.utils import connect_to_database # nosec  # noqa
 except:     # nosec  # noqa
     pass        # nosec # noqa
  
 try:        # nosec  # noqa
-    from connections import connect_to_database  # nosec  # noqa
+    from utils import connect_to_database  # nosec  # noqa
 except:     # nosec   # noqa
     pass        # nosec  # noqa
 
@@ -85,10 +85,10 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db ,bucket
         "staff",
         "sales_order",
         "address",
-        "payment",
-        "purchase_order",
-        "payment_type",
-        "transaction",
+        # "payment",
+        # "purchase_order",
+        # "payment_type",
+        # "transaction",
     ]
 
     for table in table_list:
@@ -146,7 +146,7 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db ,bucket
     logger.info("Successfully written to bucket!")
     
     #print(filepaths)
-    return filepaths
+    return {"filepaths":filepaths}
 
 
       
