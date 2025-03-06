@@ -317,10 +317,13 @@ def transform_counterparty(counterparty, address):
         print("Counterparty Columns:", counterparty_df.columns)
         print("Address Columns:", address_df.columns)
 
-        address_df.drop(columns=["created_at", "last_updated"], inplace=True)
-        counterparty_df.drop(columns=["created_at", "last_updated"], inplace=True)
+        address_df.drop(columns=["created_at"], inplace=True)
+        address_df.drop(columns=["last_updated"], inplace=True)
+        counterparty_df.drop(columns=["created_at"], inplace=True)
+        counterparty_df.drop(columns=["last_updated"], inplace=True)
 
-        transformed_df = counterparty_df.merge(address_df, left_on="address_id", right_on="legal_address_id", how="left")
+        transformed_df = counterparty_df.merge(address_df, left_on="legal_address_id", right_on="address_id", how="left")
+
         transformed_df.drop(columns=['address_id'], inplace=True)
         transformed_df.drop(columns=['legal_address_id'], inplace=True)
         transformed_df.drop(columns=['commercial_contact'], inplace=True)
