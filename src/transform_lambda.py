@@ -111,6 +111,7 @@ def read(file_paths, client, bucketname="totes-extract-bucket-202502271548105499
             file_loaded = json.loads(file["Body"].read().decode("utf-8"))
             table_name = file_path.split("/")[-1]
             file_dict[table_name] = file_loaded
+            logger.info('JSON file correctly read!')
         except ClientError as e:
             if e.response["Error"]["Code"] == "NoSuchKey":
                 logger.error(
@@ -169,11 +170,20 @@ def write(transformed_dataframe, client, filename,bucketname="totes-extract-buck
         
         parquet_file = transformed_dataframe.to_parquet(index=True)
 
+
+
+       
+        logger.info(f"Writing to S3: {file_name}")
+        
+       
+
+
         client.put_object(
                 Bucket=bucketname,
                 Key=f"{file_name}.parquet",
                 Body=parquet_file,
             )
+
 
     except Exception as e:
 
@@ -310,6 +320,7 @@ def transform_currency(currency):
 
 def transform_counterparty(counterparty, address):
     """Transforms counterparty and address data to match the warehouse schema."""
+
     if counterparty and address:
         counterparty_df = pd.DataFrame(counterparty)
         address_df = pd.DataFrame(address)
@@ -438,14 +449,3 @@ def transform_fact_sales_order(sales_order):
         return pd.DataFrame(columns=expected_columns)
 
 
-# lambda_handler({"filepaths":["data/by time/2025/03-March/04/10:43:43.533092/address",
-# "data/by time/2025/03-March/04/10:43:43.533092/counterparty",
-# "data/by time/2025/03-March/04/10:43:43.533092/currency",
-# "data/by time/2025/03-March/04/10:43:43.533092/department",
-# "data/by time/2025/03-March/04/10:43:43.533092/design",
-# "data/by time/2025/03-March/04/10:43:43.533092/payment",
-# "data/by time/2025/03-March/04/10:43:43.533092/payment_type",
-# "data/by time/2025/03-March/04/10:43:43.533092/purchase_order",
-# "data/by time/2025/03-March/04/10:43:43.533092/sales_order",
-# "data/by time/2025/03-March/04/10:43:43.533092/staff",
-# "data/by time/2025/03-March/04/10:43:43.533092/transaction"]},"hello")
