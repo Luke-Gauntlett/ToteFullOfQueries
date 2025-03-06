@@ -179,9 +179,9 @@ def write(transformed_dataframe, client, filename,bucketname="totes-extract-buck
 
 
         transformed_dataframe.to_parquet(
-            f"s3://{bucketname}/{s3_key}.parquet", index=False, engine="pyarrow"
+            f"s3://{bucketname}/{file_name}.parquet", index=False, engine="pyarrow"
         )
-        logger.info(f"Writing to S3: {s3_key}")
+        logger.info(f"Writing to S3: {file_name}")
         
         parquet_file = transformed_dataframe.to_parquet()
 
