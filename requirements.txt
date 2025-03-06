@@ -9,5 +9,6 @@ six==1.17.0
 urllib3==2.3.0
 pycountry==24.6.1
 botocore==1.36.22
+SQLAlchemy==2.0.38
 
 
