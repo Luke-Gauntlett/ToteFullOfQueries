@@ -435,14 +435,14 @@ def transform_fact_sales_order(sales_order):
         return pd.DataFrame(columns=expected_columns)
 
 
-lambda_handler({"filepaths":["data/by time/2025/03-March/04/10:43:43.533092/address",
-"data/by time/2025/03-March/04/10:43:43.533092/counterparty",
-"data/by time/2025/03-March/04/10:43:43.533092/currency",
-"data/by time/2025/03-March/04/10:43:43.533092/department",
-"data/by time/2025/03-March/04/10:43:43.533092/design",
-"data/by time/2025/03-March/04/10:43:43.533092/payment",
-"data/by time/2025/03-March/04/10:43:43.533092/payment_type",
-"data/by time/2025/03-March/04/10:43:43.533092/purchase_order",
-"data/by time/2025/03-March/04/10:43:43.533092/sales_order",
-"data/by time/2025/03-March/04/10:43:43.533092/staff",
-"data/by time/2025/03-March/04/10:43:43.533092/transaction"]},"hello")
+# lambda_handler({"filepaths":["data/by time/2025/03-March/04/10:43:43.533092/address",
+# "data/by time/2025/03-March/04/10:43:43.533092/counterparty",
+# "data/by time/2025/03-March/04/10:43:43.533092/currency",
+# "data/by time/2025/03-March/04/10:43:43.533092/department",
+# "data/by time/2025/03-March/04/10:43:43.533092/design",
+# "data/by time/2025/03-March/04/10:43:43.533092/payment",
+# "data/by time/2025/03-March/04/10:43:43.533092/payment_type",
+# "data/by time/2025/03-March/04/10:43:43.533092/purchase_order",
+# "data/by time/2025/03-March/04/10:43:43.533092/sales_order",
+# "data/by time/2025/03-March/04/10:43:43.533092/staff",
+# "data/by time/2025/03-March/04/10:43:43.533092/transaction"]},"hello")
