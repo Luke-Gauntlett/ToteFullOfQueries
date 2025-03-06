@@ -139,7 +139,7 @@ def read(file_paths, client, bucketname="totes-extract-bucket-202502271548105499
 #             )
 
 
-def write(transformed_dataframe, client, filename,bucketname="totes-extract-bucket-20250227154810549900000003"):
+def write(transformed_dataframe, client, filename,bucketname="totes-transform-bucket-20250227154810549700000001"):
     try:
 
         current_time = datetime.now()
@@ -168,16 +168,11 @@ def write(transformed_dataframe, client, filename,bucketname="totes-extract-buck
 
         file_name = f"data/by time/{year}/{month_str}/{day}/{time}/{filename}"
         
-        parquet_file = transformed_dataframe.to_parquet(index=True)
-
-
-
+        parquet_file = transformed_dataframe.to_parquet(index = True)
        
         logger.info(f"Writing to S3: {file_name}")
         
-       
-
-
+    
         client.put_object(
                 Bucket=bucketname,
                 Key=f"{file_name}.parquet",
@@ -325,15 +320,15 @@ def transform_counterparty(counterparty, address):
         counterparty_df = pd.DataFrame(counterparty)
         address_df = pd.DataFrame(address)
 
-        print("Counterparty Columns:", counterparty_df.columns)
-        print("Address Columns:", address_df.columns)
+        # print("Counterparty Columns:", counterparty_df.columns)
+        # print("Address Columns:", address_df.columns)
 
         address_df.drop(columns=["created_at"], inplace=True)
         address_df.drop(columns=["last_updated"], inplace=True)
         counterparty_df.drop(columns=["created_at"], inplace=True)
         counterparty_df.drop(columns=["last_updated"], inplace=True)
 
-        transformed_df = counterparty_df.merge(address_df, left_on="legal_address_id", right_on="address_id", how="left")
+        transformed_df = counterparty_df.merge(address_df, left_on="address_id", right_on="legal_address_id", how="left")
 
         transformed_df.drop(columns=['address_id'], inplace=True)
         transformed_df.drop(columns=['legal_address_id'], inplace=True)
@@ -356,7 +351,7 @@ def transform_counterparty(counterparty, address):
             .drop_duplicates()
         )
         transformed_df.set_index("counterparty_id", inplace=True)
-        print("Transformed Columns:", transformed_df.columns)
+        #print("Transformed Columns:", transformed_df.columns)
         
         return transformed_df
     else:
