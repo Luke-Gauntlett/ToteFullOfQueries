@@ -1,6 +1,4 @@
-import pandas as pd
-from src.transform_lambda import (
-    transform_staff,
+from src.transform_lambda import (transform_staff,
     transform_location,
     transform_design,
     get_currency_name,
