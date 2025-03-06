@@ -208,7 +208,7 @@ def load_date_range(s3_client, object_key, bucketname):
         date_range = json.load(response['Body'])
         start_date = pd.to_datetime(date_range['start_date'])
         end_date = pd.to_datetime(date_range['end_date'])
-    except Exception as e:
+    except Exception:
         today = pd.to_datetime('today')
         start_date = pd.to_datetime('2000-01-01')
         end_date = today + pd.DateOffset(years=50)
