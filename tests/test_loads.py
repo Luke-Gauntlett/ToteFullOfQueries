@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 import os
 import sqlite3 # import create_engine
-from pprint import pprint
+# from pprint import pprint
 
 location_data = [
     {
@@ -144,7 +144,8 @@ class TestWarehouse:
         
         engine_conn = temp_db
         cur = engine_conn.cursor()
-        # cur.execute("CREATE TABLE test_design (created_at, design_name, file_location, file_name, last_updated)")
+        # cur.execute("CREATE TABLE test_design (created_at, design_name, 
+        # file_location, file_name, last_updated)")
 
         cur.execute("DROP TABLE IF EXISTS test_design;")
         load_df_to_warehouse(test_df, 'test_design', engine_conn=engine_conn)
@@ -190,7 +191,8 @@ class TestWarehouse:
         
         engine_conn = temp_db
         cur = engine_conn.cursor()
-        # cur.execute("CREATE TABLE test_design (created_at, design_name, file_location, file_name, last_updated)")
+        # cur.execute("CREATE TABLE test_design (created_at, design_name, 
+        # file_location, file_name, last_updated)")
 
         cur.execute("DROP TABLE IF EXISTS test_design;")
         load_df_to_warehouse(test_df, 'test_design', engine_conn=engine_conn)
