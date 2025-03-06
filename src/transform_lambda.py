@@ -221,12 +221,15 @@ def save_date_range(s3_client, bucketname, object_key, date_range):
 
 def generate_date_table(start_date, end_date):
     dates = pd.date_range(start=start_date, end=end_date, freq='D')
-    date_table = pd.DataFrame({'Date': dates})
-    date_table['Year'] = date_table['Date'].dt.year
-    date_table['Month'] = date_table['Date'].dt.month
-    date_table['Day'] = date_table['Date'].dt.day
-    date_table['Weekday'] = date_table['Date'].dt.weekday
-    date_table['WeekdayName'] = date_table['Date'].dt.day_name()
+    date_table = pd.DataFrame({'date': dates})
+    date_table['year'] = date_table['date'].dt.year
+    date_table['month'] = date_table['date'].dt.month
+    date_table['day'] = date_table['date'].dt.day
+    date_table['day_of_week'] = date_table['date'].dt.weekday + 1
+    date_table['day_name'] = date_table['date'].dt.day_name()
+    date_table['month_name'] = date_table['date'].dt.month_name()
+    date_table['quarter'] = date_table['date'].dt.quarter
+    date_table.set_index('date', inplace=True)
     return date_table
 
 ############################# transform design ############################## noqa
