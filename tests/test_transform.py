@@ -1,6 +1,7 @@
 from src.transform_lambda import (transform_staff,transform_location,transform_design,
                                   get_currency_name,transform_currency,
                                   transform_counterparty,transform_fact_sales_order)
+import pandas as pd
 
 def test_transform_staff():
     sample_staff = [
@@ -489,8 +490,6 @@ class TestTransformCurrency:
         assert result.empty
         assert list(result.columns) == ["currency_code", "currency_name"]
 
-
-import pandas as pd
 
 class TestTransformCounterParty:
     def test_returns_a_dataframe(self):
