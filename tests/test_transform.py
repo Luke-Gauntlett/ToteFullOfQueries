@@ -7,8 +7,6 @@ from src.transform_lambda import (transform_staff,
     transform_fact_sales_order,
 )
 
-
-
 def test_transform_staff():
     sample_staff = [
         {
