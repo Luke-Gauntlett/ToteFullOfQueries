@@ -1,3 +1,4 @@
+import pandas as pd
 from src.transform_lambda import (
     transform_staff,
     transform_location,
@@ -7,7 +8,7 @@ from src.transform_lambda import (
     transform_counterparty,
     transform_fact_sales_order,
 )
-#import pandas as pd
+
 
 
 def test_transform_staff():
