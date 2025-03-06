@@ -288,6 +288,8 @@ def transform_currency(currency):
             df.set_index("currency_id", inplace=True)
 
             return df[["currency_code", "currency_name"]].drop_duplicates()
+        else:
+            return pd.DataFrame([])
     except KeyError as e:
         logger.error(f"Error in transform_currency: {e}")
         raise  

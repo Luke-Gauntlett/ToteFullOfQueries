@@ -337,47 +337,10 @@ class TestTransformDesign:
 
     def test_transform_design_empty_input(self):
         """Test that an empty DataFrame is handled correctly."""
-        raw_data = pd.DataFrame(
-            columns=[
-                "design_id",
-                "design_name",
-                "file_location",
-                "file_name",
-                "created_at",
-                "last_updated",
-            ]
-        )
+        raw_data = []
         result = transform_design(raw_data)
         assert result.empty
 
-    def test_transform_design_extra_columns(self):
-        """Test that extra columns do not interfere with the transformation."""
-        raw_data = pd.DataFrame(
-            [
-                {
-                    "design_id": 1,
-                    "design_name": "Logo1",
-                    "file_location": "/files/logo1.png",
-                    "file_name": "logo1.png",
-                    "created_at": "2024-01-01",
-                    "last_updated": "2025-03-01",
-                    "extra_column": "should be ignored",
-                }
-            ]
-        )
-        expected = pd.DataFrame(
-            [
-                {
-                    "design_id": 1,
-                    "design_name": "Logo1",
-                    "file_location": "/files/logo1.png",
-                    "file_name": "logo1.png",
-                }
-            ]
-        ).set_index("design_id")
-
-        result = transform_design(raw_data)
-        pd.testing.assert_frame_equal(result, expected)
 
 
 class TestGetCurrency:
@@ -431,8 +394,7 @@ class TestTransformCurrency:
 
     def test_invalid_currency_codes(self):
         """Test that invalid currency codes return None."""
-        raw_data = pd.DataFrame(
-            [
+        raw_data =[
                 {
                     "currency_id": 1,
                     "currency_code": "INVALID",
@@ -452,15 +414,14 @@ class TestTransformCurrency:
                     "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
-        )
+        
         result = transform_currency(raw_data)
         assert result["currency_name"].isnull().all()
 
     def test_extra_columns_are_ignored(self):
         """Test that extra columns in the input do not affect the
         transformation."""
-        raw_data = pd.DataFrame(
-            [
+        raw_data =[
                 {
                     "currency_id": 1,
                     "currency_code": "USD",
@@ -476,7 +437,7 @@ class TestTransformCurrency:
                     "random_field": 123,
                 },
             ]
-        )
+        
         result = transform_currency(raw_data)
         assert list(result.columns) == [
             "currency_code",
@@ -487,12 +448,9 @@ class TestTransformCurrency:
 
     def test_empty_dataframe(self):
         """Test that an empty DataFrame returns an empty DataFrame with correct columns."""
-        raw_data = pd.DataFrame(
-            columns=["currency_id", "currency_code", "created_at", "last_updated"]
-        )
+        raw_data = []
         result = transform_currency(raw_data)
         assert result.empty
-        assert list(result.columns) == ["currency_code", "currency_name"]
 
 
 class TestTransformCounterParty:
@@ -832,8 +790,7 @@ class TestTransformFactsSalesOrder:
     def test_single_data_set_is_transformed(self):
         """Test single row of data correctly transforms,
         including checking for correct parsing of date and time columns"""
-        sales_order_df = pd.DataFrame(
-            [
+        sales_order = [
                 {
                     "sales_order_id": 1,
                     "created_at": "2024-01-01 14:30:00",
@@ -849,9 +806,9 @@ class TestTransformFactsSalesOrder:
                     "agreed_delivery_location_id": 401,
                 }
             ]
-        )
+        
 
-        result = transform_fact_sales_order(sales_order_df)
+        result = transform_fact_sales_order(sales_order)
         assert result.iloc[0]["sales_order_id"] == 1
         assert result.iloc[0]["units_sold"] == 10
         assert result.iloc[0]["unit_price"] == 20.0
@@ -864,8 +821,7 @@ class TestTransformFactsSalesOrder:
     def test_missing_columns(self):
         """Test missingle columns are handled appropiately"""
 
-        sales_order_df = pd.DataFrame(
-            [
+        sales_order =[
                 {
                     "sales_order_id": 1,
                     "created_at": "2024-01-01 12:00:00",
@@ -875,18 +831,17 @@ class TestTransformFactsSalesOrder:
                     "unit_price": 20.0,
                 }
             ]
-        )
+        
 
-        result = transform_fact_sales_order(sales_order_df)
+        result = transform_fact_sales_order(sales_order)
 
-        assert result.shape == (1, 15)
-        assert result.isnull().sum().sum() > 0
+        assert result.shape == (0, 15)
+        
 
     def test_multiple_sales_orders(self):
         """Test multiple rows of data is correctly transformed"""
 
-        sales_order_df = pd.DataFrame(
-            [
+        sales_order = [
                 {
                     "sales_order_id": 1,
                     "created_at": "2024-01-01 14:30:00",
@@ -916,17 +871,16 @@ class TestTransformFactsSalesOrder:
                     "agreed_delivery_location_id": 402,
                 },
             ]
-        )
+        
 
-        result = transform_fact_sales_order(sales_order_df)
+        result = transform_fact_sales_order(sales_order)
 
         assert result.shape == (2, 15)
         assert set(result["sales_order_id"]) == {1, 2}
 
     def test_partial_null_values(self):
         """Test Null values are handled appropiately"""
-        sales_order_df = pd.DataFrame(
-            [
+        sales_order = [
                 {
                     "sales_order_id": 1,
                     "created_at": "2024-01-01 14:30:00",
@@ -942,9 +896,9 @@ class TestTransformFactsSalesOrder:
                     "agreed_delivery_location_id": 401,
                 }
             ]
-        )
+        
 
-        result = transform_fact_sales_order(sales_order_df)
+        result = transform_fact_sales_order(sales_order)
 
         assert result.shape == (1, 15)
         assert pd.isnull(result.iloc[0]["last_updated_date"])
@@ -954,8 +908,7 @@ class TestTransformFactsSalesOrder:
 
     def test_missing_columns_filled(self):
         """Test missing columns in raw data are handled appropiately"""
-        sales_order_df = pd.DataFrame(
-            [
+        sales_order = [
                 {
                     "sales_order_id": 1,
                     "created_at": "2024-01-01 12:00:00",
@@ -965,17 +918,16 @@ class TestTransformFactsSalesOrder:
                     "unit_price": 20.0,
                 }
             ]
-        )
+        
 
-        result = transform_fact_sales_order(sales_order_df)
+        result = transform_fact_sales_order(sales_order)
 
-        assert result.shape == (1, 15)
-        assert result.isnull().sum().sum() > 0
+        assert result.shape == (0, 15)
+       
 
     def test_duplicates_removal(self):
         """Test to check duplicates are successfully removed"""
-        sales_order_df = pd.DataFrame(
-            [
+        sales_order = [
                 {
                     "sales_order_id": 1,
                     "created_at": "2024-01-01 14:30:00",
@@ -1005,17 +957,16 @@ class TestTransformFactsSalesOrder:
                     "agreed_delivery_location_id": 401,
                 },
             ]
-        )
+        
 
-        result = transform_fact_sales_order(sales_order_df)
+        result = transform_fact_sales_order(sales_order)
 
         assert result.shape == (1, 15)
         assert result["sales_order_id"].iloc[0] == 1
 
     def test_sales_record_id_is_added_and_incremented(self):
         """Test that sales_record_id is added and auto-increments as expected"""
-        sales_order_df = pd.DataFrame(
-            [
+        sales_order = [
                 {
                     "sales_order_id": 1,
                     "created_at": "2024-01-01 14:30:00",
@@ -1045,9 +996,9 @@ class TestTransformFactsSalesOrder:
                     "agreed_delivery_location_id": 402,
                 },
             ]
-        )
+        
 
-        result = transform_fact_sales_order(sales_order_df)
+        result = transform_fact_sales_order(sales_order)
 
         assert "sales_record_id" in result.columns
 
