@@ -9,190 +9,190 @@ from src.transform_lambda import (
 )
 import pandas as pd
 
-
-def test_transform_staff():
-    sample_staff = [
-        {
-            "staff_id": 1,
-            "first_name": "Jeremie",
-            "last_name": "Franey",
-            "department_id": 1,
-            "email_address": "jeremie.franey@terrifictotes.com",
-            "created_at": "2022-11-03 14:20:51.563000",
-            "last_updated": "2022-11-03 14:20:51.563000",
-        },
-        {
-            "staff_id": 2,
-            "first_name": "Deron",
-            "last_name": "Beier",
-            "department_id": 2,
-            "email_address": "deron.beier@terrifictotes.com",
-            "created_at": "2022-11-03 14:20:51.563000",
-            "last_updated": "2022-11-03 14:20:51.563000",
-        },
-        {
-            "staff_id": 3,
-            "first_name": "Jeanette",
-            "last_name": "Erdman",
-            "department_id": 3,
-            "email_address": "jeanette.erdman@terrifictotes.com",
-            "created_at": "2022-11-03 14:20:51.563000",
-            "last_updated": "2022-11-03 14:20:51.563000",
-        },
-    ]
-
-    sample_department = [
-        {
-            "department_id": 1,
-            "department_name": "Sales",
-            "location": "Manchester",
-            "manager": "Richard Roma",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-        {
-            "department_id": 2,
-            "department_name": "Purchasing",
-            "location": "Manchester",
-            "manager": "Naomi Lapaglia",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-        {
-            "department_id": 3,
-            "department_name": "Production",
-            "location": "Leeds",
-            "manager": "Chester Ming",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-    ]
-
-    result = transform_staff(sample_staff, sample_department)
-
-    expected_df_first_entry = pd.DataFrame(
-        [
+class TestTransformStaff:
+    def test_transform_staff(self):
+        sample_staff = [
             {
                 "staff_id": 1,
                 "first_name": "Jeremie",
                 "last_name": "Franey",
-                "department_name": "Sales",
-                "location": "Manchester",
+                "department_id": 1,
                 "email_address": "jeremie.franey@terrifictotes.com",
+                "created_at": "2022-11-03 14:20:51.563000",
+                "last_updated": "2022-11-03 14:20:51.563000",
             },
             {
                 "staff_id": 2,
                 "first_name": "Deron",
                 "last_name": "Beier",
-                "department_name": "Purchasing",
-                "location": "Manchester",
+                "department_id": 2,
                 "email_address": "deron.beier@terrifictotes.com",
+                "created_at": "2022-11-03 14:20:51.563000",
+                "last_updated": "2022-11-03 14:20:51.563000",
             },
             {
                 "staff_id": 3,
                 "first_name": "Jeanette",
                 "last_name": "Erdman",
-                "department_name": "Production",
-                "location": "Leeds",
+                "department_id": 3,
                 "email_address": "jeanette.erdman@terrifictotes.com",
+                "created_at": "2022-11-03 14:20:51.563000",
+                "last_updated": "2022-11-03 14:20:51.563000",
             },
         ]
-    )
 
-    expected_df_first_entry.set_index("staff_id", inplace=True)
+        sample_department = [
+            {
+                "department_id": 1,
+                "department_name": "Sales",
+                "location": "Manchester",
+                "manager": "Richard Roma",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+            {
+                "department_id": 2,
+                "department_name": "Purchasing",
+                "location": "Manchester",
+                "manager": "Naomi Lapaglia",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+            {
+                "department_id": 3,
+                "department_name": "Production",
+                "location": "Leeds",
+                "manager": "Chester Ming",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+        ]
 
-    # print(expected_df_first_entry.to_string())
-    # print(result.to_string())
+        result = transform_staff(sample_staff, sample_department)
 
-    pd.testing.assert_frame_equal(expected_df_first_entry, result)
+        expected_df_first_entry = pd.DataFrame(
+            [
+                {
+                    "staff_id": 1,
+                    "first_name": "Jeremie",
+                    "last_name": "Franey",
+                    "department_name": "Sales",
+                    "location": "Manchester",
+                    "email_address": "jeremie.franey@terrifictotes.com",
+                },
+                {
+                    "staff_id": 2,
+                    "first_name": "Deron",
+                    "last_name": "Beier",
+                    "department_name": "Purchasing",
+                    "location": "Manchester",
+                    "email_address": "deron.beier@terrifictotes.com",
+                },
+                {
+                    "staff_id": 3,
+                    "first_name": "Jeanette",
+                    "last_name": "Erdman",
+                    "department_name": "Production",
+                    "location": "Leeds",
+                    "email_address": "jeanette.erdman@terrifictotes.com",
+                },
+            ]
+        )
+
+        expected_df_first_entry.set_index("staff_id", inplace=True)
+
+        # print(expected_df_first_entry.to_string())
+        # print(result.to_string())
+
+        pd.testing.assert_frame_equal(expected_df_first_entry, result)
 
 
-def test_transform_staff_empty_input():
-    result = transform_staff([], [])
-    assert result.empty
+    def test_transform_staff_empty_input(self):
+        result = transform_staff([], [])
+        assert result.empty
 
+class TestTransformAddress:
+    def test_location(self):
 
-def test_location():
+        sample_addresses = [
+            {
+                "address_id": 1,
+                "address_line_1": "6826 Herzog Via",
+                "address_line_2": None,
+                "district": "Avon",
+                "city": "New Patienceburgh",
+                "postal_code": "28441",
+                "country": "Turkey",
+                "phone": "1803 637401",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+            {
+                "address_id": 2,
+                "address_line_1": "179 Alexie Cliffs",
+                "address_line_2": None,
+                "district": None,
+                "city": "Aliso Viejo",
+                "postal_code": "99305-7380",
+                "country": "San Marino",
+                "phone": "9621 880720",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+            {
+                "address_id": 3,
+                "address_line_1": "148 Sincere Fort",
+                "address_line_2": None,
+                "district": None,
+                "city": "Lake Charles",
+                "postal_code": "89360",
+                "country": "Samoa",
+                "phone": "0730 783349",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            },
+        ]
 
-    sample_addresses = [
-        {
-            "address_id": 1,
-            "address_line_1": "6826 Herzog Via",
-            "address_line_2": None,
-            "district": "Avon",
-            "city": "New Patienceburgh",
-            "postal_code": "28441",
-            "country": "Turkey",
-            "phone": "1803 637401",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-        {
-            "address_id": 2,
-            "address_line_1": "179 Alexie Cliffs",
-            "address_line_2": None,
-            "district": None,
-            "city": "Aliso Viejo",
-            "postal_code": "99305-7380",
-            "country": "San Marino",
-            "phone": "9621 880720",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-        {
-            "address_id": 3,
-            "address_line_1": "148 Sincere Fort",
-            "address_line_2": None,
-            "district": None,
-            "city": "Lake Charles",
-            "postal_code": "89360",
-            "country": "Samoa",
-            "phone": "0730 783349",
-            "created_at": "2022-11-03 14:20:49.962000",
-            "last_updated": "2022-11-03 14:20:49.962000",
-        },
-    ]
+        expected_location = [
+            {
+                "location_id": 1,
+                "address_line_1": "6826 Herzog Via",
+                "address_line_2": None,
+                "district": "Avon",
+                "city": "New Patienceburgh",
+                "postal_code": "28441",
+                "country": "Turkey",
+                "phone": "1803 637401",
+            },
+            {
+                "location_id": 2,
+                "address_line_1": "179 Alexie Cliffs",
+                "address_line_2": None,
+                "district": None,
+                "city": "Aliso Viejo",
+                "postal_code": "99305-7380",
+                "country": "San Marino",
+                "phone": "9621 880720",
+            },
+            {
+                "location_id": 3,
+                "address_line_1": "148 Sincere Fort",
+                "address_line_2": None,
+                "district": None,
+                "city": "Lake Charles",
+                "postal_code": "89360",
+                "country": "Samoa",
+                "phone": "0730 783349",
+            },
+        ]
 
-    expected_location = [
-        {
-            "location_id": 1,
-            "address_line_1": "6826 Herzog Via",
-            "address_line_2": None,
-            "district": "Avon",
-            "city": "New Patienceburgh",
-            "postal_code": "28441",
-            "country": "Turkey",
-            "phone": "1803 637401",
-        },
-        {
-            "location_id": 2,
-            "address_line_1": "179 Alexie Cliffs",
-            "address_line_2": None,
-            "district": None,
-            "city": "Aliso Viejo",
-            "postal_code": "99305-7380",
-            "country": "San Marino",
-            "phone": "9621 880720",
-        },
-        {
-            "location_id": 3,
-            "address_line_1": "148 Sincere Fort",
-            "address_line_2": None,
-            "district": None,
-            "city": "Lake Charles",
-            "postal_code": "89360",
-            "country": "Samoa",
-            "phone": "0730 783349",
-        },
-    ]
+        result = transform_location(sample_addresses)
 
-    result = transform_location(sample_addresses)
+        expected_df = pd.DataFrame(expected_location)
 
-    expected_df = pd.DataFrame(expected_location)
+        expected_df.set_index("location_id", inplace=True)
 
-    expected_df.set_index("location_id", inplace=True)
-
-    pd.testing.assert_frame_equal(expected_df, result)
+        pd.testing.assert_frame_equal(expected_df, result)
 
 
 # def test_make_a_date():
@@ -216,8 +216,7 @@ def test_location():
 class TestTransformDesign:
     def test_returns_a_dataframe(self):
         """Test returns a dataframe structure."""
-        raw_data = pd.DataFrame(
-            [
+        raw_data = [
                 {
                     "design_id": 1,
                     "created_at": "2022-11-03 14:20:49.962000",
@@ -243,14 +242,13 @@ class TestTransformDesign:
                     "last_updated": "2023-02-07 17:31:10.093000",
                 },
             ]
-        )
+        
         result = transform_design(raw_data)
         assert isinstance(result, pd.DataFrame)
 
     def test_transform_design_basic(self):
         """Test basic transformation from raw to warehouse schema."""
-        raw_data = pd.DataFrame(
-            [
+        raw_data = [
                 {
                     "design_id": 10,
                     "created_at": "2022-11-03 14:20:49.962000",
@@ -276,7 +274,7 @@ class TestTransformDesign:
                     "last_updated": "2023-02-07 17:31:10.093000",
                 },
             ]
-        )
+        
         expected = pd.DataFrame(
             [
                 {
@@ -305,8 +303,7 @@ class TestTransformDesign:
 
     def test_transform_design_removes_duplicates(self):
         """Test that duplicate rows are removed."""
-        raw_data = pd.DataFrame(
-            [
+        raw_data = [
                 {
                     "design_id": 8,
                     "created_at": "2022-11-03 14:20:49.962000",
@@ -324,7 +321,7 @@ class TestTransformDesign:
                     "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
-        )
+        
         expected = pd.DataFrame(
             [
                 {
