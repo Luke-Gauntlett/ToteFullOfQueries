@@ -16,11 +16,9 @@ logger.setLevel(logging.INFO)
 
 
 def lambda_handler(event, context):
-
     client = boto3.client("s3")
 
     loaded__files = read(event["filepaths"], client)
-
     counterparty = loaded__files["counterparty"]
     currency = loaded__files["currency"]
     department = loaded__files["department"]
@@ -28,16 +26,13 @@ def lambda_handler(event, context):
     staff = loaded__files["staff"]
     sales_order = loaded__files["sales_order"]
     address = loaded__files["address"]
-    
-    #only needed for extension
 
+    #only needed for extension
     # payment = loaded__files["payment"]
     # purchase_order = loaded__files["purchase_order"]
     # payment_type = loaded__files["payment_type"]
     # transaction = loaded__files["transaction"]
-
     # split = event["address"].split("/")
-
     # year = split[2]
     # month = split[3]
     # day = split[4]
@@ -54,12 +49,10 @@ def lambda_handler(event, context):
     transformed_design = transform_design(design)
     transformed_currency = transform_currency(currency)
     transformed_counterparty = transform_counterparty(address,counterparty)
-
     write(
         transformed_sales_order,
-        client, "fact_sales_order"
+        client,"fact_sales_order"
     )
-
     write(
         transformed_staff,
         client, "dim_staff"
@@ -90,7 +83,6 @@ def lambda_handler(event, context):
         client, "dim_date"
     )
 
-
 ################################ read each of the json files ######################################################## # noqa
 
 # def read(file_paths, client ,
@@ -110,9 +102,7 @@ def lambda_handler(event, context):
 
 
 #     return file_dict
-def read(
-    file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"
-):
+def read(file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"):
     file_dict = {}
 
     for file_path in file_paths:
@@ -134,10 +124,11 @@ def read(
     return file_dict
 
 
-################################# write parquet file to the s3 bucket ############################################### # noqa
+
+################################ write parquet file to the s3 bucket ############################################### # noqa
 
 # def write(transformed_data,client,filename,bucketname = "totes-transform-bucket-20250227154810549700000001"):   # noqa
-
+    
 #     parquet_data = transformed_data.to_parquet()
 
 
@@ -176,14 +167,16 @@ def write(transformed_dataframe, client, filename,bucketname="totes-extract-buck
         time = split[2].split(" ")[1]
 
         file_name = f"data/by time/{year}/{month_str}/{day}/{time}/{filename}"
+        
+        parquet_file = transformed_dataframe.to_parquet(index=True)
 
 
-        transformed_dataframe.to_parquet(
-            f"s3://{bucketname}/{file_name}.parquet", index=False, engine="pyarrow"
-        )
+
+       
         logger.info(f"Writing to S3: {file_name}")
         
-        parquet_file = transformed_dataframe.to_parquet()
+       
+
 
         client.put_object(
                 Bucket=bucketname,
@@ -213,6 +206,12 @@ def transform_location(file_data):
 
     return df
 
+# s3_client = boto3.client("s3")
+# file_data = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
+# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
+# transformed_dataframe = transform_location(file_data["address"])
+# write(transformed_dataframe, s3_client,
+# "totes-transform-bucket-20250227154810549700000001", "test")
 
 ############################## transform the data for dim staff table #############################   # noqa
 
@@ -322,77 +321,53 @@ def transform_currency(currency):
 def transform_counterparty(counterparty, address):
     """Transforms counterparty and address data to match the warehouse schema."""
 
-    counterparty_df = pd.DataFrame(counterparty)
-    address_df = pd.DataFrame(address)
+    if counterparty and address:
+        counterparty_df = pd.DataFrame(counterparty)
+        address_df = pd.DataFrame(address)
 
-    counterparty_columns = [
-        "counterparty_id",
-        "counterparty_legal_name",
-        "legal_address_id",
-        "created_at",
-        "last_updated",
-    ]
-    address_columns = [
-        "address_id",
-        "address_line_1",
-        "address_line_2",
-        "district",
-        "city",
-        "postal_code",
-        "country",
-        "phone",
-        "created_at",
-        "last_updated",
-    ]
+        print("Counterparty Columns:", counterparty_df.columns)
+        print("Address Columns:", address_df.columns)
 
-    for col in counterparty_columns:
-        if col not in counterparty_df.columns:
-            logger.warning(f"Column {col} missing in counterparty data. Adding None.")
-            counterparty_df[col] = None
-    for col in address_columns:
-        if col not in address_df.columns:
-            logger.warning(f"Column {col} missing in address data. Adding None.")
-            address_df[col] = None
+        address_df.drop(columns=["created_at"], inplace=True)
+        address_df.drop(columns=["last_updated"], inplace=True)
+        counterparty_df.drop(columns=["created_at"], inplace=True)
+        counterparty_df.drop(columns=["last_updated"], inplace=True)
 
-    address_df.drop(columns=["created_at", "last_updated"], inplace=True)
-    counterparty_df.drop(columns=["created_at", "last_updated"], inplace=True)
+        transformed_df = counterparty_df.merge(address_df, left_on="legal_address_id", right_on="address_id", how="left")
 
-    transformed_df = counterparty_df.merge(
-        address_df, left_on="legal_address_id", right_on="address_id", how="left"
-    )
+        transformed_df.drop(columns=['address_id'], inplace=True)
+        transformed_df.drop(columns=['legal_address_id'], inplace=True)
+        transformed_df.drop(columns=['commercial_contact'], inplace=True)
+        transformed_df.drop(columns=['delivery_contact'], inplace=True)
+        # print(transformed_df.to_string())
 
-    transformed_df = (
-        transformed_df[
-            [
-                "counterparty_id",
-                "counterparty_legal_name",
-                "address_line_1",
-                "address_line_2",
-                "district",
-                "city",
-                "postal_code",
-                "country",
-                "phone",
-            ]
-        ]
-        .rename(
-            columns={
-                "counterparty_id": "counterparty_id",
-                "address_line_1": "counterparty_legal_address_line_1",
-                "address_line_2": "counterparty_legal_address_line_2",
-                "district": "counterparty_legal_district",
-                "city": "counterparty_legal_city",
-                "postal_code": "counterparty_legal_postal_code",
-                "country": "counterparty_legal_country",
-                "phone": "counterparty_legal_phone_number",
-            }
+        transformed_df = (
+            transformed_df.rename(
+                columns={
+                    "address_line_1": "counterparty_legal_address_line_1",
+                    "address_line_2": "counterparty_legal_address_line_2",
+                    "district": "counterparty_legal_district",
+                    "city": "counterparty_legal_city",
+                    "postal_code": "counterparty_legal_postal_code",
+                    "country": "counterparty_legal_country",
+                    "phone": "counterparty_legal_phone_number",
+                }
+            )
+            .drop_duplicates()
         )
-        .drop_duplicates()
-    )
-    transformed_df.set_index("counterparty_id", inplace=True)
-    
-    return transformed_df
+        transformed_df.set_index("counterparty_id", inplace=True)
+        print("Transformed Columns:", transformed_df.columns)
+        
+        return transformed_df
+    else:
+        return pd.DataFrame([])
 
+# s3_client = boto3.client("s3")
+# file_data = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
+# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
+# file_data2 = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
+# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
+# transform_counterparty(file_data["counterparty"],file_data2["address"])
 
 ###################### facts sales table ###################### noqa
 
@@ -472,4 +447,5 @@ def transform_fact_sales_order(sales_order):
     except Exception as e:
         logger.error(f"Error transforming fact_sales_order: {e}", exc_info=True)
         return pd.DataFrame(columns=expected_columns)
+
 

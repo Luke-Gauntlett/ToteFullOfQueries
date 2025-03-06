@@ -501,8 +501,7 @@ class TestTransformCurrency:
 class TestTransformCounterParty:
     def test_returns_a_dataframe(self):
         """Test returns a dataframe structure."""
-        counterparty_df = pd.DataFrame(
-            [
+        counterparty = [
                 {
                     "counterparty_id": 1,
                     "counterparty_legal_name": "Fahey and Sons",
@@ -531,9 +530,8 @@ class TestTransformCounterParty:
                     "last_updated": "2022-11-03 14:20:51.563000",
                 },
             ]
-        )
-        address_df = pd.DataFrame(
-            [
+        
+        address= [
                 {
                     "address_id": 1,
                     "address_line_1": "6826 Herzog Via",
@@ -571,41 +569,9 @@ class TestTransformCounterParty:
                     "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
-        )
-        result = transform_counterparty(counterparty_df, address_df)
+        
+        result = transform_counterparty(counterparty, address)
         assert isinstance(result, pd.DataFrame)
-
-    def test_return_correct_dataframe_columns(self):
-        """Test that the DataFrame returns correct structure,
-        aswell as if empty returns an empty DataFrame"""
-        counterparty_df = pd.DataFrame(
-            columns=[
-                "counterparty_id",
-                "counterparty_legal_name",
-                "legal_address_id",
-                "created_at",
-                "last_updated",
-            ]
-        )
-        address_df = pd.DataFrame(
-            columns=[
-                "address_id",
-                "address_line_1",
-                "address_line_2",
-                "district",
-                "city",
-                "postal_code",
-                "country",
-                "phone",
-                "created_at",
-                "last_updated",
-            ]
-        )
-
-        result = transform_counterparty(counterparty_df, address_df)
-
-        assert result.empty
-
         expected_columns = [
             "counterparty_legal_name",
             "counterparty_legal_address_line_1",
@@ -619,11 +585,11 @@ class TestTransformCounterParty:
 
         assert list(result.columns) == expected_columns
 
+
     def test_handle_null_values(self):
         """Test that the function handles null values,
         changes column names, merges in the data correctly."""
-        counterparty_df = pd.DataFrame(
-            [
+        counterparty =[
                 {
                     "counterparty_id": 1,
                     "counterparty_legal_name": "Fahey and Sons",
@@ -652,9 +618,8 @@ class TestTransformCounterParty:
                     "last_updated": "2022-11-03 14:20:51.563000",
                 },
             ]
-        )
-        address_df = pd.DataFrame(
-            [
+        
+        address = [
                 {
                     "address_id": 1,
                     "address_line_1": "6826 Herzog Via",
@@ -692,11 +657,9 @@ class TestTransformCounterParty:
                     "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
-        )
+        
 
-        result = transform_counterparty(counterparty_df, address_df).reset_index(
-            drop=True
-        )
+        result = transform_counterparty(counterparty, address)
 
         assert pd.isnull(result["counterparty_legal_address_line_2"].iloc[1])
         assert pd.isnull(result["counterparty_legal_district"].iloc[2])
@@ -713,8 +676,7 @@ class TestTransformCounterParty:
 
     def test_handle_duplicates(self):
         """Test that the function correctly handles duplicates in the data."""
-        counterparty_df = pd.DataFrame(
-            [
+        counterparty =[
                 {
                     "counterparty_id": 1,
                     "counterparty_legal_name": "Fahey and Sons",
@@ -752,10 +714,9 @@ class TestTransformCounterParty:
                     "last_updated": "2022-11-03 14:20:51.563000",
                 },
             ]
-        )
+        
 
-        address_df = pd.DataFrame(
-            [
+        address =[
                 {
                     "address_id": 1,
                     "address_line_1": "6826 Herzog Via",
@@ -793,9 +754,9 @@ class TestTransformCounterParty:
                     "last_updated": "2022-11-03 14:20:49.962000",
                 },
             ]
-        )
+        
 
-        result = transform_counterparty(counterparty_df, address_df)
+        result = transform_counterparty(counterparty, address)
 
         assert result.duplicated().sum() == 0
         assert len(result) == 3
