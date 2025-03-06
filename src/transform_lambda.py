@@ -22,12 +22,13 @@ def lambda_handler(event, context):
     address = loaded__files["address"]
 
     #only needed for extension
+    
     # payment = loaded__files["payment"]
     # purchase_order = loaded__files["purchase_order"]
     # payment_type = loaded__files["payment_type"]
     # transaction = loaded__files["transaction"]
 
-    split = event["filespaths"]["address"].split("/")
+    split = event["filepaths"][0].split("/")
     year,month,day,time = split[2],split[3],split[4],split[5]
 
     transformed_date = create_date_table()
@@ -132,13 +133,6 @@ def transform_location(file_data):
 
     return df
 
-# s3_client = boto3.client("s3")
-# file_data = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
-# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
-# transformed_dataframe = transform_location(file_data["address"])
-# write(transformed_dataframe, s3_client,
-# "totes-transform-bucket-20250227154810549700000001", "test")
-
 ############################## transform the data for dim staff table #############################   # noqa
 
 
@@ -172,15 +166,10 @@ def transform_staff(staff_data, department_data):
 
 def create_date_table(start="2025-01-01", end="2025-12-31"):
 
-    # current_date = datetime.now().date()
-
-    # if current_date > end:
-    #     end = current_datee
 
     start_ts = pd.to_datetime(start).date()  # turns string into datetime format
     end_ts = pd.to_datetime(end).date()
 
-    # Construct DIM Date Dataframe
     df_date = pd.DataFrame(
         {"date": pd.date_range(start=f"{start_ts}", end=f"{end_ts}", freq="D")}
     )
@@ -251,9 +240,6 @@ def transform_counterparty(address, counterparty):
         counterparty_df = pd.DataFrame(counterparty)
         address_df = pd.DataFrame(address)
 
-        print("Counterparty Columns:", counterparty_df.columns)
-        print("Address Columns:", address_df.columns)
-
 
         address_df.drop(columns=["created_at"], inplace=True)
         address_df.drop(columns=["last_updated"], inplace=True)
@@ -269,7 +255,7 @@ def transform_counterparty(address, counterparty):
         transformed_df.drop(columns=['legal_address_id'], inplace=True)
         transformed_df.drop(columns=['commercial_contact'], inplace=True)
         transformed_df.drop(columns=['delivery_contact'], inplace=True)
-        # print(transformed_df.to_string())
+       
 
         transformed_df = (
             transformed_df.rename(
@@ -286,18 +272,10 @@ def transform_counterparty(address, counterparty):
             .drop_duplicates()
         )
         transformed_df.set_index("counterparty_id", inplace=True)
-        print("Transformed Columns:", transformed_df.columns)
-        print(transformed_df.head())
+    
         return transformed_df
     else:
         return pd.DataFrame([])
-
-# s3_client = boto3.client("s3")
-# file_data = read(["data/by time/2025/03-March/04/10:43:43.533092/counterparty"], 
-# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
-# file_data2 = read(["data/by time/2025/03-March/04/10:43:43.533092/address"], 
-# s3_client, bucketname="totes-extract-bucket-20250227154810549900000003")
-# print(transform_counterparty(file_data2['address'], file_data['counterparty']))
 
 ###################### facts sales table ###################### noqa
 
@@ -378,4 +356,15 @@ def transform_fact_sales_order(sales_order):
         logger.error(f"Error transforming fact_sales_order: {e}", exc_info=True)
         return pd.DataFrame(columns=expected_columns)
 
-
+if __name__ == "__main__":
+    lambda_handler({"filepaths":["data/by time/2025/03-March/04/10:43:43.533092/address",
+    "data/by time/2025/03-March/04/10:43:43.533092/counterparty",
+    "data/by time/2025/03-March/04/10:43:43.533092/currency",
+    "data/by time/2025/03-March/04/10:43:43.533092/department",
+    "data/by time/2025/03-March/04/10:43:43.533092/design",
+    "data/by time/2025/03-March/04/10:43:43.533092/payment",
+    "data/by time/2025/03-March/04/10:43:43.533092/payment_type",
+    "data/by time/2025/03-March/04/10:43:43.533092/purchase_order",
+    "data/by time/2025/03-March/04/10:43:43.533092/sales_order",
+    "data/by time/2025/03-March/04/10:43:43.533092/staff",
+    "data/by time/2025/03-March/04/10:43:43.533092/transaction"]},"hello")
