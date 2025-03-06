@@ -1,10 +1,6 @@
-from src.transform_lambda import (transform_staff,
-    transform_location,
-    transform_design,
-    get_currency_name,
-    transform_currency,
-    transform_counterparty,
-    transform_fact_sales_order,
+from src.transform_lambda import (transform_staff,transform_location,transform_design,
+                                  get_currency_name,transform_currency,
+                                  transform_counterparty,transform_fact_sales_order,
 )
 
 def test_transform_staff():
