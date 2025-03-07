@@ -4,13 +4,13 @@ import json
 from botocore.exceptions import ClientError
 import pandas as pd
 import pycountry
-from pprint import pprint
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
 def lambda_handler(event, context):
+
     client = boto3.client("s3")
 
     loaded__files = read(event["filepaths"], client)
@@ -21,7 +21,7 @@ def lambda_handler(event, context):
     staff = loaded__files["staff"]
     sales_order = loaded__files["sales_order"]
     address = loaded__files["address"]
-    pprint(design)
+  
     #only needed for extension
     
     # payment = loaded__files["payment"]
@@ -32,23 +32,25 @@ def lambda_handler(event, context):
     split = event["filepaths"][0].split("/")
     year, month, day, time = split[2], split[3], split[4], split[5]
 
-    start_date, end_date = load_date_range(client, "date_table_last_date.json", bucketname="totes-transform-bucket-20250227154810549700000001")
+    # Get file_exists flag from load_date_range
+    start_date, end_date, file_exists = load_date_range(client, "date_table_last_date.json", bucketname="totes-transform-bucket-20250227154810549700000001")
     today = pd.to_datetime('today')
     needs_update = (end_date - today).days <= 49 * 365
 
-    if needs_update:
-        start_date = end_date
-        end_date = today + pd.DateOffset(years=50)
 
-        date_range = {'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d')}
+    if (not file_exists) or needs_update:
+        if needs_update:
+            start_date = end_date
+            end_date = today + pd.DateOffset(years=50)
 
-        save_date_range(s3_client=client,
-                        bucketname="totes-transform-bucket-20250227154810549700000001",
-                        object_key="date_table_last_date.json",
-                        date_range=date_range)
+            date_range = {'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d')}
+
+            save_date_range(s3_client=client,
+                            bucketname="totes-transform-bucket-20250227154810549700000001",
+                            object_key="date_table_last_date.json",
+                            date_range=date_range)
 
         transformed_date = generate_date_table(start_date, end_date)
-
     else:
         transformed_date = pd.DataFrame([])
 
@@ -183,8 +185,9 @@ def transform_staff(staff_data, department_data):
             del dep_df["created_at"]
             del dep_df["last_updated"]
 
-            merged = staff_df.merge(dep_df, on="department_id", how="outer")
+            merged = staff_df.merge(dep_df, on="department_id", how="left")
             merged.set_index("staff_id", inplace=True)
+            merged.index = merged.index.astype(int)
 
             del merged["manager"]
             del merged["department_id"]
@@ -208,13 +211,15 @@ def load_date_range(s3_client, object_key, bucketname):
         date_range = json.load(response['Body'])
         start_date = pd.to_datetime(date_range['start_date'])
         end_date = pd.to_datetime(date_range['end_date'])
+        file_exists = True
     except Exception:
         today = pd.to_datetime('today')
         start_date = pd.to_datetime('2000-01-01')
         end_date = today + pd.DateOffset(years=50)
         date_range = {'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d')}
         save_date_range(s3_client, bucketname, object_key, date_range)
-    return start_date, end_date
+        file_exists = False
+    return start_date, end_date, file_exists
 
 def save_date_range(s3_client, bucketname, object_key, date_range):
     s3_client.put_object(Bucket=bucketname, Key=object_key, Body=json.dumps(date_range))
@@ -225,10 +230,11 @@ def generate_date_table(start_date, end_date):
     date_table['year'] = date_table['date'].dt.year
     date_table['month'] = date_table['date'].dt.month
     date_table['day'] = date_table['date'].dt.day
-    date_table['day_of_week'] = date_table['date'].dt.weekday + 1
+    date_table['day_of_week'] = date_table['date'].dt.dayofweek + 1
     date_table['day_name'] = date_table['date'].dt.day_name()
     date_table['month_name'] = date_table['date'].dt.month_name()
     date_table['quarter'] = date_table['date'].dt.quarter
+    date_table['date'] = date_table['date'].dt.date
     date_table.set_index('date', inplace=True)
     return date_table
 
@@ -301,15 +307,13 @@ def transform_counterparty(address, counterparty):
             counterparty_df.drop(columns=["last_updated"], inplace=True)
 
             transformed_df = counterparty_df.merge(
-        address_df, left_on="legal_address_id", right_on="address_id", how="left"
-    )
-
+                address_df, left_on="legal_address_id", right_on="address_id", how="left"
+            )
 
             transformed_df.drop(columns=['address_id'], inplace=True)
             transformed_df.drop(columns=['legal_address_id'], inplace=True)
             transformed_df.drop(columns=['commercial_contact'], inplace=True)
             transformed_df.drop(columns=['delivery_contact'], inplace=True)
-        
 
             transformed_df = (
                 transformed_df.rename(
