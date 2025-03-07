@@ -10,3 +10,4 @@ pg8000==1.31.2
 moto==5.1.1
 pycountry==24.6.1
 pyarrow==19.0.1
+SQLAlchemy==2.0.38
