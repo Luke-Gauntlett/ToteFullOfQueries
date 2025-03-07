@@ -1,10 +1,12 @@
-from src.load_lambda import read_parquet
+from src.load_lambda import read_parquet, load_df_to_warehouse
 from src.transform_lambda import transform_location
 import boto3
 from moto import mock_aws
 import pandas as pd
 import pytest
 import os
+import sqlite3 # import create_engine
+# from pprint import pprint
 
 location_data = [
     {
@@ -108,5 +110,111 @@ class TestReadParquet:
         assert pd.isna(result[file_name].iloc[2]["district"])
 
 
+@pytest.fixture
+def temp_db():
+    """Creates a temporary in-memory SQLite database."""
+    # engine = create_engine("sqlite:///:memory:")  
+    # yield engine.connect()  
+    yield sqlite3.connect("test.db")
+    # engine.dispose()  
 
-    
+class TestWarehouse:
+    def test_data_written_to_warehouse(self, temp_db):
+        test_df = pd.DataFrame(
+            [
+                {
+                    "design_id": 1,
+                    "created_at": "2022",
+                    "design_name": "Wooden"            
+                },
+                {
+                    "design_id": 2,
+                    "created_at": "2023",
+                    "design_name": "Bronze"                    
+                },
+                {
+                    "design_id": 3,
+                    "created_at": "2023",
+                    "design_name": "Bronze"                   
+                },
+            ]
+        )
+        # test_df.reset_index(drop=True, inplace=True)
+        test_df.set_index('design_id',inplace=True)
+        
+        engine_conn = temp_db
+        cur = engine_conn.cursor()
+        # cur.execute("CREATE TABLE test_design (created_at, design_name, 
+        # file_location, file_name, last_updated)")
+
+        cur.execute("DROP TABLE IF EXISTS test_design;")
+        load_df_to_warehouse(test_df, 'test_design', engine_conn=engine_conn)
+        
+        result = cur.execute("SELECT * FROM test_design")
+        results_list = result.fetchall()
+        # engine_conn.close()
+        assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze')]
+
+    def test_data_appends_to_existing_table_in_warehouse(self, temp_db):
+        test_df = pd.DataFrame(
+            [
+                {
+                    "design_id": 1,
+                    "created_at": "2022",
+                    "design_name": "Wooden"            
+                },
+                {
+                    "design_id": 2,
+                    "created_at": "2023",
+                    "design_name": "Bronze"                    
+                },
+                {
+                    "design_id": 3,
+                    "created_at": "2023",
+                    "design_name": "Bronze"                   
+                },
+            ]
+        )
+
+        test_df_2 = pd.DataFrame(
+            [
+                {
+                    "design_id": 4,
+                    "created_at": "2023",
+                    "design_name": "W"            
+                }])
+
+
+        # test_df.reset_index(drop=True, inplace=True)
+        test_df.set_index('design_id',inplace=True)
+        test_df_2.set_index('design_id',inplace=True)
+        
+        engine_conn = temp_db
+        cur = engine_conn.cursor()
+        # cur.execute("CREATE TABLE test_design (created_at, design_name, 
+        # file_location, file_name, last_updated)")
+
+        cur.execute("DROP TABLE IF EXISTS test_design;")
+        load_df_to_warehouse(test_df, 'test_design', engine_conn=engine_conn)
+        load_df_to_warehouse(test_df_2, 'test_design', engine_conn=engine_conn)
+        result = cur.execute("SELECT * FROM test_design")
+        results_list = result.fetchall()
+        
+        assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze'), (4, '2023', 'W')]
+
+
+    # def test_dim_date_only_populated_once(self, temp_db):
+    #     test_date_df = pd.DataFrame([{'year': 2025, 'month': 'May'},
+    #          {'year': 2026, 'month': 'June'}])
+    #     engine_conn = temp_db
+    #     cur = engine_conn.cursor()
+
+    #     cur.execute("DROP TABLE IF EXISTS dim_date")
+    #     load_df_to_warehouse(test_date_df, 'dim_date', engine_conn=engine_conn)
+    #     load_df_to_warehouse(test_date_df, 'dim_date', engine_conn=engine_conn)
+
+    #     result = cur.execute("SELECT * FROM dim_date")
+    #     results_list = result.fetchall()
+    #     print(results_list)
+    #     assert results_list == [(0, 2025, 'May'), (1, 2026, 'June')]
+    # no need anymore
