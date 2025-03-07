@@ -307,10 +307,9 @@ resource "aws_iam_role" "step_function_role" {
   })
 }
 
+# creates lambda permissions
 
-
-#The policy Document
-data "aws_iam_policy_document" "step_function_policy" {
+data "aws_iam_policy_document" "step_function_lambda_policy" {
   statement {
     effect  = "Allow"
     actions = ["lambda:InvokeFunction"]
@@ -321,23 +320,23 @@ data "aws_iam_policy_document" "step_function_policy" {
   }
 }
 
-
-#Create the policy
-resource "aws_iam_policy" "step_function_policy" {
-  name   = "step_function_lambda_invoke_policy"
-  policy = data.aws_iam_policy_document.step_function_policy.json
+resource "aws_iam_policy" "step_function_lambda_policy" {
+  name   = "StepFunctionLambdaInvokePolicy"
+  policy = data.aws_iam_policy_document.step_function_lambda_policy.json
 }
 
-#Attach the policy
 resource "aws_iam_role_policy_attachment" "step_function_lambda_policy_attachment" {
   role       = aws_iam_role.step_function_role.name
-  policy_arn = aws_iam_policy.step_function_policy.arn
+  policy_arn = aws_iam_policy.step_function_lambda_policy.arn
 }
 
 
+# create cloudwatch permissions
 
+#creates cloudwatch logs
 resource "aws_cloudwatch_log_group" "step_function_logs" {
-  name              = "/aws/states/totes_step_function"
+  name              = "/aws/vendedlogs/totes_step_function"
+  retention_in_days = 30
 }
 
 
@@ -345,36 +344,28 @@ data "aws_iam_policy_document" "step_function_logging_policy" {
   statement {
     effect = "Allow"
     actions = [
-      "logs:CreateLogDelivery",
+      "logs:CreateLogGroup",
       "logs:CreateLogStream",
-      "logs:GetLogDelivery",
-      "logs:UpdateLogDelivery",
-      "logs:DeleteLogDelivery",
-      "logs:ListLogDeliveries",
       "logs:PutLogEvents",
-      "logs:PutResourcePolicy",
-      "logs:DescribeResourcePolicies",
-      "logs:DescribeLogGroups"
+      "logs:DescribeLogStreams"
     ]
     resources = [
-      "${aws_cloudwatch_log_group.step_function_logs.arn}",
+      aws_cloudwatch_log_group.step_function_logs.arn,
       "${aws_cloudwatch_log_group.step_function_logs.arn}:*"
     ]
   }
 }
 
-
-
-
-resource "aws_iam_policy" "step_function_logging_policy" {
-  name   = "ToteStepFunctionLoggingPolicy"
+resource "aws_iam_policy" "step_logging_policy" {
+  name   = "StepFunctionLoggingPolicy"
   policy = data.aws_iam_policy_document.step_function_logging_policy.json
 }
 
 resource "aws_iam_role_policy_attachment" "step_function_logging_attachment" {
   role       = aws_iam_role.step_function_role.name
-  policy_arn = aws_iam_policy.step_function_logging_policy.arn
+  policy_arn = aws_iam_policy.step_logging_policy.arn
 }
+
 
 resource "aws_cloudwatch_log_resource_policy" "step_function_logs_policy" {
   policy_name = "StepFunctionLogsPolicy"
@@ -387,25 +378,25 @@ resource "aws_cloudwatch_log_resource_policy" "step_function_logs_policy" {
           Service = "states.amazonaws.com"
         },
         Action = [
-          "logs:CreateLogDelivery",
           "logs:CreateLogStream",
-          "logs:GetLogDelivery",
-          "logs:UpdateLogDelivery",
-          "logs:DeleteLogDelivery",
-          "logs:ListLogDeliveries",
-          "logs:PutLogEvents",
-          "logs:PutResourcePolicy",
-          "logs:DescribeResourcePolicies",
-          "logs:DescribeLogGroups"
+          "logs:PutLogEvents"
         ],
         Resource = [
-          "${aws_cloudwatch_log_group.step_function_logs.arn}",
+          aws_cloudwatch_log_group.step_function_logs.arn,
           "${aws_cloudwatch_log_group.step_function_logs.arn}:*"
         ]
       }
     ]
   })
 }
+
+# resource "aws_iam_role_policy_attachment" "step_function_cw_attachment" {
+#   role       = aws_iam_role.step_function_role.name
+#   policy_arn = aws_cloudwatch_log_resource_policy.step_function_logs_policy.arn
+# }
+
+
+
 
 
 #########################################  IAM Policy for Database Access/RDS  #################################################
