@@ -12,6 +12,12 @@ data "archive_file" "transform_lambda" {
   output_path = "${path.module}/../deploy/lambdas/transform_lambda.zip"
 }
 
+data "archive_file" "load_lambda" {
+  type = "zip"
+  source_file = "${path.module}/../src/load_lambda.py"
+  output_path = "${path.module}/../deploy/lambdas/load_lambda.zip"
+}
+
 ####################### zips the layer folders #########################################
 
 data "archive_file" "dependencieslayer" {
@@ -45,9 +51,10 @@ resource "aws_lambda_layer_version" "dependencieslayer" {
 }
 
 
-############### triggers to remake  lambdas and layers ###########################################
+############### triggers to remake  lambdas and layers ####################################################
 resource "null_resource" "force_redeploy" {
   triggers = {
     always_run = timestamp()
   }
 }
+
