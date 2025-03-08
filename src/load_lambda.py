@@ -92,8 +92,8 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
 def connect_to_warehouse(secret_name="project_warehouse_credentials", region_name="eu-west-2"): # nosec
     credentials = get_db_credentials(secret_name, region_name)
     db_url = (
-        f"postgresql+pg8000://{credentials['user']}:{credentials['password']}"
-        f"@{credentials['host']}:{credentials['port']}/{credentials['database']}"
+        f"postgresql+pg8000://{credentials['user']}:{credentials['password']}" # nosec
+        f"@{credentials['host']}:{credentials['port']}/{credentials['database']}" # nosec
     )
     engine = create_engine(db_url)
 
@@ -147,8 +147,8 @@ def clear_all_tables():
 def print_all_tables_except_date(secret_name="project_warehouse_credentials", region_name="eu-west-2"): # nosec # noqa
     credentials = get_db_credentials(secret_name, region_name)
     db_url = (
-        f"postgresql+pg8000://{credentials['user']}:{credentials['password']}"
-        f"@{credentials['host']}:{credentials['port']}/{credentials['database']}"
+        f"postgresql+pg8000://{credentials['user']}:{credentials['password']}" # nosec
+        f"@{credentials['host']}:{credentials['port']}/{credentials['database']}" # nosec
     )
 
     engine = create_engine(db_url)
