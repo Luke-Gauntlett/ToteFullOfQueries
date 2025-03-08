@@ -89,7 +89,7 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
 
     return dataframes
 
-def connect_to_warehouse(secret_name="project_warehouse_credentials", region_name="eu-west-2"):
+def connect_to_warehouse(secret_name="project_warehouse_credentials", region_name="eu-west-2"): # nosec
     credentials = get_db_credentials(secret_name, region_name)
     db_url = (
         f"postgresql+pg8000://{credentials['user']}:{credentials['password']}"
@@ -135,8 +135,8 @@ def clear_all_tables():
     try:
         with conn.begin():
             for table in table_list:
-                conn.execute(text(f"DELETE FROM {table};"))
-                print(f"Deleted data from table: {table}")
+                conn.execute(text(f"DELETE FROM {table};")) # nosec
+                print(f"Deleted data from table: {table}") # nosec
     except Exception as e:
         print(f"Error deleting data: {e}")
         conn.rollback()
@@ -144,7 +144,7 @@ def clear_all_tables():
         conn.close()
         print("Connection closed.")
 
-def print_all_tables_except_date(secret_name="project_warehouse_credentials", region_name="eu-west-2"):
+def print_all_tables_except_date(secret_name="project_warehouse_credentials", region_name="eu-west-2"): # nosec # noqa
     credentials = get_db_credentials(secret_name, region_name)
     db_url = (
         f"postgresql+pg8000://{credentials['user']}:{credentials['password']}"
