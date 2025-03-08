@@ -1,6 +1,5 @@
 import boto3
 import pyarrow.parquet as pa
-from pprint import pprint
 import pandas as pd
 import io
 from botocore.exceptions import ClientError
@@ -102,7 +101,7 @@ def connect_to_warehouse(secret_name="project_warehouse_credentials", region_nam
 
 def load_df_to_warehouse(dataframe, table_name,conn = None):
     
-    if conn == None:
+    if conn is None:
         conn=connect_to_warehouse()
 
     try:
