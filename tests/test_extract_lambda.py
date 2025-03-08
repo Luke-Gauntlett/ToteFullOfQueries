@@ -164,7 +164,7 @@
 #     return db_mock
 
 
-# def test_write_data_correctly_writes_to_s3(mock_client, mock_db,aws_credentials): noqa
+# def test_write_data_correctly_writes_to_s3(mock_client, mock_db,aws_credentials): # noqa
 #     """Test that data is correctly written to S3."""
 #     last_extract_time = "2022-11-01 00:00:00"
 #     this_extract_time = "2022-11-03 14:20:51"
@@ -207,7 +207,7 @@
 #     last_extraction_time = "2022-11-01 00:00:00"
 #     this_extraction_time = "2022-11-03 14:20:51"
 
-#     write_data(last_extraction_time, this_extraction_time, mock_client, mock_db, bucketname="testbucket123abc456def") noqa
+#     write_data(last_extraction_time, this_extraction_time, mock_client, mock_db, bucketname="testbucket123abc456def") # noqa
 
 #     objects = mock_client.list_objects(Bucket="testbucket123abc456def")["Contents"]  # noqa
 #     s3_keys = {obj["Key"] for obj in objects}
@@ -365,7 +365,7 @@
 #     last_extraction_time = "0001-01-01 00:00:00.000000"
 #     this_extraction_time = "0001-01-03 00:00:00.000000"
 #     with caplog.at_level(logging.INFO):
-#         write_data(last_extraction_time, this_extraction_time, mock_client, mock_db, bucketname="testbucket123abc456def") noqa
+#         write_data(last_extraction_time, this_extraction_time, mock_client, mock_db, bucketname="testbucket123abc456def") # noqa
 #         assert "Successfully written to bucket!" in caplog.text
 
 

@@ -91,7 +91,7 @@
 
 #         result = read_parquet(file_paths, client, bucket_name)
 
-#         assert list(result[file_name].columns) == ["address_line_1", "address_line_2", "district", "city", "postal_code", "country", "phone"] noqa
+#         assert list(result[file_name].columns) == ["address_line_1", "address_line_2", "district", "city", "postal_code", "country", "phone"] # noqa
 
 #     def test_data_is_inputted_correctly(self, mock_s3_client_read):
 #         client, bucket_name, file_paths, file_name = mock_s3_client_read
@@ -154,7 +154,7 @@
 #         result = cur.execute("SELECT * FROM test_design")
 #         results_list = result.fetchall()
 #         # engine_conn.close()
-#         assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze')] noqa
+#         assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze')] # noqa
 
 #     # def test_data_appends_to_existing_table_in_warehouse(self, temp_db):
 #     #     test_df = pd.DataFrame(
@@ -201,7 +201,7 @@
 #     #     result = cur.execute("SELECT * FROM test_design")
 #     #     results_list = result.fetchall()
         
-#     #     assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze'), (4, '2023', 'W')] noqa
+#     #     assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze'), (4, '2023', 'W')] # noqa
 
 #     # def test_appending_same_data_to_existing_table_in_warehouse_does____(self, temp_db): noqa
 #     #     test_df = pd.DataFrame(
@@ -238,7 +238,7 @@
 #     #     result = cur.execute("SELECT * FROM test_design")
 #     #     results_list = result.fetchall()
          
-#     #     assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze')] noqa
+#     #     assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze')] # noqa
 
 
 #     # def test_appending_same_data_to_existing_table_in_warehouse_does____(self, temp_db):
@@ -281,7 +281,7 @@
 
 #     #     # cur.execute("DROP TABLE IF EXISTS test_design;")
 #     #     # cur.execute("""CREATE TABLE test_design 
-#     #     #             (id INT PRIMARY KEY, design_id INT, created_at VARCHAR(4), design_name VARCHAR(10))""")   noqa
+#     #     #             (id INT PRIMARY KEY, design_id INT, created_at VARCHAR(4), design_name VARCHAR(10))""")   # noqa
               
 #     #     # test_df.set_index('design_id',inplace=True) 
 #     #     # load_df_to_warehouse(test_df, 'test_design', engine_conn=None)        
