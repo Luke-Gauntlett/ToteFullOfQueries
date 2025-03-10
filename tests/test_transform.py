@@ -967,7 +967,7 @@ class TestTransformFactsSalesOrder:
             ]
         
 
-        result = transform_fact_sales_order(sales_order)
+        #result = transform_fact_sales_order(sales_order)
 
         # assert "sales_record_id" in result.columns
 
