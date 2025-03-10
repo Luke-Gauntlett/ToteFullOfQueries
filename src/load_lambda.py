@@ -116,18 +116,3 @@ def load_df_to_warehouse(dataframe, table_name,conn = None):
         print(f"Failed! data not added {table_name}")
         conn.close()
         raise
-    #finally:
-        #conn.close()
-
-
-# lambda_handler({
-#     "filepaths": [
-#         "data/by time/2025/03-March/07/22:17:13.872739/dim_location.parquet",
-#         "data/by time/2025/03-March/07/22:17:13.872739/dim_counterparty.parquet",
-#         "data/by time/2025/03-March/07/22:17:13.872739/dim_currency.parquet",
-#         "data/by time/2025/03-March/07/22:17:13.872739/dim_date.parquet",
-#         "data/by time/2025/03-March/07/22:17:13.872739/dim_design.parquet",
-#         "data/by time/2025/03-March/07/22:17:13.872739/dim_staff.parquet",
-#         "data/by time/2025/03-March/07/22:17:13.872739/fact_sales_order.parquet"
-#     ]
-# },{})
