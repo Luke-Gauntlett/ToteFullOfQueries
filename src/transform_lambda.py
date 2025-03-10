@@ -299,7 +299,7 @@ def transform_currency(currency):
 
             if 'created_at' in df.columns and 'last_updated' in df.columns:
                 df.drop(columns=["created_at", "last_updated"], inplace=True)
-            
+
             df = df.sort_values(by="currency_id").reset_index(drop=True)
 
             return df
