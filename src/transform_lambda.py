@@ -389,11 +389,11 @@ def transform_fact_sales_order(sales_order):
         logger.error(f"Error transforming fact_sales_order: {e}", exc_info=True)
         return pd.DataFrame([])
 
-if __name__ == "__main__":
-    lambda_handler({"filepaths": ["data/by time/2025/03-March/07/22:17:13.872739/address",
-                                   "data/by time/2025/03-March/07/22:17:13.872739/counterparty",
-                                   "data/by time/2025/03-March/07/22:17:13.872739/currency",
-                                   "data/by time/2025/03-March/07/22:17:13.872739/department",
-                                   "data/by time/2025/03-March/07/22:17:13.872739/design",
-                                   "data/by time/2025/03-March/07/22:17:13.872739/sales_order",
-                                   "data/by time/2025/03-March/07/22:17:13.872739/staff",]},{})
+#  if __name__ == "__main__":
+#   lambda_handler({"filepaths": ["data/by time/2025/03-March/07/22:17:13.872739/address",
+#                                    "data/by time/2025/03-March/07/22:17:13.872739/counterparty",
+#                                    "data/by time/2025/03-March/07/22:17:13.872739/currency",
+#                                  "data/by time/2025/03-March/07/22:17:13.872739/department",
+#                                    "data/by time/2025/03-March/07/22:17:13.872739/design",
+#                                    "data/by time/2025/03-March/07/22:17:13.872739/sales_order",
+#                                    "data/by time/2025/03-March/07/22:17:13.872739/staff",]},{})
