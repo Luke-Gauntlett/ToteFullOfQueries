@@ -11,11 +11,11 @@ logger.setLevel(logging.INFO)
 
 try:
     from src.utils import get_db_credentials
-except ImportError:                   # pragma: no cover
-    try: # pragma: no cover
-        from utils import get_db_credentials # pragma: no cover
-    except ImportError: # pragma: no cover
-        raise ImportError("Could not import get_db_credentials") # pragma: no cover
+except ImportError: # pragma: no cover
+    try:# pragma: no cover
+        from utils import get_db_credentials# pragma: no cover
+    except ImportError:# pragma: no cover
+        raise ImportError("Could not import get_db_credentials")# pragma: no cover
 
 
 def lambda_handler(event, context):
@@ -84,6 +84,8 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
         except ClientError as e:
             if e.response["Error"]["Code"] == "NoSuchKey":
                 logger.error(f"Warning: File {file_path} does not exist in S3. Skipping.")
+                raise
+            else:
                 raise
 
     return dataframes
