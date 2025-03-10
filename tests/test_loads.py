@@ -1,295 +1,339 @@
-# from src.load_lambda import read_parquet, load_df_to_warehouse, connect_to_warehouse noqa
-# from src.transform_lambda import transform_location
-# import boto3
-# from moto import mock_aws
-# import pandas as pd
-# import pytest
-# import os
-# import sqlite3 # import create_engine
-# from pprint import pprint
-# import pg8000
-
-# location_data = [
-#     {
-#         "address_id": 1,
-#         "address_line_1": "6826 Herzog Via",
-#         "address_line_2": None,
-#         "district": "Avon",
-#         "city": "New Patienceburgh",
-#         "postal_code": "28441",
-#         "country": "Turkey",
-#         "phone": "1803 637401",
-#         "created_at": "2022-11-03 14:20:49.962000",
-#         "last_updated": "2022-11-03 14:20:49.962000"
-#     },
-#     {
-#         "address_id": 2,
-#         "address_line_1": "179 Alexie Cliffs",
-#         "address_line_2": None,
-#         "district": None,
-#         "city": "Aliso Viejo",
-#         "postal_code": "99305-7380",
-#         "country": "San Marino",
-#         "phone": "9621 880720",
-#         "created_at": "2022-11-03 14:20:49.962000",
-#         "last_updated": "2022-11-03 14:20:49.962000"
-#     },
-#     {
-#         "address_id": 3,
-#         "address_line_1": "148 Sincere Fort",
-#         "address_line_2": None,
-#         "district": None,
-#         "city": "Lake Charles",
-#         "postal_code": "89360",
-#         "country": "Samoa",
-#         "phone": "0730 783349",
-#         "created_at": "2022-11-03 14:20:49.962000",
-#         "last_updated": "2022-11-03 14:20:49.962000"
-#     }]
-
-# @pytest.fixture(scope="function", autouse=True)
-# def aws_credentials():
-#     """Mocked AWS Credentials for moto"""
-#     os.environ["AWS_ACCESS_KEY_ID"] = "test"
-#     os.environ["AWS_SECRET_ACCESS_KEY"] = "test"
-#     os.environ["AWS_SECURITY_TOKEN"] = "test"
-#     os.environ["AWS_SESSION_TOKEN"] = "test"
-#     os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
-
-# @pytest.fixture
-# def mock_s3_client_read():
-#     """Fixture to mock the S3 client and prepopulate with test data."""
-#     with mock_aws():
-#         client = boto3.client("s3", region_name="eu-west-2")
-
-#         bucket_name = "test-bucket"
-#         file_paths = ["data/by_time/2025/March/03/14:24:54.932025/address.parquet"]
-#         file_name = file_paths[0].split("/")[-1].split(".")[0]
-
-#         client.create_bucket(
-#             Bucket=bucket_name,
-#             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-#         )
-#         transformed_data = transform_location(location_data)
-#         parquet_data = transformed_data.to_parquet()
-#         client.put_object(Bucket=bucket_name, Key=file_paths[0], Body=parquet_data)
-
-#         yield client, bucket_name, file_paths, file_name
+from src.load_lambda import read_parquet, load_df_to_warehouse
+from src.transform_lambda import (transform_location,
+                                  transform_counterparty,
+                                  transform_currency,
+                                  transform_design,
+                                  transform_fact_sales_order,
+                                  transform_staff)
+import boto3
+from moto import mock_aws
+import pandas as pd
+import pytest
+import os
+import sqlite3  # import create_engine
+from botocore.exceptions import ClientError
 
 
-# class TestReadParquet: 
-#     def test_transformed_parquet_file_into_data_frame(self, mock_s3_client_read):
-#         """Test reading a single parquet file from S3."""
-#         client, bucket_name, file_paths, file_name = mock_s3_client_read
-
-#         result = read_parquet(file_paths, client, bucket_name)
-
-#         assert isinstance(result[file_name], pd.DataFrame)
-
-#     def test_data_is_correctly_indexed(self, mock_s3_client_read):
-#         client, bucket_name, file_paths, file_name = mock_s3_client_read
-
-#         result = read_parquet(file_paths, client, bucket_name)
-
-#         assert list(result[file_name].columns) == ["address_line_1", "address_line_2", "district", "city", "postal_code", "country", "phone"] # noqa
-
-#     def test_data_is_inputted_correctly(self, mock_s3_client_read):
-#         client, bucket_name, file_paths, file_name = mock_s3_client_read
-
-#         result = read_parquet(file_paths, client, bucket_name)
-
-#         assert result[file_name].iloc[0]["district"] == "Avon"
-#         assert result[file_name].iloc[1]["address_line_1"] == "179 Alexie Cliffs"
-#         assert result[file_name].iloc[2]["city"] == "Lake Charles"
-
-#     def test_na_values_are_inputted_correctly(self, mock_s3_client_read):
-#         client, bucket_name, file_paths, file_name = mock_s3_client_read
-
-#         result = read_parquet(file_paths, client, bucket_name)
-
-#         assert pd.isna(result[file_name].iloc[1]["district"])
-#         assert pd.isna(result[file_name].iloc[2]["district"])
+@pytest.fixture(scope="function")
+def aws_credentials():
+    """Mocked AWS Credentials for moto"""
+    os.environ["AWS_ACCESS_KEY_ID"] = "test"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "test"
+    os.environ["AWS_SECURITY_TOKEN"] = "test"
+    os.environ["AWS_SESSION_TOKEN"] = "test"
+    os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
 
 
-# @pytest.fixture
-# def temp_db():
-#     """Creates a temporary in-memory SQLite database."""
-#     # engine = create_engine("sqlite:///:memory:")  
-#     # yield engine.connect()  
-#     yield sqlite3.connect("test.db")
-#     # engine.dispose()  
+location_data = [
+    {
+        "address_id": 1,
+        "address_line_1": "6826 Herzog Via",
+        "address_line_2": None,
+        "district": "Avon",
+        "city": "New Patienceburgh",
+        "postal_code": "28441",
+        "country": "Turkey",
+        "phone": "1803 637401",
+        "created_at": "2022-11-03 14:20:49.962000",
+        "last_updated": "2022-11-03 14:20:49.962000",
+    },
+    {
+        "address_id": 2,
+        "address_line_1": "179 Alexie Cliffs",
+        "address_line_2": None,
+        "district": None,
+        "city": "Aliso Viejo",
+        "postal_code": "99305-7380",
+        "country": "San Marino",
+        "phone": "9621 880720",
+        "created_at": "2022-11-03 14:20:49.962000",
+        "last_updated": "2022-11-03 14:20:49.962000",
+    },
+    {
+        "address_id": 3,
+        "address_line_1": "148 Sincere Fort",
+        "address_line_2": None,
+        "district": None,
+        "city": "Lake Charles",
+        "postal_code": "89360",
+        "country": "Samoa",
+        "phone": "0730 783349",
+        "created_at": "2022-11-03 14:20:49.962000",
+        "last_updated": "2022-11-03 14:20:49.962000",
+    },
+]
 
-# class TestWarehouse:
-#     def test_data_written_to_warehouse(self, temp_db):
-#         test_df = pd.DataFrame(
-#             [
-#                 {
-#                     "design_id": 1,
-#                     "created_at": "2022",
-#                     "design_name": "Wooden"            
-#                 },
-#                 {
-#                     "design_id": 2,
-#                     "created_at": "2023",
-#                     "design_name": "Bronze"                    
-#                 },
-#                 {
-#                     "design_id": 3,
-#                     "created_at": "2023",
-#                     "design_name": "Bronze"                   
-#                 },
-#             ]
-#         )
-#         # test_df.reset_index(drop=True, inplace=True)
-#         test_df.set_index('design_id',inplace=True)
+
+counterparty_data = [
+    {
+        "counterparty_id": 1,
+        "counterparty_legal_name": "Fahey and Sons",
+        "legal_address_id": 15,
+        "commercial_contact": "Micheal Toy",
+        "delivery_contact": "Mrs. Lucy Runolfsdottir",
+        "created_at": "2022-11-03 14:20:51.563000",
+        "last_updated": "2022-11-03 14:20:51.563000"
+    }]
+
+currency_data = [{
+        "currency_id": 1,
+        "currency_code": "GBP",
+        "created_at": "2022-11-03 14:20:49.962000",
+        "last_updated": "2022-11-03 14:20:49.962000"
+    }]
+
+department_data =  [{
+        "department_id": 1,
+        "department_name": "Sales",
+        "location": "Manchester",
+        "manager": "Richard Roma",
+        "created_at": "2022-11-03 14:20:49.962000",
+        "last_updated": "2022-11-03 14:20:49.962000"
+    }]
+design_data =  [{
+        "design_id": 8,
+        "created_at": "2022-11-03 14:20:49.962000",
+        "design_name": "Wooden",
+        "file_location": "/usr",
+        "file_name": "wooden-20220717-npgz.json",
+        "last_updated": "2022-11-03 14:20:49.962000"
+    }]
+fact_sales_data = [{
+        "sales_order_id": 2,
+        "created_at": "2022-11-03 14:20:52.186000",
+        "last_updated": "2022-11-03 14:20:52.186000",
+        "design_id": 3,
+        "staff_id": 19,
+        "counterparty_id": 8,
+        "units_sold": 42972,
+        "unit_price": 3.94,
+        "currency_id": 2,
+        "agreed_delivery_date": "2022-11-07",
+        "agreed_payment_date": "2022-11-08",
+        "agreed_delivery_location_id": 8
+    }]
+staff_data = [{
+        "staff_id": 1,
+        "first_name": "Jeremie",
+        "last_name": "Franey",
+        "department_id": 2,
+        "email_address": "jeremie.franey@terrifictotes.com",
+        "created_at": "2022-11-03 14:20:51.563000",
+        "last_updated": "2022-11-03 14:20:51.563000"
+    }]
+############################################################################################### noqa
+
+@pytest.fixture
+def mock_s3_client_read():
+    """Fixture to mock the S3 client and prepopulate with test data."""
+    with mock_aws():
+        client = boto3.client("s3", region_name="eu-west-2")
+
+        bucket_name = "test-bucket"
+
+        client.create_bucket(
+            Bucket=bucket_name,
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+        )
+
+
+        tfact = transform_fact_sales_order(fact_sales_data).to_parquet()
+        tstaff = transform_staff(staff_data, department_data).to_parquet()
+        tlocation = transform_location(location_data).to_parquet()
+        tdesign =transform_design(design_data).to_parquet()
+        tcurrency = transform_currency(currency_data).to_parquet()
+        tcounterparty = transform_counterparty(location_data, counterparty_data).to_parquet()
+
+        factpath = "data/by time/2025/03-March/07/22:17:13.872739/fact_sales_order.parquet"    
+        staffpath = "data/by time/2025/03-March/07/22:17:13.872739/dim_staff.parquet"
+        locationpath = "data/by time/2025/03-March/07/22:17:13.872739/dim_location.parquet"
+        designpath = "data/by time/2025/03-March/07/22:17:13.872739/dim_design.parquet"
+        currencypath = "data/by time/2025/03-March/07/22:17:13.872739/dim_currency.parquet"
+        counterpartypath = "data/by time/2025/03-March/07/22:17:13.872739/dim_counterparty.parquet"
         
-#         engine_conn = temp_db
-#         cur = engine_conn.cursor()
-#         # cur.execute("CREATE TABLE test_design (created_at, design_name, 
-#         # file_location, file_name, last_updated)")
+        client.put_object(Bucket=bucket_name, Key=factpath, Body=tfact)
+        client.put_object(Bucket=bucket_name, Key=staffpath, Body=tstaff)
+        client.put_object(Bucket=bucket_name, Key=locationpath, Body=tlocation)
+        client.put_object(Bucket=bucket_name, Key=designpath, Body=tdesign)
+        client.put_object(Bucket=bucket_name, Key=currencypath, Body=tcurrency)
+        client.put_object(Bucket=bucket_name, Key=counterpartypath, Body=tcounterparty)
 
-#         cur.execute("DROP TABLE IF EXISTS test_design;")
-#         load_df_to_warehouse(test_df, 'test_design', engine_conn=engine_conn)
+
+        filepaths = ["data/by time/2025/03-March/07/22:17:13.872739/fact_sales_order.parquet",    
+        "data/by time/2025/03-March/07/22:17:13.872739/dim_staff.parquet",
+        "data/by time/2025/03-March/07/22:17:13.872739/dim_location.parquet",
+        "data/by time/2025/03-March/07/22:17:13.872739/dim_design.parquet",
+        "data/by time/2025/03-March/07/22:17:13.872739/dim_currency.parquet",
+        "data/by time/2025/03-March/07/22:17:13.872739/dim_counterparty.parquet"]
+
+
+        yield client, bucket_name, filepaths
+
+
+class TestReadParquet:
+    def test_transformed_parquet_file_into_data_frame(
+        self, mock_s3_client_read, aws_credentials
+    ):
+        """Test reading a single parquet file from S3."""
+        client, bucket_name, file_paths = mock_s3_client_read
+
+        result = read_parquet(file_paths, client, bucket_name)
+
+        assert isinstance(result["dim_location"], pd.DataFrame)
+        assert isinstance(result["dim_counterparty"], pd.DataFrame)
+        assert isinstance(result["dim_currency"], pd.DataFrame)
+        assert isinstance(result["dim_design"], pd.DataFrame)
+        assert isinstance(result["dim_staff"], pd.DataFrame)
+        assert isinstance(result["fact_sales_order"], pd.DataFrame)
+
+    def test_data_is_correctly_indexed(self, mock_s3_client_read):
+        client, bucket_name, file_paths = mock_s3_client_read
+
+        result = read_parquet(file_paths, client, bucket_name)
+
+        assert list(result["dim_location"].columns) == [
+            "location_id",
+            "address_line_1",
+            "address_line_2",
+            "district",
+            "city",
+            "postal_code",
+            "country",
+            "phone",
+        ]
+        assert list(result["dim_counterparty"].columns) == [
+        "counterparty_id",
+        "counterparty_legal_name",
+        "counterparty_legal_address_line_1",
+        'counterparty_legal_address_line_2',
+        'counterparty_legal_district',
+        'counterparty_legal_city',
+        'counterparty_legal_postal_code',
+        'counterparty_legal_country',
+        'counterparty_legal_phone_number']
+
+    def test_data_is_inputted_correctly(self, mock_s3_client_read, aws_credentials):
+        client, bucket_name, file_paths= mock_s3_client_read
+
+        result = read_parquet(file_paths, client, bucket_name)
+
+        assert result["dim_location"].iloc[0]["district"] == "Avon"
+        assert result["dim_location"].iloc[1]["address_line_1"] == "179 Alexie Cliffs"
+        assert result["dim_location"].iloc[2]["city"] == "Lake Charles"
+
+    def test_na_values_are_inputted_correctly(self, mock_s3_client_read):
+        client, bucket_name, file_paths = mock_s3_client_read
+
+        result = read_parquet(file_paths, client, bucket_name)
+
+        assert pd.isna(result["dim_location"].iloc[1]["district"])
+        assert pd.isna(result["dim_location"].iloc[2]["district"])
+
+    def test_read_returns_correct_dict_keys(self, mock_s3_client_read, aws_credentials):
+
+        client, bucket_name, file_paths = mock_s3_client_read
+
+        result = read_parquet(file_paths, client, bucketname=bucket_name)
         
-#         result = cur.execute("SELECT * FROM test_design")
-#         results_list = result.fetchall()
-#         # engine_conn.close()
-#         assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze')] # noqa
+        assert isinstance(result,dict)
+        assert "dim_location" in result
+        assert "dim_counterparty" in result
+        assert "dim_currency" in result
+        assert "dim_design" in result
+        assert "dim_staff" in result
+        assert "fact_sales_order" in result
 
-#     # def test_data_appends_to_existing_table_in_warehouse(self, temp_db):
-#     #     test_df = pd.DataFrame(
-#     #         [
-#     #             {
-#     #                 "design_id": 1,
-#     #                 "created_at": "2022",
-#     #                 "design_name": "Wooden"            
-#     #             },
-#     #             {
-#     #                 "design_id": 2,
-#     #                 "created_at": "2023",
-#     #                 "design_name": "Bronze"                    
-#     #             },
-#     #             {
-#     #                 "design_id": 3,
-#     #                 "created_at": "2023",
-#     #                 "design_name": "Bronze"                   
-#     #             },
-#     #         ]
-#     #     )
+    def test_read_returns_dict_of_dataframes(self,mock_s3_client_read,aws_credentials):
+        client, bucket_name, file_paths = mock_s3_client_read
 
-#     #     test_df_2 = pd.DataFrame(
-#     #         [
-#     #             {
-#     #                 "design_id": 4,
-#     #                 "created_at": "2023",
-#     #                 "design_name": "W"            
-#     #             }])
+        result = read_parquet(file_paths, client, bucket_name)
 
+        assert all(isinstance(value, pd.DataFrame) for value in result.values())
+       
 
-#     #     # test_df.reset_index(drop=True, inplace=True)
-#     #     test_df.set_index('design_id',inplace=True)
-#     #     test_df_2.set_index('design_id',inplace=True)
+    def test_get_error_if_filepath_missing(self, mock_s3_client_read, aws_credentials):
+        client, bucket_name, file_paths = mock_s3_client_read
+
+        with pytest.raises(ClientError) as e:
+            read_parquet(["notAFilePath.parquet"], client,bucketname=bucket_name)
         
-#     #     engine_conn = temp_db
-#     #     cur = engine_conn.cursor()
-#     #     # cur.execute("CREATE TABLE test_design (created_at, design_name, 
-#     #     # file_location, file_name, last_updated)")
+        assert e.value.response["Error"]["Code"] == "NoSuchKey"
 
-#     #     cur.execute("DROP TABLE IF EXISTS test_design;")
-#     #     load_df_to_warehouse(test_df, 'test_design', engine_conn=engine_conn)
-#     #     load_df_to_warehouse(test_df_2, 'test_design', engine_conn=engine_conn)
-#     #     result = cur.execute("SELECT * FROM test_design")
-#     #     results_list = result.fetchall()
-        
-#     #     assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze'), (4, '2023', 'W')] # noqa
+    def test_get_error_if_other(self, mock_s3_client_read, aws_credentials):
+        client, bucket_name, file_paths = mock_s3_client_read
 
-#     # def test_appending_same_data_to_existing_table_in_warehouse_does____(self, temp_db): noqa
-#     #     test_df = pd.DataFrame(
-#     #         [
-#     #             {
-#     #                 "design_id": 1,
-#     #                 "created_at": "2022",
-#     #                 "design_name": "Wooden"            
-#     #             },
-#     #             {
-#     #                 "design_id": 2,
-#     #                 "created_at": "2023",
-#     #                 "design_name": "Bronze"                    
-#     #             },
-#     #             {
-#     #                 "design_id": 3,
-#     #                 "created_at": "2023",
-#     #                 "design_name": "Bronze"                   
-#     #             },
-#     #         ]
-#     #     )       
+        with pytest.raises(ClientError) as exc_info:
+            read_parquet(file_paths, client, bucketname="fakebucket")
+
+        assert exc_info.value.response["Error"]["Code"] == "NoSuchBucket"
 
 
-#     #     # test_df.reset_index(drop=True, inplace=True)
-#     #     test_df.set_index('design_id',inplace=True)    
-        
-#     #     engine_conn = temp_db
-#     #     cur = engine_conn.cursor()    
-
-#     #     cur.execute("DROP TABLE IF EXISTS test_design;")
-#     #     load_df_to_warehouse(test_df, 'test_design', engine_conn=engine_conn)
-#     #     load_df_to_warehouse(test_df, 'test_design', engine_conn=engine_conn)
-
-#     #     result = cur.execute("SELECT * FROM test_design")
-#     #     results_list = result.fetchall()
-         
-#     #     assert results_list == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze')] # noqa
+@pytest.fixture
+def temp_db():
+    """Creates a temporary in-memory SQLite database."""
+    yield sqlite3.connect("test.db")
 
 
-#     # def test_appending_same_data_to_existing_table_in_warehouse_does____(self, temp_db):
-#     #     test_df = pd.DataFrame(
-#     #         [
-#     #             {                    
-#     #                 "design_id": 1,                  
-#     #                 "design_name": "Wooden",
-#     #                 "file_location" : 'guhs',
-#     #                 "file_name" : 'file'            
-#     #             },
-#     #             {
-#     #                 "design_id": 2,                    
-#     #                 "design_name": "Bronze",   
-#     #                 "file_location" : 'guhs',
-#     #                 "file_name" : 'file'               
-#     #             },
-#     #             {
-#     #                 "design_id": 3,                    
-#     #                 "design_name": "Bronze", 
-#     #                 "file_location" : 'guhs',
-#     #                 "file_name" : 'file'                  
-#     #             }
-#     #         ]
-#     #     )       
-#     #     print('p1')
-#     #     load_df_to_warehouse(test_df, 'dim_design')
-#     #     print('p2')
-#     #     conn = connect_to_warehouse()
-#     #     print('p3')
-#     #     result = conn.run("""SELECT * FROM dim_design""")
-#     #     print('p4')
-#     #     # result_list = result.fetchall()
+class TestWarehouse:
+    def test_data_written_to_warehouse(self, temp_db, aws_credentials):
+        test_df = pd.DataFrame(
+            [
+                {"design_id": 1, "created_at": "2022", "design_name": "Wooden"},
+                {"design_id": 2, "created_at": "2023", "design_name": "Bronze"},
+                {"design_id": 3, "created_at": "2023", "design_name": "Bronze"},
+            ]
+        )
 
-#     #     # test_df.reset_index(drop=True, inplace=True)
-#     #     # test_df.set_index('design_id',inplace=True)    
-        
-#     #     # engine_conn = temp_db
-#     #     # cur = engine_conn.cursor()    
+        cur = temp_db.cursor()
+        # cur.execute("CREATE TABLE test_design (created_at, design_name,
+        # file_location, file_name, last_updated)")
 
-#     #     # cur.execute("DROP TABLE IF EXISTS test_design;")
-#     #     # cur.execute("""CREATE TABLE test_design 
-#     #     #             (id INT PRIMARY KEY, design_id INT, created_at VARCHAR(4), design_name VARCHAR(10))""")   # noqa
-              
-#     #     # test_df.set_index('design_id',inplace=True) 
-#     #     # load_df_to_warehouse(test_df, 'test_design', engine_conn=None)        
-#     #     # # load_df_to_warehouse(test_df, 'test_design', engine_conn=engine_conn)
+        cur.execute("DROP TABLE IF EXISTS test_design;")
 
-#     #     # result = cur.execute("SELECT * FROM test_design")
-#     #     # results_list = result.fetchall()
-#     #     pprint(result)
-#     #     assert result == [(1, '2022', 'Wooden'), (2, '2023', 'Bronze'), (3, '2023', 'Bronze')]
+        load_df_to_warehouse(test_df, "test_design", conn=temp_db)
 
+        cur = temp_db.cursor()
 
+        result = cur.execute("SELECT * FROM test_design")
+
+        results_list = result.fetchall()
+
+        assert results_list == [
+            (1, "2022", "Wooden"),
+            (2, "2023", "Bronze"),
+            (3, "2023", "Bronze"),
+        ]  # noqa
+
+    def test_data_appends_to_existing_table_in_warehouse(
+        self, temp_db, aws_credentials
+    ):
+        test_df = pd.DataFrame(
+            [
+                {"design_id": 1, "created_at": "2022", "design_name": "Wooden"},
+                {"design_id": 2, "created_at": "2023", "design_name": "Bronze"},
+                {"design_id": 3, "created_at": "2023", "design_name": "Bronze"},
+            ]
+        )
+
+        test_df_2 = pd.DataFrame(
+            [{"design_id": 4, "created_at": "2023", "design_name": "W"}]
+        )
+
+        cur = temp_db.cursor()
+
+        cur.execute("DROP TABLE IF EXISTS test_design;")
+        load_df_to_warehouse(test_df, "test_design", conn=temp_db)
+        load_df_to_warehouse(test_df_2, "test_design", conn=temp_db)
+
+        result = cur.execute("SELECT * FROM test_design")
+
+        results_list = result.fetchall()
+
+        assert results_list == [
+            (1, "2022", "Wooden"),
+            (2, "2023", "Bronze"),
+            (3, "2023", "Bronze"),
+            (4, "2023", "W"),
+        ]
+
+        # test that testdata is actually added when envoking lambda handler with filepaths
