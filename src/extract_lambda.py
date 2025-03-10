@@ -134,5 +134,5 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db, bucket
     return {"filepaths": filepaths}
 
 
-if __name__ == "__main__":
-    lambda_handler({},{})
+# if __name__ == "__main__":
+# lambda_handler({},{})
