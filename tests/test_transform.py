@@ -14,10 +14,9 @@ import pandas as pd
 import pytest
 from moto import mock_aws
 import boto3
-from unittest.mock import Mock
 import json
-from pprint import pprint
-import logging 
+
+
 
 @pytest.fixture
 def mock_client():
