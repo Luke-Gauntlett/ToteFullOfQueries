@@ -5,7 +5,7 @@ import pandas as pd
 import io
 from botocore.exceptions import ClientError
 import logging
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 
 logger = logging.getLogger()
@@ -52,8 +52,8 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
             else:
                 raise
 
-        pprint(df_dict)
-        return df_dict
+    # pprint(df_dict)
+    return df_dict
 
 # read_parquet(["data/by time/2025/
 # 03-March/05/15:00:03/test.parquet"], client, 
@@ -76,7 +76,7 @@ def connect_to_warehouse(secret_name = "project_warehouse_credentials",region_na
        # need to close db connection?????
         
         print("Database connection successful!") #nosec
-        return conn        
+        return conn      
 
     except ClientError as err:
         print(f"Failed to retrieve database credentials:{err}")
@@ -90,20 +90,88 @@ def load_df_to_warehouse(dataframe, table_name, engine_conn=None):
         if engine_conn is None:
             db_conn = connect_to_warehouse()
         else:
-            db_conn = engine_conn
-        # if table_name == 'dim_date':
-        #    db_conn.execute("""IF (EXISTS (SELECT * 
-        #          FROM INFORMATION_SCHEMA.TABLES 
-        #          WHERE TABLE_NAME = 'dim_date'))
-        #                    BEGIN """) 
-        dataframe.to_sql(table_name, db_conn, if_exists='append')
-        # maybe easier if using sql alchemy everywhere, not sqlite?
-        # else just drop table and repopulate
+            db_conn = engine_conn  
+
+        # with db_conn:
+            try:            
+                with db_conn:
+                    if table_name == 'fact_sales_order':
+                        dataframe.to_sql(table_name, db_conn, if_exists='append',index=False)
+                    else:
+                        dataframe.to_sql(table_name, db_conn, if_exists='append',index=True)
+            
+            except Exception as e:
+                db_conn.rollback()
+                print(e)
+        
     finally:
         # db_conn.close()
         pass
 
+test_df = pd.DataFrame(
+            [
+                {                    
+                    "design_id": 28,                  
+                    "design_name": "Woodenq",
+                    "file_location" : 'guqhs',
+                    "file_name" : 'fiqle'            
+                },
+                {
+                    "design_id": 27,                    
+                    "design_name": "Bqr",   
+                    "file_location" : 'guqhs',
+                    "file_name" : 'fiqle'               
+                },
+                {
+                    "design_id": 26,                    
+                    "design_name": "Brqonze", 
+                    "file_location" : 'gquhs',
+                    "file_name" : 'fiqle'                  
+                }
+            ]
+        )
 
+
+sales_data = pd.DataFrame([
+    {   
+        
+        "sales_order_id": 1,
+        "created_date": pd.to_datetime('2000-01-01').date(),
+        "created_time": pd.to_datetime("14:20:52.186000").time(),
+        "last_updated_date": pd.to_datetime('2000-01-01').date(),
+        "last_updated_time": pd.to_datetime("14:20:52.186000").time(),
+        "sales_staff_id": 19,
+        "counterparty_id": 8,
+        "units_sold": 42972,
+        "unit_price": 3.94,
+        "currency_id": 2,
+        "design_id": 3,
+        "agreed_payment_date": pd.to_datetime('2000-01-01').date(),
+        "agreed_delivery_date": pd.to_datetime('2000-01-01').date(),
+        "agreed_delivery_location_id": 8
+    }
+])
+# sales_data.to_datetime('')
+# pd.to_datetime('2000-01-01')
+
+
+# with conn.begin():
+#         conn.execute(text("DELETE FROM dim_design"))
+
+df = read_parquet(['data/by time/2025/03-March/04/10:43:43.533092/dim_date.parquet'], client)['dim_date']
+
+
+print(df)
+print('p1')
+# load_df_to_warehouse(df, 'dim_date')
+print('p2')
+conn = connect_to_warehouse()
+print('p3')
+result = conn.execute(text("""SELECT * FROM dim_staff"""))
+print('p4')
+result_list = result.fetchall()
+pprint(result_list)
+conn.close()
 
 
 
