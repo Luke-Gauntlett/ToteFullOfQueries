@@ -1,7 +1,7 @@
 
 #########################################  IAM Roles and role policy documents   ###################################################
-# Extract Lambda IAM
-data "aws_iam_policy_document" "assume_role" {
+# Extract Lambda IAM role
+data "aws_iam_policy_document" "extract_iam_policy" {
   statement {
     effect = "Allow"
 
@@ -14,16 +14,17 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-resource "aws_iam_role" "lambda_iam" {
-  name                  = "lambda_iam"
-  assume_role_policy    = data.aws_iam_policy_document.assume_role.json
+resource "aws_iam_role" "extract_lambda_iam_role" {
+  name                  = "extract_lambda_iam"
+  assume_role_policy    = data.aws_iam_policy_document.extract_iam_policy.json
   force_detach_policies = true
+
 }
 
 
 # Transform Lambda
 
-data "aws_iam_policy_document" "assume_role2" {
+data "aws_iam_policy_document" "transform_iam_policy" {
   statement {
     effect = "Allow"
 
@@ -37,14 +38,15 @@ data "aws_iam_policy_document" "assume_role2" {
 }
 
 
-resource "aws_iam_role" "lambda_iam2" {
-  name                  = "lambda_iam2"
-  assume_role_policy    = data.aws_iam_policy_document.assume_role2.json
+resource "aws_iam_role" "transform_lambda_iam_role" {
+  name                  = "transform_lambda_iam"
+  assume_role_policy    = data.aws_iam_policy_document.transform_iam_policy.json
   force_detach_policies = true
 }
 
+
 #Load Lambda
-data "aws_iam_policy_document" "assume_role3" {
+data "aws_iam_policy_document" "load_iam_policy" {
   statement {
     effect = "Allow"
 
@@ -57,9 +59,9 @@ data "aws_iam_policy_document" "assume_role3" {
   }
 }
 
-resource "aws_iam_role" "lambda_iam3" {
-  name                  = "lambda_iam3"
-  assume_role_policy    = data.aws_iam_policy_document.assume_role3.json
+resource "aws_iam_role" "load_lambda_iam_role" {
+  name                  = "load_lambda_iam"
+  assume_role_policy    = data.aws_iam_policy_document.load_iam_policy.json
   force_detach_policies = true
 }
 
@@ -89,12 +91,14 @@ resource "aws_iam_policy" "s3_policy" {
 
 resource "aws_iam_policy_attachment" "s3_attach_policy" {
   name       = "s3_attach_policy"
-  roles      = [aws_iam_role.lambda_iam.name, aws_iam_role.lambda_iam2.name] # Fixed to attach to both roles
+  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name] # Fixed to attach to both roles
   policy_arn = aws_iam_policy.s3_policy.arn
+
+
 }
 # Transform
 
-data "aws_iam_policy_document" "s3_transform_policy" {
+data "aws_iam_policy_document" "s3_transform_load_policy" {
   statement {
     effect    = "Allow"
     actions   = ["s3:ListBucket"]
@@ -108,29 +112,29 @@ data "aws_iam_policy_document" "s3_transform_policy" {
   }
 }
 
-resource "aws_iam_policy" "s3_transform_policy" {
+resource "aws_iam_policy" "s3_transform_policy_json" {
   name   = "s3_transform_bucket_policy"
-  policy = data.aws_iam_policy_document.s3_transform_policy.json
+  policy = data.aws_iam_policy_document.s3_transform_load_policy.json
 }
 
 resource "aws_iam_policy_attachment" "s3_transform_attach_policy" {
   name       = "s3_transform_attach_policy"
-  roles      = [aws_iam_role.lambda_iam2.name]
-  policy_arn = aws_iam_policy.s3_transform_policy.arn
+  roles      = [aws_iam_role.transform_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name]
+  policy_arn = aws_iam_policy.s3_transform_policy_json.arn
 }
 ###Load Transform
 
 
-resource "aws_iam_policy" "s3_load_policy" {
-  name   = "s3_load_bucket_policy"
-  policy = data.aws_iam_policy_document.s3_transform_policy.json
-}
+# resource "aws_iam_policy" "s3_load_policy" {
+#   name   = "s3_load_bucket_policy"
+#   policy = data.aws_iam_policy_document.s3_transform_policy.json
+# }
 
-resource "aws_iam_policy_attachment" "s3_load_attach_policy" {
-  name       = "s3_load_attach_policy"
-  roles      = [aws_iam_role.lambda_iam3.name]
-  policy_arn = aws_iam_policy.s3_transform_policy.arn
-}
+# resource "aws_iam_policy_attachment" "s3_load_attach_policy" {
+#   name       = "s3_load_attach_policy"
+#   roles      = [aws_iam_role.lambda_iam3.name]
+#   policy_arn = aws_iam_policy.s3_transform_policy.arn
+# }
 
 ########################################################## IAM Policy for SNS Notification   ###########################################################
 
@@ -151,13 +155,13 @@ resource "aws_iam_policy" "sns_policy" {
 
 resource "aws_iam_policy_attachment" "sns_attach_policy" {
   name       = "sns_attach_policy"
-  roles      = [aws_iam_role.lambda_iam.name]
+  roles      = [aws_iam_role.extract_lambda_iam_role.name]
   policy_arn = aws_iam_policy.sns_policy.arn
 }
 
 resource "aws_iam_policy_attachment" "sns_attach_policy2" {
   name       = "sns_attach_policy2"
-  roles      = [aws_iam_role.lambda_iam2.name]
+  roles      = [aws_iam_role.transform_lambda_iam_role.name]
   policy_arn = aws_iam_policy.sns_policy.arn  
 }
 
@@ -172,23 +176,19 @@ data "aws_iam_policy_document" "secret_manager_policy" {
   }
   ##The above policy is currently using the * wildcard, where all secrets can be accessed
 }
-resource "aws_iam_policy" "secret_manager_policy3" {
-  name   = "secret_manager_policy"
+resource "aws_iam_policy" "secret_manager_policy_json" {
+  name   = "secret_manager_policy_json"
   policy = data.aws_iam_policy_document.secret_manager_policy.json
 
 }
 
 resource "aws_iam_policy_attachment" "secret_manager_attach_policy" {
   name       = "secret_manager_attach_policy"
-  roles      = [aws_iam_role.lambda_iam.name]
-  policy_arn = aws_iam_policy.secret_manager_policy3.arn
+  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name]
+  policy_arn = aws_iam_policy.secret_manager_policy_json.arn
 }
 
-resource "aws_iam_policy_attachment" "secret_manager_attach_policy3" {
-  name       = "secret_manager_attach_policy_load"
-  roles      = [aws_iam_role.lambda_iam3.name]
-  policy_arn = aws_iam_policy.secret_manager_policy3.arn
-}
+
 
 
 #########################################  IAM Policy for Cloud Watch  ###################################################
@@ -221,13 +221,13 @@ resource "aws_iam_policy" "cloudwatch_policy" {
 # attaches to Lambda
 resource "aws_iam_policy_attachment" "cloudwatch_attach_policy" {
   name       = "cloudwatch_attach_policy"
-  roles      = [aws_iam_role.lambda_iam.name]
+  roles      = [aws_iam_role.extract_lambda_iam_role.name]
   policy_arn = aws_iam_policy.cloudwatch_policy.arn
 }
 
 resource "aws_iam_policy_attachment" "cloudwatch_attach_policy2" {
   name       = "cloudwatch_attach_policy2"
-  roles      = [aws_iam_role.lambda_iam2.name]
+  roles      = [aws_iam_role.transform_lambda_iam_role.name]
   policy_arn = aws_iam_policy.cloudwatch_policy.arn  # Reusing the existing S3 policy
 }
 
@@ -444,37 +444,36 @@ resource "aws_cloudwatch_log_resource_policy" "step_function_logs_policy" {
 
 #########################################  IAM Policy for Database Access/RDS  #################################################
 
-data "aws_iam_policy_document" "postgres_policy" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "rds:DescribeDBInstances",
-      "rds:Connect"
-    ]
-    resources = [
-      "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:${var.database_id}/${var.database_user}"
-    ]
-  }
+# data "aws_iam_policy_document" "postgres_policy" {
+#   statement {
+#     effect = "Allow"
+#     actions = [
+#       "rds:DescribeDBInstances",
+#       "rds:Connect"
+#     ]
+#     resources = [
+#       "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:${var.database_id}/${var.database_user}"
+#     ]
+#   }
 
-  statement {
-    effect  = "Allow"
-    actions = ["secretsmanager:GetSecretValue"]
-    resources = [
-      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.database_secret_name}"
-    ]
-  }
-}
+#   statement {
+#     effect  = "Allow"
+#     actions = ["secretsmanager:GetSecretValue"]
+#     resources = [
+#       "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:*"
+#     ]
+#   }
+# }
 
-resource "aws_iam_policy" "postgres_policy" {
-  name   = "postgres_lambda_policy"
-  policy = data.aws_iam_policy_document.postgres_policy.json
-}
+# resource "aws_iam_policy" "postgres_policy" {
+#   name   = "postgres_lambda_policy"
+#   policy = data.aws_iam_policy_document.postgres_policy.json
+# }
 
-resource "aws_iam_role_policy_attachment" "lambda_postgres_policy_attachment" {
-  role       = aws_iam_role.lambda_iam.name
-  policy_arn = aws_iam_policy.postgres_policy.arn
-}
-
+# resource "aws_iam_role_policy_attachment" "lambda_postgres_policy_attachment" {
+#   role       = aws_iam_role.extract_lambda_iam_role.arn
+#   policy_arn = aws_iam_policy.postgres_policy.arn
+# }
 
 
 
