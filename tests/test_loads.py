@@ -257,6 +257,12 @@ class TestReadParquet:
         with pytest.raises(ClientError):
             read_parquet(["notAFilePath.parquet"], client)
 
+    def test_get_error_if_other(self, mock_s3_client_read, aws_credentials):
+        client, bucket_name, file_paths = mock_s3_client_read
+
+        with pytest.raises(ClientError):
+            read_parquet(["notAFilePath.parquet"], client, bucketname ="fakebucket")
+
 
 @pytest.fixture
 def temp_db():
