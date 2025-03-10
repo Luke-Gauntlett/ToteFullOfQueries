@@ -106,7 +106,6 @@ def load_df_to_warehouse(dataframe, table_name,conn = None):
     
     if conn is None:
         conn=connect_to_warehouse()
-
     try:
         with conn:
             dataframe.to_sql(table_name, conn, if_exists='append', index=False)
