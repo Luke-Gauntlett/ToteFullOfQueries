@@ -6,7 +6,7 @@ from src.transform_lambda import (
     transform_currency,
     transform_counterparty,
     transform_fact_sales_order,
-    generate_date_table
+    #generate_date_table
 )
 import pandas as pd
 
