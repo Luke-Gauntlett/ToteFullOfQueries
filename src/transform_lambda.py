@@ -95,6 +95,14 @@ def lambda_handler(event, context):
         client, f"data/by time/{year}/{month}/{day}/{time}/dim_date"
     )
 
+    return {"filepaths":[f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_staff",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_location",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_design",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_currency",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_counterparty",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_date"
+                            ]}
 
 ################################ read each of the json files ######################################################## # noqa
 
