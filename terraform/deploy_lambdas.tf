@@ -32,7 +32,7 @@ resource "aws_lambda_function" "totes_load_lambda" {
   function_name    = var.load_lambda
   source_code_hash = data.archive_file.load_lambda.output_base64sha256
   filename         = data.archive_file.load_lambda.output_path
-  role             = aws_iam_role.lambda_iam.arn
+  role             = aws_iam_role.lambda_iam3.arn
   handler          = "${var.load_lambda}.lambda_handler"
   runtime          = "python3.12"
   timeout          = var.default_timeout
