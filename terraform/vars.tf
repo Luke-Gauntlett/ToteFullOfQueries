@@ -55,3 +55,9 @@ variable "email_address" {
   default = "totefullofqueries@gmail.com"
   sensitive = true
 }
+
+variable "warehouse_secret_name"{
+  type = string
+  default = ""
+  sensitive = true
+}
