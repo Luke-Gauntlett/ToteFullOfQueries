@@ -172,7 +172,7 @@ data "aws_iam_policy_document" "secret_manager_policy" {
   }
   ##The above policy is currently using the * wildcard, where all secrets can be accessed
 }
-resource "aws_iam_policy" "secret_manager_policy" {
+resource "aws_iam_policy" "secret_manager_policy3" {
   name   = "secret_manager_policy"
   policy = data.aws_iam_policy_document.secret_manager_policy.json
 
@@ -181,13 +181,13 @@ resource "aws_iam_policy" "secret_manager_policy" {
 resource "aws_iam_policy_attachment" "secret_manager_attach_policy" {
   name       = "secret_manager_attach_policy"
   roles      = [aws_iam_role.lambda_iam.name]
-  policy_arn = aws_iam_policy.secret_manager_policy.arn
+  policy_arn = aws_iam_policy.secret_manager_policy3.arn
 }
 
 resource "aws_iam_policy_attachment" "secret_manager_attach_policy3" {
-  name       = "secret_manager_attach_policy"
+  name       = "secret_manager_attach_policy_load"
   roles      = [aws_iam_role.lambda_iam3.name]
-  policy_arn = aws_iam_policy.secret_manager_policy.arn
+  policy_arn = aws_iam_policy.secret_manager_policy3.arn
 }
 
 
