@@ -85,8 +85,6 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
             if e.response["Error"]["Code"] == "NoSuchKey":
                 logger.error(f"Warning: File {file_path} does not exist in S3. Skipping.")
                 raise
-            else:
-                raise
 
     return dataframes
 

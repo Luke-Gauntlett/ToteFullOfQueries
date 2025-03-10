@@ -325,3 +325,5 @@ class TestWarehouse:
             (3, "2023", "Bronze"),
             (4, "2023", "W"),
         ]
+
+        # test that testdata is actually added when envoking lambda handler with filepaths
