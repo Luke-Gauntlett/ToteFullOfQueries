@@ -59,3 +59,19 @@ def print_all_tables_except_date(secret_name="project_warehouse_credentials", re
 print_all_tables_except_date()
 
 # clear_all_tables() #######################
+
+    #    test read 
+    # returns dict
+    # enough dataframes
+    # time and dates are right format
+    # test the  error if not given filepath
+
+    #     test connect_to_warehouse
+    # works?
+
+
+    #     test load_df_to_warehouse
+    
+    # dataframe = expected df for each file
+    # errors
+    # indexing?
