@@ -43,6 +43,8 @@ The infrastructure is managed using **Terraform** and includes:
 - Terraform installed.
 - An existing **RDS database** on AWS.
 - A verified **email address** for SNS alerts.
+- Python 3.12.
+- **Backend bucket** for statefiles set up manually via CLI/console.
 
 Note: This ETL pipeline is designed to work specifically with our internal RDS database (Totesys). If you do not have access to this database, you will not be able to run the pipeline successfully.
 
