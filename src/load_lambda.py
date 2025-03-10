@@ -67,6 +67,8 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
 
             df_name = file_path.split("/")[-1].split(".")[0]
 
+            print(df_name)
+
             # Convert date columns explicitly
             if df_name in date_columns:
                 for col in date_columns[df_name]:

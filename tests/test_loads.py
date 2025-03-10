@@ -254,14 +254,18 @@ class TestReadParquet:
     def test_get_error_if_filepath_missing(self, mock_s3_client_read, aws_credentials):
         client, bucket_name, file_paths = mock_s3_client_read
 
-        with pytest.raises(ClientError):
-            read_parquet(["notAFilePath.parquet"], client)
+        with pytest.raises(ClientError) as e:
+            read_parquet(["notAFilePath.parquet"], client,bucketname=bucket_name)
+        
+        assert e.value.response["Error"]["Code"] == "NoSuchKey"
 
     def test_get_error_if_other(self, mock_s3_client_read, aws_credentials):
         client, bucket_name, file_paths = mock_s3_client_read
 
-        with pytest.raises(ClientError):
-            read_parquet(["notAFilePath.parquet"], client, bucketname ="fakebucket")
+        with pytest.raises(ClientError) as exc_info:
+            read_parquet(file_paths, client, bucketname="fakebucket")
+
+        assert exc_info.value.response["Error"]["Code"] == "NoSuchBucket"
 
 
 @pytest.fixture
