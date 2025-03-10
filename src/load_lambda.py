@@ -11,11 +11,11 @@ logger.setLevel(logging.INFO)
 
 try:
     from src.utils import get_db_credentials
-except ImportError:
-    try:
-        from utils import get_db_credentials
-    except ImportError:
-        raise ImportError("Could not import get_db_credentials")
+except ImportError:                   # pragma: no cover
+    try: # pragma: no cover
+        from utils import get_db_credentials # pragma: no cover
+    except ImportError: # pragma: no cover
+        raise ImportError("Could not import get_db_credentials") # pragma: no cover
 
 
 def lambda_handler(event, context):
