@@ -40,6 +40,7 @@ def lambda_handler(event, context):
             logger.warning(f"Data for table {table} not found; skipping.")
 
 def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227154810549700000001"):
+    
     dataframes = {}
 
     date_columns = {
@@ -83,7 +84,7 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
         except ClientError as e:
             if e.response["Error"]["Code"] == "NoSuchKey":
                 logger.error(f"Warning: File {file_path} does not exist in S3. Skipping.")
-                continue
+                raise
             else:
                 raise
 
@@ -105,7 +106,7 @@ def load_df_to_warehouse(dataframe, table_name,conn = None):
         conn=connect_to_warehouse()
 
     try:
-        with conn.begin():
+        with conn:
             dataframe.to_sql(table_name, conn, if_exists='append', index=False)
             print(f"data addeed to {table_name}")
 
@@ -113,64 +114,11 @@ def load_df_to_warehouse(dataframe, table_name,conn = None):
         logger.error(f"Error inserting data: {e}")
         conn.rollback()
         print(f"Failed! data not added {table_name}")
+        conn.close()
         raise
-    finally:
-        conn.close()
+    #finally:
+        #conn.close()
 
-def clear_all_tables():
-
-    table_list = [
-        "fact_sales_order",
-        "dim_location",
-        "dim_counterparty",
-        "dim_currency",
-        "dim_date",
-        "dim_design",
-        "dim_location",
-        "dim_staff"
-    ]
-
-    conn = connect_to_warehouse()
-
-    try:
-        with conn.begin():
-            for table in table_list:
-                conn.execute(text(f"DELETE FROM {table};")) # nosec
-                print(f"Deleted data from table: {table}") # nosec
-    except Exception as e:
-        print(f"Error deleting data: {e}")
-        conn.rollback()
-    finally:
-        conn.close()
-        print("Connection closed.")
-
-def print_all_tables_except_date(secret_name="project_warehouse_credentials", region_name="eu-west-2"): # nosec # noqa
-    credentials = get_db_credentials(secret_name, region_name)
-    db_url = (
-        f"postgresql+pg8000://{credentials['user']}:{credentials['password']}" # nosec
-        f"@{credentials['host']}:{credentials['port']}/{credentials['database']}" # nosec
-    )
-
-    engine = create_engine(db_url)
-
-    table_names = [
-        "dim_counterparty",
-        "dim_currency",
-        "dim_design",
-        "dim_location",
-        "dim_staff",
-        "fact_sales_order"
-    ]
-
-    with engine.connect() as conn:
-        for table in table_names:
-            print(f"\n=== {table.upper()} ===")
-            df = pd.read_sql_table(table, conn)
-            print(df)
-
-print_all_tables_except_date()
-
-# clear_all_tables() #######################
 
 # lambda_handler({
 #     "filepaths": [
@@ -179,7 +127,6 @@ print_all_tables_except_date()
 #         "data/by time/2025/03-March/07/22:17:13.872739/dim_currency.parquet",
 #         "data/by time/2025/03-March/07/22:17:13.872739/dim_date.parquet",
 #         "data/by time/2025/03-March/07/22:17:13.872739/dim_design.parquet",
-#         "data/by time/2025/03-March/07/22:17:13.872739/dim_location.parquet",
 #         "data/by time/2025/03-March/07/22:17:13.872739/dim_staff.parquet",
 #         "data/by time/2025/03-March/07/22:17:13.872739/fact_sales_order.parquet"
 #     ]
