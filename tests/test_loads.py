@@ -1,10 +1,12 @@
-from src.load_lambda import read_parquet, load_df_to_warehouse
-from src.transform_lambda import (transform_location,
-                                  transform_counterparty,
-                                  transform_currency,
-                                  transform_design,
-                                  transform_fact_sales_order,
-                                  transform_staff)
+from src.load_lambda import read_parquet, load_df_to_warehouse, lambda_handler
+from src.transform_lambda import (
+    transform_location,
+    transform_counterparty,
+    transform_currency,
+    transform_design,
+    transform_fact_sales_order,
+    transform_staff,
+)
 import boto3
 from moto import mock_aws
 import pandas as pd
@@ -68,37 +70,45 @@ counterparty_data = [
     {
         "counterparty_id": 1,
         "counterparty_legal_name": "Fahey and Sons",
-        "legal_address_id": 15,
+        "legal_address_id": 1,
         "commercial_contact": "Micheal Toy",
         "delivery_contact": "Mrs. Lucy Runolfsdottir",
         "created_at": "2022-11-03 14:20:51.563000",
-        "last_updated": "2022-11-03 14:20:51.563000"
-    }]
+        "last_updated": "2022-11-03 14:20:51.563000",
+    }
+]
 
-currency_data = [{
+currency_data = [
+    {
         "currency_id": 1,
         "currency_code": "GBP",
         "created_at": "2022-11-03 14:20:49.962000",
-        "last_updated": "2022-11-03 14:20:49.962000"
-    }]
+        "last_updated": "2022-11-03 14:20:49.962000",
+    }
+]
 
-department_data =  [{
+department_data = [
+    {
         "department_id": 1,
         "department_name": "Sales",
         "location": "Manchester",
         "manager": "Richard Roma",
         "created_at": "2022-11-03 14:20:49.962000",
-        "last_updated": "2022-11-03 14:20:49.962000"
-    }]
-design_data =  [{
+        "last_updated": "2022-11-03 14:20:49.962000",
+    }
+]
+design_data = [
+    {
         "design_id": 8,
         "created_at": "2022-11-03 14:20:49.962000",
         "design_name": "Wooden",
         "file_location": "/usr",
         "file_name": "wooden-20220717-npgz.json",
-        "last_updated": "2022-11-03 14:20:49.962000"
-    }]
-fact_sales_data = [{
+        "last_updated": "2022-11-03 14:20:49.962000",
+    }
+]
+fact_sales_data = [
+    {
         "sales_order_id": 2,
         "created_at": "2022-11-03 14:20:52.186000",
         "last_updated": "2022-11-03 14:20:52.186000",
@@ -110,18 +120,22 @@ fact_sales_data = [{
         "currency_id": 2,
         "agreed_delivery_date": "2022-11-07",
         "agreed_payment_date": "2022-11-08",
-        "agreed_delivery_location_id": 8
-    }]
-staff_data = [{
+        "agreed_delivery_location_id": 8,
+    }
+]
+staff_data = [
+    {
         "staff_id": 1,
         "first_name": "Jeremie",
         "last_name": "Franey",
         "department_id": 2,
         "email_address": "jeremie.franey@terrifictotes.com",
         "created_at": "2022-11-03 14:20:51.563000",
-        "last_updated": "2022-11-03 14:20:51.563000"
-    }]
+        "last_updated": "2022-11-03 14:20:51.563000",
+    }
+]
 ############################################################################################### noqa
+
 
 @pytest.fixture
 def mock_s3_client_read():
@@ -136,21 +150,30 @@ def mock_s3_client_read():
             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
 
-
         tfact = transform_fact_sales_order(fact_sales_data).to_parquet()
         tstaff = transform_staff(staff_data, department_data).to_parquet()
         tlocation = transform_location(location_data).to_parquet()
-        tdesign =transform_design(design_data).to_parquet()
+        tdesign = transform_design(design_data).to_parquet()
         tcurrency = transform_currency(currency_data).to_parquet()
-        tcounterparty = transform_counterparty(location_data, counterparty_data).to_parquet()
+        tcounterparty = transform_counterparty(
+            location_data, counterparty_data
+        ).to_parquet()
 
-        factpath = "data/by time/2025/03-March/07/22:17:13.872739/fact_sales_order.parquet"    
+        factpath = (
+            "data/by time/2025/03-March/07/22:17:13.872739/fact_sales_order.parquet"
+        )
         staffpath = "data/by time/2025/03-March/07/22:17:13.872739/dim_staff.parquet"
-        locationpath = "data/by time/2025/03-March/07/22:17:13.872739/dim_location.parquet"
+        locationpath = (
+            "data/by time/2025/03-March/07/22:17:13.872739/dim_location.parquet"
+        )
         designpath = "data/by time/2025/03-March/07/22:17:13.872739/dim_design.parquet"
-        currencypath = "data/by time/2025/03-March/07/22:17:13.872739/dim_currency.parquet"
-        counterpartypath = "data/by time/2025/03-March/07/22:17:13.872739/dim_counterparty.parquet"
-        
+        currencypath = (
+            "data/by time/2025/03-March/07/22:17:13.872739/dim_currency.parquet"
+        )
+        counterpartypath = (
+            "data/by time/2025/03-March/07/22:17:13.872739/dim_counterparty.parquet"
+        )
+
         client.put_object(Bucket=bucket_name, Key=factpath, Body=tfact)
         client.put_object(Bucket=bucket_name, Key=staffpath, Body=tstaff)
         client.put_object(Bucket=bucket_name, Key=locationpath, Body=tlocation)
@@ -158,14 +181,14 @@ def mock_s3_client_read():
         client.put_object(Bucket=bucket_name, Key=currencypath, Body=tcurrency)
         client.put_object(Bucket=bucket_name, Key=counterpartypath, Body=tcounterparty)
 
-
-        filepaths = ["data/by time/2025/03-March/07/22:17:13.872739/fact_sales_order.parquet",    
-        "data/by time/2025/03-March/07/22:17:13.872739/dim_staff.parquet",
-        "data/by time/2025/03-March/07/22:17:13.872739/dim_location.parquet",
-        "data/by time/2025/03-March/07/22:17:13.872739/dim_design.parquet",
-        "data/by time/2025/03-March/07/22:17:13.872739/dim_currency.parquet",
-        "data/by time/2025/03-March/07/22:17:13.872739/dim_counterparty.parquet"]
-
+        filepaths = [
+            "data/by time/2025/03-March/07/22:17:13.872739/dim_location.parquet",
+            "data/by time/2025/03-March/07/22:17:13.872739/dim_staff.parquet",
+            "data/by time/2025/03-March/07/22:17:13.872739/dim_design.parquet",
+            "data/by time/2025/03-March/07/22:17:13.872739/dim_currency.parquet",
+            "data/by time/2025/03-March/07/22:17:13.872739/dim_counterparty.parquet",
+            "data/by time/2025/03-March/07/22:17:13.872739/fact_sales_order.parquet",
+        ]
 
         yield client, bucket_name, filepaths
 
@@ -202,18 +225,19 @@ class TestReadParquet:
             "phone",
         ]
         assert list(result["dim_counterparty"].columns) == [
-        "counterparty_id",
-        "counterparty_legal_name",
-        "counterparty_legal_address_line_1",
-        'counterparty_legal_address_line_2',
-        'counterparty_legal_district',
-        'counterparty_legal_city',
-        'counterparty_legal_postal_code',
-        'counterparty_legal_country',
-        'counterparty_legal_phone_number']
+            "counterparty_id",
+            "counterparty_legal_name",
+            "counterparty_legal_address_line_1",
+            "counterparty_legal_address_line_2",
+            "counterparty_legal_district",
+            "counterparty_legal_city",
+            "counterparty_legal_postal_code",
+            "counterparty_legal_country",
+            "counterparty_legal_phone_number",
+        ]
 
     def test_data_is_inputted_correctly(self, mock_s3_client_read, aws_credentials):
-        client, bucket_name, file_paths= mock_s3_client_read
+        client, bucket_name, file_paths = mock_s3_client_read
 
         result = read_parquet(file_paths, client, bucket_name)
 
@@ -234,8 +258,8 @@ class TestReadParquet:
         client, bucket_name, file_paths = mock_s3_client_read
 
         result = read_parquet(file_paths, client, bucketname=bucket_name)
-        
-        assert isinstance(result,dict)
+
+        assert isinstance(result, dict)
         assert "dim_location" in result
         assert "dim_counterparty" in result
         assert "dim_currency" in result
@@ -243,20 +267,21 @@ class TestReadParquet:
         assert "dim_staff" in result
         assert "fact_sales_order" in result
 
-    def test_read_returns_dict_of_dataframes(self,mock_s3_client_read,aws_credentials):
+    def test_read_returns_dict_of_dataframes(
+        self, mock_s3_client_read, aws_credentials
+    ):
         client, bucket_name, file_paths = mock_s3_client_read
 
         result = read_parquet(file_paths, client, bucket_name)
 
         assert all(isinstance(value, pd.DataFrame) for value in result.values())
-       
 
     def test_get_error_if_filepath_missing(self, mock_s3_client_read, aws_credentials):
         client, bucket_name, file_paths = mock_s3_client_read
 
         with pytest.raises(ClientError) as e:
-            read_parquet(["notAFilePath.parquet"], client,bucketname=bucket_name)
-        
+            read_parquet(["notAFilePath.parquet"], client, bucketname=bucket_name)
+
         assert e.value.response["Error"]["Code"] == "NoSuchKey"
 
     def test_get_error_if_other(self, mock_s3_client_read, aws_credentials):
@@ -336,9 +361,121 @@ class TestWarehouse:
             (4, "2023", "W"),
         ]
 
-        # test that testdata is actually added when envoking lambda handler with filepaths
+def test_complete_lambda_handler_takes_parquets_and_loads_to_warehouse(
+    mock_s3_client_read, aws_credentials, temp_db
+):
+    client, bucket_name, file_paths = mock_s3_client_read
 
-        # call load_df_to_warehouse with none and assert connect_to_warehouse has been called once with patch?
+    files_dict = {"filepaths": file_paths}
 
-        #test the logging at the end
+    cur = temp_db.cursor()
+    cur.execute("DROP TABLE IF EXISTS dim_counterparty;")
+    cur.execute("DROP TABLE IF EXISTS dim_currency;")
+    cur.execute("DROP TABLE IF EXISTS dim_design;")
+    cur.execute("DROP TABLE IF EXISTS dim_location;")
+    cur.execute("DROP TABLE IF EXISTS dim_staff;")
+    cur.execute("DROP TABLE IF EXISTS fact_sales_order;")
 
+    lambda_handler(files_dict, {}, client=client, conn=temp_db, bucket_name=bucket_name)
+
+    design_res = cur.execute("SELECT * FROM dim_design")
+    design_list = design_res.fetchall()
+    assert design_list == [(8, "Wooden", "/usr", "wooden-20220717-npgz.json")]
+
+    counterparty_res = cur.execute("SELECT * FROM dim_counterparty")
+    counterparty_list = counterparty_res.fetchall()
+    assert counterparty_list == [
+        (
+            1,
+            "Fahey and Sons",
+            "6826 Herzog Via",
+            None,
+            "Avon",
+            "New Patienceburgh",
+            "28441",
+            "Turkey",
+            "1803 637401",
+        )
+    ]
+
+    currency_res = cur.execute("SELECT * FROM dim_currency")
+    currency_list = currency_res.fetchall()
+    assert currency_list == [(1, "GBP", "Pound Sterling")]
+
+    location_res = cur.execute("SELECT * FROM dim_location")
+    location_list = location_res.fetchall()
+    assert location_list == [
+        (
+            1,
+            "6826 Herzog Via",
+            None,
+            "Avon",
+            "New Patienceburgh",
+            "28441",
+            "Turkey",
+            "1803 637401",
+        ),
+        (
+            2,
+            "179 Alexie Cliffs",
+            None,
+            None,
+            "Aliso Viejo",
+            "99305-7380",
+            "San Marino",
+            "9621 880720",
+        ),
+        (
+            3,
+            "148 Sincere Fort",
+            None,
+            None,
+            "Lake Charles",
+            "89360",
+            "Samoa",
+            "0730 783349",
+        ),
+    ]
+
+    staff_res = cur.execute("SELECT * FROM dim_staff")
+    staff_list = staff_res.fetchall()
+    assert staff_list == [
+        (1, "Jeremie", "Franey", None, None, "jeremie.franey@terrifictotes.com")
+    ]
+
+    fact_res = cur.execute("SELECT * FROM fact_sales_order")
+    fact_list = fact_res.fetchall()
+    assert fact_list == [
+        (
+            2,
+            "2022-11-03",
+            "14:20:52.186000",
+            "2022-11-03",
+            "14:20:52.186000",
+            19,
+            8,
+            42972,
+            3.94,
+            2,
+            3,
+            "2022-11-08",
+            "2022-11-07",
+            8,
+        )
+    ]
+
+
+def test_get_error_loading_to_warehouse_incorrect_data_type(
+    mock_s3_client_read, aws_credentials, temp_db
+):
+    cur = temp_db.cursor()
+
+    wrong_df = pd.DataFrame([{"created_at": 1, "design_id": 2}])
+    cur.execute("DROP TABLE IF EXISTS test_design;")
+
+    cur.execute("CREATE TABLE test_design (created_at TEXT, design_name TEXT)")
+    with pytest.raises(Exception) as exc_info:
+        load_df_to_warehouse(wrong_df, "test_design", conn=temp_db)
+    print(exc_info.value)
+
+    assert "has no" in str(exc_info.value) or "invalid" in str(exc_info.value).lower()

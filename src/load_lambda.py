@@ -18,11 +18,12 @@ except ImportError: # pragma: no cover
         raise ImportError("Could not import get_db_credentials")# pragma: no cover
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, context, client=None, conn=None, bucket_name="totes-transform-bucket-20250227154810549700000001"):
 
-    client = boto3.client("s3")
+    if client is None:
+        client = boto3.client("s3")    
 
-    dataframes = read_parquet(event["filepaths"],client)
+    dataframes = read_parquet(event["filepaths"],client, bucket_name)
 
     tables = ["dim_counterparty",
               "dim_currency",
@@ -35,7 +36,7 @@ def lambda_handler(event, context):
 
     for table in tables:
         if table in dataframes:
-            load_df_to_warehouse(dataframes[table], table)
+            load_df_to_warehouse(dataframes[table], table, conn)
         else:
             logger.warning(f"Data for table {table} not found; skipping.")
 
@@ -67,7 +68,7 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
 
             df_name = file_path.split("/")[-1].split(".")[0]
 
-            print(df_name)
+            # print(df_name)
 
             # Convert date columns explicitly
             if df_name in date_columns:
@@ -109,11 +110,11 @@ def load_df_to_warehouse(dataframe, table_name,conn = None):
     try:
         with conn:
             dataframe.to_sql(table_name, conn, if_exists='append', index=False)
-            print(f"data addeed to {table_name}")
+            # print(f"data addeed to {table_name}")
 
     except Exception as e:
         logger.error(f"Error inserting data: {e}")
-        conn.rollback()
-        print(f"Failed! data not added {table_name}")
+        conn.rollback()        
+        # print(f"Failed! data not added {table_name}")
         conn.close()
         raise
