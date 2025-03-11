@@ -10,7 +10,30 @@ logger.setLevel(logging.INFO)
 
 
 def lambda_handler(event, context):
+    """
+    Main entry point for AWS Lambda function to transform and load data into S3 as a parquet, 
+    ensuring that the data conforms to the data warehouse schema. The function 
+    loads raw data from S3, applies transformations to various datasets, and writes 
+    the transformed data back into a different S3.
 
+    Steps involved:
+    1. Load raw data files from S3 based on the provided file paths from extract lambda.
+    2. Transform the raw data for the different tables (e.g., sales order, staff, design, etc.).
+    3. Ensure that the date dimension table is updated if necessary.
+    4. Write the transformed data to the appropriate S3 location, organized by time.
+    5. Return the list of file paths where the transformed data is stored in the transform S3.
+
+    Args:
+        event (dict): 
+            A dictionary containing the input data. It includes a list of file paths pointing to the raw data 
+            in S3 to be processed.
+        
+        context (LambdaContext): {}            
+
+    Returns:
+        dict: A dictionary containing the file paths of the transformed data stored in S3.
+    """
+    
     client = boto3.client("s3")
 
     loaded__files = read(event["filepaths"], client)
@@ -107,6 +130,21 @@ def lambda_handler(event, context):
 ################################ read each of the json files ######################################################## # noqa
 
 def read(file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"):
+    """
+    Reads JSON files from extract lambda put in an S3 and returns their contents (source table data) as a dictionary.
+
+    This function retrieves JSON files from the extract S3 bucket using the provided file paths, decodes the content, 
+    and stores it in a dictionary where the keys are table names derived from the file paths.
+
+    Args:
+        file_paths (list): A list of file paths (S3 keys) to be read from the specified bucket.
+        client (boto3.client): The S3 client instance used for interacting with Amazon S3.
+        bucketname (str, optional): The S3 bucket name. Defaults to 'totes-extract-bucket-20250227154810549900000003'.
+
+    Returns:
+        dict: A dictionary where keys are table names (derived from file paths) and values are the JSON (raw) data loaded 
+              from the respective files.
+    """
     file_dict = {}
 
     for file_path in file_paths:
@@ -134,6 +172,21 @@ def read(file_paths, client, bucketname="totes-extract-bucket-202502271548105499
 
 
 def write(transformed_dataframe, client, filename, bucketname="totes-transform-bucket-20250227154810549700000001"):
+    """
+    Writes a transformed table DataFrame to an S3 bucket as a Parquet file.
+
+    This function converts the provided DataFrame into a Parquet file format and uploads it to the specified S3 bucket. 
+    The file is stored with the given filename and a `.parquet` extension.
+
+    Args:
+        transformed_dataframe (pandas.DataFrame): The DataFrame containing the transformed data to be written.
+        client (boto3.client): The S3 client instance used for interacting with Amazon S3.
+        filename (str): The S3 object key (filename) to store the Parquet file under.
+        bucketname (str, optional): The name of the S3 bucket. Defaults to 'totes-transform-bucket-20250227154810549700000001'.
+
+    Returns:
+        None
+    """
     try:
         parquet_file = transformed_dataframe.to_parquet(index=True)
        
@@ -153,7 +206,16 @@ def write(transformed_dataframe, client, filename, bucketname="totes-transform-b
 
 
 def transform_location(address):
-    """Transforms location data to match the warehouse schema."""
+    """
+    Transforms location data to match the warehouse schema by renaming, removing, 
+    and sorting columns.
+
+    Args:
+        address (list of dict): Location data to be transformed.
+
+    Returns:
+        pandas.DataFrame: Transformed data or an empty DataFrame if the transformation fails.
+    """
     try:
         if address:
             df = pd.DataFrame(address)
@@ -184,6 +246,16 @@ def transform_location(address):
 ############################## transform the data for dim staff table #############################   # noqa
 
 def transform_staff(staff_data, department_data):
+    """
+    Transforms staff data by merging with department data and formatting columns.
+
+    Args:
+        staff_data (list of dict): Staff data to be transformed.
+        department_data (list of dict): Department data to merge with staff data.
+
+    Returns:
+        pandas.DataFrame: Transformed staff data or an empty DataFrame if input data is missing.
+    """
     try:
 
         if staff_data and department_data:
@@ -217,7 +289,20 @@ def transform_staff(staff_data, department_data):
 ##################################### make a date #######################################  # noqa
 
 def load_date_range(s3_client, object_key, bucketname):
+    """
+    Loads the date range of dates to put in warehouse from an S3 bucket or creates a default date range if not found with 15 years of dates.
 
+    Args:
+        s3_client (boto3.client): The S3 client used to interact with AWS S3.
+        object_key (str): The S3 object key (path) for the date range JSON file.
+        bucketname (str): The name of the S3 bucket containing the date range file.
+
+    Returns:
+        tuple: A tuple containing:
+            - start_date (datetime): The start date of the range.
+            - end_date (datetime): The end date of the range.
+            - file_exists (bool): Flag indicating whether the file was found (True) or not (False).
+    """
     try:
         response = s3_client.get_object(Bucket=bucketname, Key=object_key)
         date_range = json.load(response['Body'])
@@ -234,9 +319,32 @@ def load_date_range(s3_client, object_key, bucketname):
     return start_date, end_date, file_exists
 
 def save_date_range(s3_client, bucketname, object_key, date_range):
+    """
+    Saves the date range dictionary to an S3 bucket as a JSON file.
+
+    Args:
+        s3_client (boto3.client): The S3 client used to interact with AWS S3.
+        bucketname (str): The name of the S3 bucket where the file will be saved.
+        object_key (str): The S3 object key (path) under which the file will be saved.
+        date_range (dict): A dictionary containing the 'start_date' and 'end_date' to be saved.
+
+    Returns:
+        None
+    """
     s3_client.put_object(Bucket=bucketname, Key=object_key, Body=json.dumps(date_range))
 
 def generate_date_table(start_date, end_date):
+    """
+    Generates a date table with various date-related attributes (e.g., year, month, day, weekday).
+
+    Args:
+        start_date (str or datetime): The start date for the range.
+        end_date (str or datetime): The end date for the range.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the date table with columns like 'year', 'month', 'day', 
+                          'day_of_week', 'day_name', 'month_name', 'quarter', and 'date_id'.
+    """
     dates = pd.date_range(start=start_date, end=end_date, freq='D')
     date_table = pd.DataFrame({'date_id': dates})
     date_table['year'] = date_table['date_id'].dt.year
@@ -252,7 +360,16 @@ def generate_date_table(start_date, end_date):
 ############################# transform design ############################## noqa
 
 def transform_design(design):
-    """Transforms location data to match the warehouse schema."""
+    """
+    Transforms design data to match the warehouse schema by removing irrelevant columns 
+    and sorting by design_id.
+
+    Args:
+        design (list of dict): Design data to be transformed.
+
+    Returns:
+        pandas.DataFrame: Transformed design data or an empty DataFrame if input data is missing.
+    """
     try:
         if design:
             df = pd.DataFrame(design)
@@ -287,7 +404,15 @@ def get_currency_name(currency_code: str):
         return None
 
 def transform_currency(currency):
-    """Returns DataFrame for transforming currency table."""
+    """
+    Transforms currency data by adding a currency name and sorting by currency_id.
+
+    Args:
+        currency (list of dict): Currency data to be transformed.
+
+    Returns:
+        pandas.DataFrame: Transformed currency data or an empty DataFrame if input data is missing.
+    """
     try:
         if currency:
             df = pd.DataFrame(currency)
@@ -312,7 +437,17 @@ def transform_currency(currency):
 ############################# transform counterparty ############################## noqa
 
 def transform_counterparty(address, counterparty):
-    """Transforms counterparty and address data to match the warehouse schema."""
+    """
+    Transforms counterparty and address data by merging and renaming columns to match the warehouse schema.
+
+    Args:
+        address (list or dict): Address data to be merged with counterparty data.
+        counterparty (list or dict): Counterparty data to be transformed.
+
+    Returns:
+        pandas.DataFrame: Transformed counterparty data or an empty DataFrame if input data is missing.
+
+    """
     try:
         if counterparty and address:
             counterparty_df = pd.DataFrame(counterparty)
@@ -352,11 +487,20 @@ def transform_counterparty(address, counterparty):
             return pd.DataFrame([])
     except KeyError as e:
         logger.error(f"Error in dim_counterparty: {e}")
-        raise  
+        raise 
+
 ###################### facts sales table ###################### noqa
 
 def transform_fact_sales_order(sales_order):
-    """Transforms raw sales_order data to match warehouse schema"""
+    """
+    Transforms raw sales order data to match the warehouse schema, including date formatting and renaming columns.
+
+    Args:
+        sales_order (list of dict): Raw sales order data to be transformed.
+
+    Returns:
+        pandas.DataFrame: Transformed sales order data or an empty DataFrame if input data is empty or invalid.
+    """
     expected_columns = [
         "sales_order_id",
         "created_date",
