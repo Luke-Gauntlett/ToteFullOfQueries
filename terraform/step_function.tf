@@ -27,17 +27,17 @@ resource "aws_sfn_state_machine" "totes_step_function" {
   }
 }
 EOF
-
+#  logging_configuration {
+#     log_destination = "${aws_cloudwatch_log_group.step_function_logs.arn}:*"
+#     include_execution_data = true
+#     level                  = "ERROR"
+#   }
 
   depends_on = [
     aws_cloudwatch_log_group.step_function_logs,
-    aws_cloudwatch_log_resource_policy.step_function_logs_policy
+    aws_cloudwatch_log_resource_policy.cw_sf_policy
   ]
 }
 
 
-  # logging_configuration {
-  #   log_destination = "${aws_cloudwatch_log_group.step_function_logs.arn}:*"
-  #   include_execution_data = true
-  #   level                  = "ERROR"
-  # }
+ 
