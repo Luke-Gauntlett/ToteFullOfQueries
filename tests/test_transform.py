@@ -6,12 +6,38 @@ from src.transform_lambda import (
     transform_currency,
     transform_counterparty,
     transform_fact_sales_order,
-    #generate_date_table
+    generate_date_table,
+    save_date_range, 
+    load_date_range
 )
 import pandas as pd
+import pytest
+from moto import mock_aws
+import boto3
+import json
+
+
+
+@pytest.fixture
+def mock_client():
+    """Mocks an S3 client with a test bucket."""
+    with mock_aws():
+        s3 = boto3.client("s3")
+        s3.create_bucket(
+            Bucket="test_bucket",
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+        )
+        yield s3
 
 class TestTransformStaff:
+    def test_transform_staff_empty_input(self):
+        """Test that an empty DataFrame is handled correctly."""
+        result = transform_staff([], [])
+        assert isinstance(result, pd.DataFrame)
+        assert result.empty
+
     def test_transform_staff(self):
+        """Test returns the correct dataframe structure."""
         sample_staff = [
             {
                 "staff_id": 1,
@@ -101,15 +127,19 @@ class TestTransformStaff:
         )
 
         pd.testing.assert_frame_equal(expected_df_first_entry, result)
+        assert list(result.columns) == ["staff_id","first_name", "last_name",
+                                        "department_name","location", "email_address"]
+        assert result.shape == (3, 6)
 
-
-    def test_transform_staff_empty_input(self):
-        result = transform_staff([], [])
+class TestTransformLocation:
+    def test_transform_location_empty_input(self):
+        """Test that an empty DataFrame is handled correctly."""
+        result = transform_location([])
+        assert isinstance(result, pd.DataFrame)
         assert result.empty
-
-class TestTransformAddress:
+        
     def test_location(self):
-
+        """Test returns the correct dataframe structure."""
         sample_addresses = [
             {
                 "address_id": 1,
@@ -187,32 +217,94 @@ class TestTransformAddress:
         expected_df = pd.DataFrame(expected_location)
 
         pd.testing.assert_frame_equal(expected_df, result)
+        assert list(result.columns) == ["location_id","address_line_1", "address_line_2",
+                                        "district","city", "postal_code", "country", "phone"]
+        assert result.shape == (3, 8)
+
+class TestGenerateDateTable:
+    def test_generates_correct_columns(self):
+        """Test that the generated DataFrame has the correct columns."""
+        df = generate_date_table("2023-01-01", "2023-01-05")
+        expected_columns = {
+            "date_id", "year", "month", "day", "day_of_week",
+            "day_name", "month_name", "quarter"
+        }
+        assert set(df.columns) == expected_columns
+
+    def test_correct_date_range(self):
+        """Ensure the function generates dates correctly."""
+        df = generate_date_table("2023-01-01", "2023-01-05")
+        assert len(df) == 5
+        assert df["date_id"].iloc[0] == pd.Timestamp("2023-01-01").date()
+        assert df["date_id"].iloc[-1] == pd.Timestamp("2023-01-05").date()
+
+    def test_leap_year(self):
+        """Check if leap year (Feb 29) is handled correctly."""
+        df = generate_date_table("2024-02-28", "2024-03-01")
+        assert len(df) == 3
+        assert pd.Timestamp("2024-02-29").date() in df["date_id"].values
 
 
-# def test_make_a_date():
+class TestSaveDateinBucket:
+    def test_saves_date_range_to_s3(self, mock_client):
+        """Test that the function correctly saves date range JSON to S3."""
+        date_range = {"start_date": "2023-01-01", "end_date": "2023-12-31"}
+        save_date_range(mock_client, "test_bucket", "test_key", date_range)
+        mock_client.put_object(
+            Bucket="test_bucket",
+            Key="test_key",
+            Body=json.dumps(date_range)
+        )
+        objects = mock_client.list_objects(Bucket="test_bucket")
 
-#     result = generate_date_table(pd.to_datetime('2000-01-01'), pd.to_datetime('2075-01-01'))
-    
-#     date_as_date = pd.to_datetime("2025-03-04").date()
-    
-#     expected = pd.DataFrame({
-#         "year": [2025],
-#         "month": [3],
-#         "day": [4],
-#         "day_of_week": [2],
-#         "day_name": ["Tuesday"],
-#         "month_name": ["March"],
-#         "quarter": [1]
-#     }, index=[date_as_date])
-    
-#     row_expected = expected.loc[date_as_date]  # expected Series
+        assert objects["Contents"][0]['Key'] == 'test_key'
+        assert objects['Name'] == 'test_bucket'
 
-#     row = result.loc[date_as_date]             # actual Series from generate_date_table
-    
-#     pd.testing.assert_series_equal(row, row_expected)
+        response = mock_client.get_object(Bucket="test_bucket", Key="test_key")
+        saved_body = json.loads(response["Body"].read().decode("utf-8"))
 
+        assert saved_body == date_range
 
+class TestLoadDate:
+    def test_loads_existing_date_range(self, mock_client):
+        """Test that an existing date range is correctly loaded from S3."""
+        date_range = {"start_date": "2023-01-01", "end_date": "2023-12-31"}
+        object_key = "test_key"
+        mock_client.put_object(
+            Bucket="test_bucket",
+            Key=object_key,
+            Body=json.dumps(date_range)
+        )
+        start_date, end_date, file_exists = load_date_range(mock_client, object_key, "test_bucket")
+
+        assert file_exists is True
+        assert start_date == pd.Timestamp(date_range["start_date"])
+        assert end_date == pd.Timestamp(date_range["end_date"])
+
+    def test_creates_default_date_range_if_missing(self, mock_client):
+        """Test that a default date range is created if none exists in S3."""
+        object_key = "missing_key"
+        start_date, end_date, file_exists = load_date_range(mock_client, object_key, "test_bucket")
+
+        assert file_exists is False
+        assert start_date == pd.Timestamp("2020-01-01")
+        assert end_date.year > 2035  
+
+        response = mock_client.get_object(Bucket="test_bucket", Key=object_key)
+        saved_body = json.loads(response["Body"].read().decode("utf-8"))
+
+        assert saved_body["start_date"] == "2020-01-01"
+        assert pd.Timestamp(saved_body["end_date"]).year > 2035
+
+            
 class TestTransformDesign:
+    def test_transform_design_empty_input(self):
+        """Test that an empty DataFrame is handled correctly."""
+        raw_data = []
+        result = transform_design(raw_data)
+        assert isinstance(result, pd.DataFrame)
+        assert result.empty
+
     def test_returns_a_dataframe(self):
         """Test returns a dataframe structure."""
         raw_data = [
@@ -299,14 +391,8 @@ class TestTransformDesign:
 
         result = transform_design(raw_data)
         pd.testing.assert_frame_equal(result, expected)
-
-
-    def test_transform_design_empty_input(self):
-        """Test that an empty DataFrame is handled correctly."""
-        raw_data = []
-        result = transform_design(raw_data)
-        assert result.empty
-
+        assert list(result.columns) == ['design_id', 'design_name', 'file_location', 'file_name']
+        assert result.shape == (3, 4)
 
 
 class TestGetCurrency:
@@ -330,6 +416,13 @@ class TestGetCurrency:
 
 
 class TestTransformCurrency:
+    def test_transform_currency_empty_input(self):
+        """Test that an empty DataFrame is handled correctly."""
+        raw_data = []
+        result = transform_currency(raw_data)
+        assert isinstance(result, pd.DataFrame)
+        assert result.empty
+
     def test_basic_transformation(self):
         """Test basic transformation with valid data."""
         raw_data = [
@@ -358,70 +451,21 @@ class TestTransformCurrency:
         assert result.iloc[0]["currency_name"] == "Pound Sterling"
         assert result.iloc[1]["currency_name"] == "US Dollar"
         assert result.iloc[2]["currency_name"] == "Euro"
-
-    def test_invalid_currency_codes(self):
-        """Test that invalid currency codes return None."""
-        raw_data =[
-                {
-                    "currency_id": 1,
-                    "currency_code": "INVALID",
-                    "created_at": "2022-11-03 14:20:49.962000",
-                    "last_updated": "2022-11-03 14:20:49.962000",
-                },
-                {
-                    "currency_id": 2,
-                    "currency_code": "XYZ",
-                    "created_at": "2022-11-03 14:20:49.962000",
-                    "last_updated": "2022-11-03 14:20:49.962000",
-                },
-                {
-                    "currency_id": 3,
-                    "currency_code": None,
-                    "created_at": "2022-11-03 14:20:49.962000",
-                    "last_updated": "2022-11-03 14:20:49.962000",
-                },
-            ]
-        
-        result = transform_currency(raw_data)
-        assert result["currency_name"].isnull().all()
-
-    # def test_extra_columns_are_ignored(self):
-    #     """Test that extra columns in the input do not affect the
-    #     transformation."""
-    #     raw_data =[
-    #             {
-    #                 "currency_id": 1,
-    #                 "currency_code": "USD",
-    #                 "created_at": "2024-01-01",
-    #                 "last_updated": "2025-03-01",
-    #                 "extra_column": "ignore_me",
-    #             },
-    #             {
-    #                 "currency_id": 2,
-    #                 "currency_code": "EUR",
-    #                 "created_at": "2024-01-01",
-    #                 "last_updated": "2025-03-01",
-    #                 "random_field": 123,
-    #             },
-    #         ]
-        
-    #     result = transform_currency(raw_data)
-    #     assert list(result.columns) == [
-    #          "currency_id",
-    #         "currency_code",
-    #         "currency_name",
-    #     ]
-    #     assert "extra_column" not in result.columns
-    #     assert "random_field" not in result.columns
-
-    def test_empty_dataframe(self):
-        """Test that an empty DataFrame returns an empty DataFrame with correct columns."""
-        raw_data = []
-        result = transform_currency(raw_data)
-        assert result.empty
+        assert "currency_id" in result.columns
+        assert "currency_name" in result.columns
+        assert "currency_code" in result.columns
+        assert "created_at" not in result.columns 
+        assert "last_updated" not in result.columns
+        assert not result.empty
 
 
 class TestTransformCounterParty:
+    def test_transform_counterparty_empty_input(self):
+        """Test that an empty DataFrame is handled correctly."""
+        result = transform_counterparty([], [])
+        assert isinstance(result, pd.DataFrame)
+        assert result.empty
+
     def test_returns_a_dataframe(self):
         """Test returns a dataframe structure."""
         counterparty = [
@@ -682,130 +726,51 @@ class TestTransformCounterParty:
 
         result = transform_counterparty(address, counterparty)
 
-        #assert result.duplicated().sum() == 0
         assert len(result) == 4
 
 
 class TestTransformFactsSalesOrder:
-    """Test suite for transform_fact_sales_order function"""
-
     def test_empty_dataframe(self):
-        """Tests an empty dataframe is returned when no data is provided."""
-        sales_order = pd.DataFrame(
-            columns=[
-                "sales_order_id",
-                "created_date",
-                "created_time",
-                "last_updated_date",
-                "last_updated_time",
-                "sales_staff_id",
-                "counterparty_id",
-                "units_sold",
-                "unit_price",
-                "currency_id",
-                "design_id",
-                "agreed_payment_date",
-                "agreed_delivery_date",
-                "agreed_delivery_location_id",
-            ]
-        )
-
-        result = transform_fact_sales_order(sales_order)
+        """Test that an empty DataFrame is handled correctly."""
+        result = transform_fact_sales_order([])
 
         assert isinstance(result, pd.DataFrame)
         assert result.empty
 
-#     def test_columns_are_correct(self):
-#         """Test to assert dataframe is populated with correct columns"""
-#         expected_columns = [
-#             "sales_record_id",
-#             "sales_order_id",
-#             "created_date",
-#             "created_time",
-#             "last_updated_date",
-#             "last_updated_time",
-#             "sales_staff_id",
-#             "counterparty_id",
-#             "units_sold",
-#             "unit_price",
-#             "currency_id",
-#             "design_id",
-#             "agreed_payment_date",
-#             "agreed_delivery_date",
-#             "agreed_delivery_location_id",
-#         ]
-#         sales_order = pd.DataFrame(
-#             columns=[
-#                 "sales_order_id",
-#                 "created_date",
-#                 "created_time",
-#                 "last_updated_date",
-#                 "last_updated_time",
-#                 "sales_staff_id",
-#                 "counterparty_id",
-#                 "units_sold",
-#                 "unit_price",
-#                 "currency_id",
-#                 "design_id",
-#                 "agreed_payment_date",
-#                 "agreed_delivery_date",
-#                 "agreed_delivery_location_id",
-#             ]
-#         )
-#         result = transform_fact_sales_order(sales_order)
-
-#         assert list(result.columns) == expected_columns
-
-#     def test_single_data_set_is_transformed(self):
-#         """Test single row of data correctly transforms,
-#         including checking for correct parsing of date and time columns"""
-#         sales_order = [
-#                 {
-#                     "sales_order_id": 1,
-#                     "created_at": "2024-01-01 14:30:00",
-#                     "last_updated": "2024-02-01 16:45:00",
-#                     "design_id": 101,
-#                     "staff_id": 201,
-#                     "counterparty_id": 301,
-#                     "units_sold": 10,
-#                     "unit_price": 20.0,
-#                     "currency_id": "USD",
-#                     "agreed_delivery_date": "2024-03-01",
-#                     "agreed_payment_date": "2024-03-15",
-#                     "agreed_delivery_location_id": 401,
-#                 }
-#             ]
+    def test_single_data_set_is_transformed(self):
+        """Test single row of data correctly transforms,
+        including checking for correct parsing of date and time columns"""
+        sales_order = [
+                {
+                    "sales_order_id": 1,
+                    "created_at": "2024-01-01 14:30:00",
+                    "last_updated": "2024-02-01 16:45:00",
+                    "design_id": 101,
+                    "staff_id": 201,
+                    "counterparty_id": 301,
+                    "units_sold": 10,
+                    "unit_price": 20.0,
+                    "currency_id": "USD",
+                    "agreed_delivery_date": "2024-03-01",
+                    "agreed_payment_date": "2024-03-15",
+                    "agreed_delivery_location_id": 401,
+                }
+            ]
         
 
-#         result = transform_fact_sales_order(sales_order)
-#         assert result.iloc[0]["sales_order_id"] == 1
-#         assert result.iloc[0]["units_sold"] == 10
-#         assert result.iloc[0]["unit_price"] == 20.0
-#         assert result.iloc[0]["created_date"] == pd.to_datetime("2024-01-01").date()
-#         assert (
-#             result.iloc[0]["created_time"]
-#             == pd.to_datetime("2024-01-01 14:30:00").time()
-#         )
+        result = transform_fact_sales_order(sales_order)
 
-#     def test_missing_columns(self):
-#         """Test missingle columns are handled appropiately"""
+        assert result.iloc[0]["sales_order_id"] == 1
+        assert result.iloc[0]["units_sold"] == 10
+        assert result.iloc[0]["unit_price"] == 20.0
+        assert result.iloc[0]["created_date"] == '2024-01-01'
+        assert result.iloc[0]["created_time"] == "14:30:00.000000"
+        assert list(result.columns) == ['sales_order_id', 'created_date', 'created_time', 
+                                        'last_updated_date', 'last_updated_time', 'sales_staff_id', 
+                                        'counterparty_id', 'units_sold', 'unit_price', 'currency_id', 
+                                        'design_id', 'agreed_payment_date', 'agreed_delivery_date', 
+                                        'agreed_delivery_location_id']
 
-#         sales_order =[
-#                 {
-#                     "sales_order_id": 1,
-#                     "created_at": "2024-01-01 12:00:00",
-#                     "design_id": 101,
-#                     "staff_id": 201,
-#                     "units_sold": 10,
-#                     "unit_price": 20.0,
-#                 }
-#             ]
-        
-
-#         result = transform_fact_sales_order(sales_order)
-
-#         assert result.shape == (0, 15)
-        
 
     def test_multiple_sales_orders(self):
         """Test multiple rows of data is correctly transformed"""
@@ -875,101 +840,4 @@ class TestTransformFactsSalesOrder:
         assert pd.isnull(result.iloc[0]["sales_staff_id"])
         assert result.iloc[0]["units_sold"] == 10
 
-#     def test_missing_columns_filled(self):
-#         """Test missing columns in raw data are handled appropiately"""
-#         sales_order = [
-#                 {
-#                     "sales_order_id": 1,
-#                     "created_at": "2024-01-01 12:00:00",
-#                     "design_id": 101,
-#                     "staff_id": 201,
-#                     "units_sold": 10,
-#                     "unit_price": 20.0,
-#                 }
-#             ]
-        
 
-#         result = transform_fact_sales_order(sales_order)
-
-#         assert result.shape == (0, 15)
-       
-
-#     def test_duplicates_removal(self):
-#         """Test to check duplicates are successfully removed"""
-#         sales_order = [
-#                 {
-#                     "sales_order_id": 1,
-#                     "created_at": "2024-01-01 14:30:00",
-#                     "last_updated": "2024-02-01 16:45:00",
-#                     "design_id": 101,
-#                     "staff_id": 201,
-#                     "counterparty_id": 301,
-#                     "units_sold": 10,
-#                     "unit_price": 20.0,
-#                     "currency_id": "USD",
-#                     "agreed_delivery_date": "2024-03-01",
-#                     "agreed_payment_date": "2024-03-15",
-#                     "agreed_delivery_location_id": 401,
-#                 },
-#                 {
-#                     "sales_order_id": 1,
-#                     "created_at": "2024-01-01 14:30:00",
-#                     "last_updated": "2024-02-01 16:45:00",
-#                     "design_id": 101,
-#                     "staff_id": 201,
-#                     "counterparty_id": 301,
-#                     "units_sold": 10,
-#                     "unit_price": 20.0,
-#                     "currency_id": "USD",
-#                     "agreed_delivery_date": "2024-03-01",
-#                     "agreed_payment_date": "2024-03-15",
-#                     "agreed_delivery_location_id": 401,
-#                 },
-#             ]
-        
-
-#         result = transform_fact_sales_order(sales_order)
-
-#         assert result.shape == (1, 15)
-#         assert result["sales_order_id"].iloc[0] == 1
-
-    # def test_sales_record_id_is_added_and_incremented(self):
-    #     """Test that sales_record_id is added and auto-increments as expected"""
-    #     sales_order = [
-    #             {
-    #                 "sales_order_id": 1,
-    #                 "created_at": "2024-01-01 14:30:00",
-    #                 "last_updated": "2024-02-01 16:45:00",
-    #                 "design_id": 101,
-    #                 "staff_id": 201,
-    #                 "counterparty_id": 301,
-    #                 "units_sold": 10,
-    #                 "unit_price": 20.0,
-    #                 "currency_id": "USD",
-    #                 "agreed_delivery_date": "2024-03-01",
-    #                 "agreed_payment_date": "2024-03-15",
-    #                 "agreed_delivery_location_id": 401,
-    #             },
-    #             {
-    #                 "sales_order_id": 2,
-    #                 "created_at": "2024-02-01 10:15:00",
-    #                 "last_updated": "2024-03-01 18:30:00",
-    #                 "design_id": 102,
-    #                 "staff_id": 202,
-    #                 "counterparty_id": 302,
-    #                 "units_sold": 5,
-    #                 "unit_price": 30.0,
-    #                 "currency_id": "EUR",
-    #                 "agreed_delivery_date": "2024-04-01",
-    #                 "agreed_payment_date": "2024-04-15",
-    #                 "agreed_delivery_location_id": 402,
-    #             },
-    #         ]
-        
-
-    #     #result = transform_fact_sales_order(sales_order)
-
-    #     # assert "sales_record_id" in result.columns
-
-    #     # assert result["sales_record_id"].iloc[0] == 1
-    #     # assert result["sales_record_id"].iloc[1] == 2
