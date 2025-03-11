@@ -433,13 +433,13 @@ class TestLambdaHandler:
 
    
             
-            assert result == {"filepaths": ["data/by time/2025/03-March/11/12:07:07.196261/fact_sales_order",
-                                "data/by time/2025/03-March/11/12:07:07.196261/dim_staff",
-                                "data/by time/2025/03-March/11/12:07:07.196261/dim_location",
-                                "data/by time/2025/03-March/11/12:07:07.196261/dim_design",
-                                "data/by time/2025/03-March/11/12:07:07.196261/dim_currency",
-                                "data/by time/2025/03-March/11/12:07:07.196261/dim_counterparty",
-                                "data/by time/2025/03-March/11/12:07:07.196261/dim_date"]
+            assert result == {"filepaths": ["data/by time/2025/03-March/11/12:07:07.196261/fact_sales_order.parquet",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_staff.parquet",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_location.parquet",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_design.parquet",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_currency.parquet",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_counterparty.parquet",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_date.parquet"]
             }
             
        
