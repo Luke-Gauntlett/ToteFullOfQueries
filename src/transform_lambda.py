@@ -9,18 +9,25 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, context, client=None, extractbucketname=None, transformbucketname=None):
 
-    client = boto3.client("s3")
+    if client ==  None:
+        client = boto3.client("s3")
 
-    loaded__files = read(event["filepaths"], client)
+    if transformbucketname == None: 
+        transformbucketname = "totes-transform-bucket-20250227154810549700000001"
+
+    if extractbucketname == None: 
+        extractbucketname = "totes-extract-bucket-20250227154810549900000003"
+
+    loaded__files = read(event["filepaths"], client, bucketname=extractbucketname)
     counterparty = loaded__files["counterparty"]
     currency = loaded__files["currency"]
     department = loaded__files["department"]
     design = loaded__files["design"]
     staff = loaded__files["staff"]
     sales_order = loaded__files["sales_order"]
-    address = loaded__files["address"]
+    address = loaded__files["address"] 
   
     #only needed for extension
     
@@ -33,7 +40,7 @@ def lambda_handler(event, context):
     year, month, day, time = split[2], split[3], split[4], split[5]
 
     # Get file_exists flag from load_date_range
-    start_date, end_date, file_exists = load_date_range(client, "date_table_last_date.json", bucketname="totes-transform-bucket-20250227154810549700000001")
+    start_date, end_date, file_exists = load_date_range(client, "date_table_last_date.json", bucketname=transformbucketname)
     today = pd.to_datetime('today')
     needs_update = (end_date - today).days <= 14 * 365
 
@@ -63,36 +70,43 @@ def lambda_handler(event, context):
 
     write(
         transformed_sales_order,
-        client, f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order"
+        client, f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order",
+        bucketname=transformbucketname
     )
     write(
         transformed_staff,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_staff"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_staff",
+        bucketname=transformbucketname  
     )
 
     write(
         transformed_location,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_location"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_location",
+        bucketname=transformbucketname
     )
 
     write(
         transformed_design,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_design"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_design",
+        bucketname=transformbucketname
     )
 
     write(
         transformed_currency,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_currency"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_currency",
+        bucketname=transformbucketname
     )
 
     write(
         transformed_counterparty,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_counterparty"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_counterparty",
+        bucketname=transformbucketname
     )
 
     write(
         transformed_date,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_date"
+        client, f"data/by time/{year}/{month}/{day}/{time}/dim_date",
+        bucketname=transformbucketname
     )
 
     return {"filepaths":[f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order",
@@ -154,37 +168,36 @@ def write(transformed_dataframe, client, filename, bucketname="totes-transform-b
 
 def transform_location(address):
     """Transforms location data to match the warehouse schema."""
-    try:
-        if address:
-            df = pd.DataFrame(address)
-            
-            logger.info(f"Columns in address DataFrame: {df.columns}")
-
-            
-            if 'address_id' in df.columns:
-                df.rename(columns={'address_id': 'location_id'}, inplace=True)
-            else:
-                logger.error("'address_id' column not found in address data.")
-                return pd.DataFrame([]) 
-
-            if 'created_at' in df.columns and 'last_updated' in df.columns:
-                df.drop(columns=["created_at", "last_updated"], inplace=True)
-
-            df = df.sort_values(by="location_id").reset_index(drop=True)
-            return df
-        else: 
+    # try:
+    if address:
+        df = pd.DataFrame(address)
+        
+        logger.info(f"Columns in address DataFrame: {df.columns}")
+        
+        if 'address_id' in df.columns:
+            df.rename(columns={'address_id': 'location_id'}, inplace=True)
+        else:
+            logger.error("'address_id' column not found in address data.")
             return pd.DataFrame([]) 
 
-    except KeyError as e:
-        logger.error(f"Error in transform_location: {e}")
-        raise  
+        if 'created_at' in df.columns and 'last_updated' in df.columns:
+            df.drop(columns=["created_at", "last_updated"], inplace=True)
+
+        df = df.sort_values(by="location_id").reset_index(drop=True)
+        return df
+    else: 
+        return pd.DataFrame([]) 
+
+    # except KeyError as e:
+    #     logger.error(f"Error in transform_location: {e}")
+    #     raise  
 
 
 
 ############################## transform the data for dim staff table #############################   # noqa
 
 def transform_staff(staff_data, department_data):
-    try:
+    # try:
 
         if staff_data and department_data:
             staff_df = pd.DataFrame(staff_data)
@@ -210,9 +223,9 @@ def transform_staff(staff_data, department_data):
             return df_reordered
         else:
             return pd.DataFrame([]) 
-    except KeyError as e:
-        logger.error(f"Error in transform_staff: {e}")
-        raise  
+    # except KeyError as e:
+    #     logger.error(f"Error in transform_staff: {e}")
+    #     raise  
 
 ##################################### make a date #######################################  # noqa
 
@@ -253,106 +266,104 @@ def generate_date_table(start_date, end_date):
 
 def transform_design(design):
     """Transforms location data to match the warehouse schema."""
-    try:
-        if design:
-            df = pd.DataFrame(design)
+    #try:
+    if design:
+        df = pd.DataFrame(design)
 
+        if 'created_at' in df.columns and 'last_updated' in df.columns:
+            df.drop(columns=["created_at", "last_updated"], inplace=True)
+        
+        df = df.sort_values(by="design_id").reset_index(drop=True)
 
-            if 'created_at' in df.columns and 'last_updated' in df.columns:
-                df.drop(columns=["created_at", "last_updated"], inplace=True)
+        return df
 
-            
-            df = df.sort_values(by="design_id").reset_index(drop=True)
+    else:
+        return pd.DataFrame([]) 
 
-            return df
-
-        else:
-            return pd.DataFrame([]) 
-
-    except KeyError as e:
-        logger.error("Error! Issues transforming data due to invalid column headers.")
-        raise KeyError(f"Missing column: {str(e)}")
+    #except KeyError as e:
+        #logger.error("Error! Issues transforming data due to invalid column headers.")
+        #raise KeyError(f"Missing column: {str(e)}")
 
 ############################# transform currency ############################## noqa
 
 def get_currency_name(currency_code: str):
     """Returns the full currency name given a currency code."""
-    try:
-        currency = pycountry.currencies.get(alpha_3=currency_code.upper())
-        if currency:
-            return currency.name
-        else:
-            return None
-    except AttributeError:
+    # try:
+    currency = pycountry.currencies.get(alpha_3=currency_code.upper())
+    if currency:
+        return currency.name
+    else:
         return None
+    # except AttributeError:
+    #     return None
 
 def transform_currency(currency):
     """Returns DataFrame for transforming currency table."""
-    try:
-        if currency:
-            df = pd.DataFrame(currency)
+    # try:
+    if currency:
+        df = pd.DataFrame(currency)
 
-            if "currency_code" in df.columns:
-                df["currency_name"] = df["currency_code"].apply(get_currency_name)
-            else:
-                df["currency_name"] = None
-
-            if 'created_at' in df.columns and 'last_updated' in df.columns:
-                df.drop(columns=["created_at", "last_updated"], inplace=True)
-
-            df = df.sort_values(by="currency_id").reset_index(drop=True)
-
-            return df
+        if "currency_code" in df.columns:
+            df["currency_name"] = df["currency_code"].apply(get_currency_name)
         else:
-            return pd.DataFrame([])
-    except KeyError as e:
-        logger.error(f"Error in transform_currency: {e}")
-        raise  
+            df["currency_name"] = None
+
+        if 'created_at' in df.columns and 'last_updated' in df.columns:
+            df.drop(columns=["created_at", "last_updated"], inplace=True)
+
+        df = df.sort_values(by="currency_id").reset_index(drop=True)
+
+        return df
+    else:
+        return pd.DataFrame([])
+    # except KeyError as e:
+    #     logger.error(f"Error in transform_currency: {e}")
+    #     raise  
 
 ############################# transform counterparty ############################## noqa
 
 def transform_counterparty(address, counterparty):
     """Transforms counterparty and address data to match the warehouse schema."""
-    try:
-        if counterparty and address:
-            counterparty_df = pd.DataFrame(counterparty)
-            address_df = pd.DataFrame(address)
+    # try:
+    if counterparty and address:
+        counterparty_df = pd.DataFrame(counterparty)
+        address_df = pd.DataFrame(address)
 
-            if 'created_at' in counterparty_df.columns and 'last_updated' in counterparty_df.columns:
-                counterparty_df.drop(columns=["created_at", "last_updated"], inplace=True)
+        if 'created_at' in counterparty_df.columns and 'last_updated' in counterparty_df.columns:
+            counterparty_df.drop(columns=["created_at", "last_updated"], inplace=True)
 
-            if 'created_at' in address_df.columns and 'last_updated' in address_df.columns:
-                address_df.drop(columns=["created_at", "last_updated"], inplace=True)
+        if 'created_at' in address_df.columns and 'last_updated' in address_df.columns:
+            address_df.drop(columns=["created_at", "last_updated"], inplace=True)
 
-            transformed_df = counterparty_df.merge(
-                address_df, left_on="legal_address_id", right_on="address_id", how="left"
-            )
+        transformed_df = counterparty_df.merge(
+            address_df, left_on="legal_address_id", right_on="address_id", how="left"
+        )
 
-            if 'address_id' in transformed_df.columns and 'legal_address_id' in transformed_df.columns:
-                transformed_df.drop(columns=["address_id", "legal_address_id"], inplace=True)
+        if 'address_id' in transformed_df.columns and 'legal_address_id' in transformed_df.columns:
+            transformed_df.drop(columns=["address_id", "legal_address_id"], inplace=True)
 
-            if 'commercial_contact' in transformed_df.columns and 'delivery_contact' in transformed_df.columns:
-                transformed_df.drop(columns=["commercial_contact", "delivery_contact"], inplace=True)
+        if 'commercial_contact' in transformed_df.columns and 'delivery_contact' in transformed_df.columns:
+            transformed_df.drop(columns=["commercial_contact", "delivery_contact"], inplace=True)
 
-            transformed_df = (
-                transformed_df.rename(columns={
-                        "address_line_1": "counterparty_legal_address_line_1",
-                        "address_line_2": "counterparty_legal_address_line_2",
-                        "district": "counterparty_legal_district",
-                        "city": "counterparty_legal_city",
-                        "postal_code": "counterparty_legal_postal_code",
-                        "country": "counterparty_legal_country",
-                        "phone": "counterparty_legal_phone_number",
-                    }))
-            
-            transformed_df = transformed_df.sort_values(by="counterparty_id").reset_index(drop=True)
+        transformed_df = (
+            transformed_df.rename(columns={
+                    "address_line_1": "counterparty_legal_address_line_1",
+                    "address_line_2": "counterparty_legal_address_line_2",
+                    "district": "counterparty_legal_district",
+                    "city": "counterparty_legal_city",
+                    "postal_code": "counterparty_legal_postal_code",
+                    "country": "counterparty_legal_country",
+                    "phone": "counterparty_legal_phone_number",
+                }))
+        
+        transformed_df = transformed_df.sort_values(by="counterparty_id").reset_index(drop=True)
 
-            return transformed_df
-        else:
-            return pd.DataFrame([])
-    except KeyError as e:
-        logger.error(f"Error in dim_counterparty: {e}")
-        raise  
+        return transformed_df
+    else:
+        return pd.DataFrame([])
+    # except KeyError as e:
+    #     logger.error(f"Error in dim_counterparty: {e}")
+    #     raise  
 ###################### facts sales table ###################### noqa
 
 def transform_fact_sales_order(sales_order):
@@ -373,29 +384,29 @@ def transform_fact_sales_order(sales_order):
         "agreed_delivery_date",
         "agreed_delivery_location_id",
     ]
-    try:
-        sales_order_df = pd.DataFrame(sales_order)
-        if sales_order_df.empty:
-            return pd.DataFrame([])
-        
-        sales_order_df["created_at"] = pd.to_datetime(sales_order_df["created_at"], errors="coerce")
-        sales_order_df["last_updated"] = pd.to_datetime(sales_order_df["last_updated"], errors="coerce")
-        
-        sales_order_df["created_date"] = sales_order_df["created_at"].dt.strftime('%Y-%m-%d')
-        sales_order_df["created_time"] = sales_order_df["created_at"].dt.strftime('%H:%M:%S.%f')
-        sales_order_df["last_updated_date"] = sales_order_df["last_updated"].dt.strftime('%Y-%m-%d')
-        sales_order_df["last_updated_time"] = sales_order_df["last_updated"].dt.strftime('%H:%M:%S.%f')        
-        sales_order_df.rename(columns={"staff_id": "sales_staff_id"}, inplace=True)
-        
-        transformed_df = sales_order_df[expected_columns].copy()
-
-        transformed_df = transformed_df.sort_values(by="sales_order_id").reset_index(drop=True)
-
-        return transformed_df
-
-    except Exception as e:
-        logger.error(f"Error transforming fact_sales_order: {e}", exc_info=True)
+    # try:
+    sales_order_df = pd.DataFrame(sales_order)
+    if sales_order_df.empty:
         return pd.DataFrame([])
+    
+    sales_order_df["created_at"] = pd.to_datetime(sales_order_df["created_at"], errors="coerce")
+    sales_order_df["last_updated"] = pd.to_datetime(sales_order_df["last_updated"], errors="coerce")
+    
+    sales_order_df["created_date"] = sales_order_df["created_at"].dt.strftime('%Y-%m-%d')
+    sales_order_df["created_time"] = sales_order_df["created_at"].dt.strftime('%H:%M:%S.%f')
+    sales_order_df["last_updated_date"] = sales_order_df["last_updated"].dt.strftime('%Y-%m-%d')
+    sales_order_df["last_updated_time"] = sales_order_df["last_updated"].dt.strftime('%H:%M:%S.%f')        
+    sales_order_df.rename(columns={"staff_id": "sales_staff_id"}, inplace=True)
+    
+    transformed_df = sales_order_df[expected_columns].copy()
+
+    transformed_df = transformed_df.sort_values(by="sales_order_id").reset_index(drop=True)
+
+    return transformed_df
+
+    # except Exception as e:
+    #     logger.error(f"Error transforming fact_sales_order: {e}", exc_info=True)
+    #     return pd.DataFrame([])
 
 #  if __name__ == "__main__":
 #   lambda_handler({"filepaths": ["data/by time/2025/03-March/07/22:17:13.872739/address",

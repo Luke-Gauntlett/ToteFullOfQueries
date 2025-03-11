@@ -1,14 +1,3 @@
-# import pytest
-# import boto3
-# from moto import mock_aws
-# import json
-# from src.transform_lambda import read, write
-# import logging
-# import pandas as pd
-# from unittest.mock import Mock
-
-# logger = logging.getLogger()
-# logger.setLevel(logging.INFO)
 
 
 # def upload_mock_file(client, bucket_name, file_path, data):
