@@ -286,21 +286,35 @@ resource "aws_cloudwatch_metric_alarm" "load_lambda_alert" {
 #######################################################  IAM Policy for Step Function #################################################
 # Step Function Role
 resource "aws_iam_role" "step_function_role" {
-  name = "StepFunctionRole"
-
+  name = "step_function_role"
+  
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version = "2012-10-17"
     Statement = [
       {
+        Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "states.amazonaws.com"
+          Service = [
+            "events.amazonaws.com", 
+            "states.amazonaws.com"
+          ]
         }
+      },
+      {
         Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        }
       }
     ]
   })
 }
+
+
+
+
 
 # Lambda permissions
 
@@ -332,25 +346,6 @@ resource "aws_cloudwatch_log_group" "step_function_logs" {
   retention_in_days = 60
 }
 
-
-data "aws_iam_policy_document" "step_function_logging_policy" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents",
-      "logs:DescribeLogStreams"
-    ]
-    resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/vendedlogs/totes_step_function:*"
-    ]
-  }
-}
-
-# CloudWatch Log Resource Policy
-
-
 resource "aws_cloudwatch_log_resource_policy" "cw_sf_policy" {
   policy_name = "StepFunctionLogsPolicy"
   policy_document = jsonencode({
@@ -374,50 +369,30 @@ resource "aws_cloudwatch_log_resource_policy" "cw_sf_policy" {
   })
 }
 
-# resource "aws_iam_policy" "step_function_logging_policy_document" {
-#   name   = "StepFunctionLoggingPolicyDocument"
-#   policy = data.aws_iam_policy_document.step_function_logging_policy.json
-# }
+
+resource "aws_iam_policy" "step_function_logging_policy" {
+  name        = "step-function-logging-policy"
+  description = "Policy to allow Step Function to write logs to CloudWatch"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:PutLogEvents",
+        "logs:CreateLogStream"
+      ],
+      "Resource": "${aws_cloudwatch_log_group.step_function_logs.arn}:*"
+    }
+  ]
+}
+EOF
+}
 
 
-# resource "aws_iam_role_policy_attachment" "step_function_logging_attach_policy" {
-#   role       = aws_iam_role.step_function_role.name
-#   policy_arn = aws_iam_policy.step_function_logging_policy_document.arn
-# }
-
-
-
-
-
-# resource "aws_cloudwatch_log_resource_policy" "cw_sf_policy" {
-#   policy_name = "StepFunctionLogsPolicy"
-#   policy_document = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Effect = "Allow",
-#         Principal = {
-#           Service = "states.amazonaws.com"
-#         },
-#         Action = [
-#           "logs:CreateLogStream",
-#           "logs:PutLogEvents"
-#         ],
-#         Resource = [
-#           aws_cloudwatch_log_group.step_function_logs.arn,
-#           "${aws_cloudwatch_log_group.step_function_logs.arn}:*"
-#         ]
-#       }
-#     ]
-#   })
-# }
-
-# # resource "aws_iam_role_policy_attachment" "step_function_cw_attachment" {
-# #   role       = aws_iam_role.step_function_role.name
-# #   policy_arn = aws_cloudwatch_log_resource_policy.step_function_logs_policy.arn
-# # }
-
-
-
-
-
+resource "aws_iam_role_policy_attachment" "step_function_logging_policy_attachment" {
+  role       = aws_iam_role.step_function_role.name
+  policy_arn = aws_iam_policy.step_function_logging_policy.arn
+}

@@ -1,146 +1,42 @@
-# resource "aws_cloudwatch_event_rule" "scheduler" {
-#   name                = "lambda-scheduler"
-#   description         = "Trigger Lambda every 5 minutes"
-#   schedule_expression = "rate(5 minutes)"
-#   state               = "ENABLED"
-#   tags = {
-#     Environment = "dev"
-#   }
-# }
-# ## Create the rule
-# resource "aws_cloudwatch_event_target" "scheduler_target" {
-#   rule      = aws_cloudwatch_event_rule.scheduler.name
-#   target_id = "lambda-target"
-#   arn       = aws_lambda_function.totes_extract_lambda.arn
-# }
-# resource "aws_scheduler_schedule" "scheduler" {
-#   name       = "my_first_terraform_scheduler"
+# Step 1: Create CloudWatch Event Rule
+resource "aws_cloudwatch_event_rule" "scheduler" {
+  name                = "lambda-scheduler"
+  description         = "Trigger Lambda every 5 minutes"
+  schedule_expression = "rate(5 minutes)"
+  state               = "ENABLED"  # Set this to ENABLED to activate the rule
+  tags = {
+    Environment = "dev"
+  }
+}
+
+# Step 2: Create CloudWatch Event Target
+resource "aws_cloudwatch_event_target" "scheduler_target" {
+  rule      = aws_cloudwatch_event_rule.scheduler.name
+  target_id = "lambda-target"
+  arn       = aws_lambda_function.totes_extract_lambda.arn  # Replace with your Lambda ARN
+}
+
+# Step 3: Create Scheduler Schedule (optional, depending on whether you're using EventBridge Scheduler or CloudWatch Rule)
+resource "aws_scheduler_schedule" "scheduler" {
+  name               = "my_first_terraform_scheduler"
+  schedule_expression = "rate(5 minutes)"
   
-#   flexible_time_window {
-#     mode = "OFF"
-#   }
-
-#   schedule_expression = "rate(5 minutes)"
-
-#   target {
-#     arn      = aws_sfn_state_machine.totes_step_function.arn
-#     role_arn = aws_iam_role.eventbridge_role.arn
-#   }
-# }
-
-# #### Allow permission to lambda
-# resource "aws_lambda_permission" "allow_cloudwatch" {
-#   statement_id  = "AllowExecutionFromCloudWatch"
-#   action        = "lambda:InvokeFunction"
-#   function_name = aws_lambda_function.totes_extract_lambda.arn
-#   principal     = "events.amazonaws.com"
-#   source_arn    = aws_cloudwatch_event_rule.scheduler.arn
-# }
-
-
-# resource "aws_iam_role" "eventbridge_role" {
-#   name = "eventbridge_step_function_role"
-
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Effect = "Allow",
-#         Principal = {
-#           Service = "scheduler.amazonaws.com"
-#         },
-#         Action = "sts:AssumeRole"
-#       }
-#     ]
-#   })
-# }
-
-# resource "aws_iam_policy" "eventbridge_sf_policy" {
-#   name   = "eventbridge_sf_policy"
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Effect = "Allow",
-#         Action = "states:StartExecution",
-#         Resource = aws_sfn_state_machine.totes_step_function.arn
-#       }
-#     ]
-#   })
-# }
-
-# resource "aws_iam_role_policy_attachment" "eventbridge_sf_policy_attachment" {
-#   role       = aws_iam_role.eventbridge_role.name
-#   policy_arn = aws_iam_policy.eventbridge_sf_policy.arn
-# }
-
-
-# logging_configuration {
-#     log_destination        = "${aws_cloudwatch_log_group.step_function_logs.arn}:*"
-#     include_execution_data = true
-#     level                  = "ALL"
-#   }
-
-
-
-
-# AWS Scheduler Rule
-
-resource "aws_iam_policy" "step_function_logging_policy_document" {
-  name   = "StepFunctionLoggingPolicyDocument"
-  policy = data.aws_iam_policy_document.step_function_logging_policy.json
-}
-resource "aws_iam_role_policy_attachment" "step_function_logging_attach_policy" {
-  role       = aws_iam_role.step_function_role.name
-  policy_arn = aws_iam_policy.step_function_logging_policy_document.arn
+  flexible_time_window {
+    mode = "OFF"
+  }
+  
+  target {
+    arn      = aws_sfn_state_machine.totes_step_function.arn  # Replace with your Step Function ARN
+    role_arn = aws_iam_role.step_function_role.arn  # This should be the IAM role with proper permissions
+  }
 }
 
 
-# IAM Role
-
-resource "aws_iam_role" "scheduler_role" {
-  name = "scheduler_step_function_role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "scheduler.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
+# Step 4: Allow permission for Lambda to be triggered by CloudWatch Event
+resource "aws_lambda_permission" "allow_cloudwatch" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.totes_extract_lambda.arn  # Replace with your Lambda ARN
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.scheduler.arn
 }
-
-
-resource "aws_iam_policy" "scheduler_sf_policy" {
-  name   = "scheduler_sf_policy"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = "states:StartExecution"
-        Resource = aws_sfn_state_machine.totes_step_function.arn
-      }
-    ]
-  })
-}
-
-
-resource "aws_iam_role_policy_attachment" "scheduler_sf_policy_attachment" {
-  role       = aws_iam_role.scheduler_role.name
-  policy_arn = aws_iam_policy.scheduler_sf_policy.arn
-}
-
-
-
-
-
-
-
-
-
