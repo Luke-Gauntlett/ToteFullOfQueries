@@ -315,7 +315,6 @@ resource "aws_iam_role" "step_function_role" {
 
 
 
-
 # Lambda permissions
 
 data "aws_iam_policy_document" "step_function_lambda_policy" {
@@ -396,3 +395,5 @@ resource "aws_iam_role_policy_attachment" "step_function_logging_policy_attachme
   role       = aws_iam_role.step_function_role.name
   policy_arn = aws_iam_policy.step_function_logging_policy.arn
 }
+
+

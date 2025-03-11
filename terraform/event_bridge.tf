@@ -9,12 +9,14 @@ resource "aws_cloudwatch_event_rule" "scheduler" {
   }
 }
 
-#  Create CloudWatch Event Target
+
 resource "aws_cloudwatch_event_target" "scheduler_target" {
   rule      = aws_cloudwatch_event_rule.scheduler.name
-  target_id = "lambda-target"
-  arn       = aws_lambda_function.totes_extract_lambda.arn  # Replace with your Lambda ARN
+  target_id = "state-machine-target"
+  arn       = aws_sfn_state_machine.totes_step_function.arn
+  role_arn  = aws_iam_role.step_function_role.arn
 }
+
 
 # Create Scheduler Schedule 
 resource "aws_scheduler_schedule" "scheduler" {
@@ -39,4 +41,27 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
   function_name = aws_lambda_function.totes_extract_lambda.arn 
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.scheduler.arn
+}
+
+
+data "aws_iam_policy_document" "scheduler_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "states:StartExecution"
+    ]
+    resources = [
+      aws_sfn_state_machine.totes_step_function.arn
+    ]
+  }
+}
+
+resource "aws_iam_policy" "scheduler_policy_document" {
+  name   = "SchedulerStartStateMachinePolicy"
+  policy = data.aws_iam_policy_document.scheduler_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "scheduler_policy_attachment" {
+  role       = aws_iam_role.step_function_role.name
+  policy_arn = aws_iam_policy.scheduler_policy_document.arn
 }
