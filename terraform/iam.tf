@@ -199,7 +199,7 @@ resource "aws_iam_policy" "cloudwatch_policy_document" {
 
 resource "aws_iam_policy_attachment" "cloudwatch_attach_policy" {
   name       = "cloudwatch_attach_policy"
-  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name]
+  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name]
   policy_arn = aws_iam_policy.cloudwatch_policy_document.arn
 }
 
