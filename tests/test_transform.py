@@ -8,15 +8,61 @@ from src.transform_lambda import (
     transform_fact_sales_order,
     generate_date_table,
     save_date_range, 
-    load_date_range
+    load_date_range,
+    read, 
+    write, lambda_handler
 )
 import pandas as pd
 import pytest
 from moto import mock_aws
 import boto3
 import json
+import logging
+from unittest.mock import Mock
+from botocore.exceptions import ClientError
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+def upload_mock_file(client, bucket_name, file_path, data):
+    """Uploads a mock JSON file to the S3 bucket."""
+    client.put_object(Bucket=bucket_name, Key=file_path, Body=json.dumps(data))
+
+@pytest.fixture
+def mock_s3_client_read():
+    """Fixture to mock the S3 client and prepopulate with test data."""
+    with mock_aws():
+        client = boto3.client("s3", region_name="eu-west-2")
+
+        bucket_name = "test-bucket"
+
+        client.create_bucket(
+            Bucket=bucket_name,
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+        )
+
+        year, month, day = "2025", "03-March", "04"
+        time = "14:24:54.932025"
+
+        tables = ["address", "department", "currency"]
+
+        for table_name in tables:
+            file_path = f"data/by_time/{year}/{month}/{day}/{time}/{table_name}"
+            data = {"id": 1, "name": f"{table_name} Data", "value": 100}
+            upload_mock_file(client, bucket_name, file_path, data)
+
+        yield client, bucket_name, time
 
 
+@pytest.fixture
+def mock_s3_client_write():
+    """Fixture to mock an S3 client."""
+    mock_s3_client = Mock()
+    bucket_name = "mock-bucket"   # noqa
+    mock_s3_client.put_object = Mock()
+    mock_s3_client.get_object = Mock()
+    mock_s3_client.list_objects_v2 = Mock()
+    return mock_s3_client
 
 @pytest.fixture
 def mock_client():
@@ -29,6 +75,374 @@ def mock_client():
         )
         yield s3
 
+class TestTransformRead:
+
+    def test_read_single_table(self, mock_s3_client_read):
+        """Test reading a single table file from S3."""
+        client, bucket_name, time = mock_s3_client_read
+
+        file_paths = [f"data/by_time/2025/03-March/04/{time}/address"]
+
+        loaded_files = read(file_paths, client, bucket_name)
+
+        assert "address" in loaded_files
+        assert loaded_files["address"] == {
+            "id": 1,
+            "name": "address Data",
+            "value": 100,
+        }
+
+    def test_read_multiple_tables(self, mock_s3_client_read):
+        """Test reading multiple table files from S3."""
+        client, bucket_name, time = mock_s3_client_read
+
+        file_paths = [
+            f"data/by_time/2025/03-March/04/{time}/address",
+            f"data/by_time/2025/03-March/04/{time}/department",
+            f"data/by_time/2025/03-March/04/{time}/currency",
+        ]
+
+        loaded_files = read(file_paths, client, bucket_name)
+
+        assert "address" in loaded_files
+        assert loaded_files["address"] == {
+            "id": 1,
+            "name": "address Data",
+            "value": 100,
+        }
+
+        assert "department" in loaded_files
+        assert loaded_files["department"] == {
+            "id": 1,
+            "name": "department Data",
+            "value": 100,
+        }
+
+        assert "currency" in loaded_files
+        assert loaded_files["currency"] == {
+            "id": 1,
+            "name": "currency Data",
+            "value": 100,
+        }
+
+    def test_read_no_files(self, mock_s3_client_read):
+        """Test when no file paths are provided."""
+        client, bucket_name, _ = mock_s3_client_read
+
+        file_paths = []
+
+        loaded_files = read(file_paths, client, bucket_name)
+
+        assert loaded_files == {}
+
+    def test_read_missing_files(self, mock_s3_client_read):
+        """Test reading a non-existent file."""
+        client, bucket_name, time = mock_s3_client_read
+
+        file_paths = [f"data/by_time/2025/03-March/04/{time}/non_existent_table"]
+
+        loaded_files = read(file_paths, client, bucket_name)
+
+        assert "non_existent_table" not in loaded_files
+
+    def test_read_with_partial_data(self, mock_s3_client_read):
+        """Test reading when some files have missing fields."""
+        client, bucket_name, time = mock_s3_client_read
+
+        file_path = f"data/by_time/2025/03-March/04/{time}/currency"
+        client.put_object(
+            Bucket=bucket_name,
+            Key=file_path,
+            Body=json.dumps({"id": 1, "name": "currency Data"}),
+        )
+
+        file_paths = [f"data/by_time/2025/03-March/04/{time}/address", file_path]
+
+        loaded_files = read(file_paths, client, bucket_name)
+
+        assert "address" in loaded_files
+        assert loaded_files["address"] == {
+            "id": 1,
+            "name": "address Data",
+            "value": 100,
+        }
+
+        assert "currency" in loaded_files
+        assert loaded_files["currency"] == {"id": 1, "name": "currency Data"}
+
+    def test_read_missing_file_logs_warning(self, mock_s3_client_read, caplog):
+        """Test that missing files generate a warning log."""
+        client, bucket_name, _ = mock_s3_client_read
+
+        file_paths = ["data/by_time/2025/03-March/04/14:24:54.932025/missing_table"]
+
+        with caplog.at_level(logging.ERROR):
+            read(file_paths, client, bucket_name)
+
+        assert any(
+            "Warning: File" in record.message
+            and "does not exist in S3" in record.message
+            for record in caplog.records
+        )
+    def test_read_raises_error(self, mock_s3_client_read):
+        client, bucket_name, _ = mock_s3_client_read
+
+        file_paths = [
+            "data/by_time/2025/03-March/04/14:24:54.932025/address",
+            "data/by_time/2025/03-March/04/14:24:54.932025/department",
+            "data/by_time/2025/03-March/04/14:24:54.932025/currency",
+        ]
+        
+        with pytest.raises(ClientError) as exc_info:
+            read(file_paths, client, bucketname="not_a_bucket")
+
+        assert exc_info.value.response["Error"]["Code"] == "NoSuchBucket"
+
+
+class TestTransformWrite:
+    @pytest.fixture
+    def mock_s3_client_write(self):
+        """Fixture to mock an S3 client."""
+        mock_s3_client = Mock()
+        bucket_name = "mock-bucket"
+        mock_s3_client.put_object = Mock()
+        mock_s3_client.get_object = Mock()
+        mock_s3_client.list_objects_v2 = Mock()
+        return mock_s3_client, bucket_name
+
+    def test_write_creates_parquet_file(self, mock_s3_client_write):
+        """Test if write function correctly uploads a Parquet file to S3."""
+        client, bucket_name = mock_s3_client_write
+
+        year, month, day = "2025", "03-March", "04"
+        time = "14:24:54.932025"
+
+        sample_df = pd.DataFrame({"id": [1, 2, 3], "name": ["Alice", "Bob", "Charlie"]})
+        filename = "test_output"
+
+        client.put_object.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
+
+        client.list_objects_v2.return_value = {
+            "Contents": [
+                {"Key": f"data/by_time/{year}/{month}/{day}/{time}/{filename}.parquet"}
+            ]
+        }
+
+        write(sample_df, client, bucket_name, filename)
+
+        response = client.list_objects_v2(
+            Bucket=bucket_name, Prefix=f"data/by_time/{year}/{month}/{day}/{time}/"
+        )
+        assert "Contents" in response
+        assert any(
+            obj["Key"] == f"data/by_time/{year}/{month}/{day}/{time}/{filename}.parquet"
+            for obj in response["Contents"]
+        )
+
+    def test_write_stores_valid_parquet_data(self, mock_s3_client_write):
+        """Test if uploaded Parquet file can be read back as a DataFrame."""
+        client, bucket_name = mock_s3_client_write
+
+        year, month, day = "2025", "03-March", "04"
+        time = "14:24:54.932025"
+
+        data = pd.DataFrame({"id": [1, 2], "value": [100, 200]})
+        filename = "valid_parquet"
+
+        client.put_object.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
+
+        write(data, client, bucket_name, filename)
+
+        client.get_object.return_value = {
+            "Body": Mock(read=Mock(return_value=b"Some mock parquet bytes"))
+        }
+
+        response = client.get_object(
+            Bucket=bucket_name,
+            Key=f"data/by_time/{year}/{month}/{day}/{time}/{filename}.parquet",
+        )
+        parquet_bytes = response["Body"].read()
+
+        assert parquet_bytes == b"Some mock parquet bytes"
+
+    def test_write_handles_empty_dataframe(self, mock_s3_client_write):
+        """Test if writing an empty DataFrame still creates a valid Parquet file."""
+        client, bucket_name = mock_s3_client_write
+
+        year, month, day = "2025", "03-March", "04"
+        time = "14:24:54.932025"
+
+        empty_df = pd.DataFrame(columns=["id", "name"])
+        filename = "empty_parquet"
+
+        client.put_object.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
+
+        write(empty_df, client, bucket_name, filename)
+
+        client.get_object.return_value = {
+            "Body": Mock(read=Mock(return_value=b"Some mock parquet bytes"))
+        }
+
+        response = client.get_object(
+            Bucket=bucket_name,
+            Key=f"data/by_time/{year}/{month}/{day}/{time}/{filename}.parquet",
+        )
+        parquet_bytes = response["Body"].read()
+
+        assert parquet_bytes == b"Some mock parquet bytes"
+
+    def test_write_s3_upload_failure(self, caplog):
+        """Test that an error is logged when S3 upload fails."""
+        
+        df = pd.DataFrame([{
+                    "staff_id": 1,
+                    "first_name": "Jeremie",
+                    "last_name": "Franey",
+                    "department_name": "Sales",
+                    "location": "Manchester",
+                    "email_address": "jeremie.franey@terrifictotes.com",
+                }])
+
+        mock_client = Mock()
+        mock_client.put_object.side_effect = Exception("Mocked S3 failure")
+
+        with caplog.at_level(logging.ERROR):
+            write(df, mock_client, "test_file")
+
+        assert "Failed to upload transformed data to S3" in caplog.text
+        assert "Mocked S3 failure" in caplog.text
+
+class TestLambdaHandler:
+    def test_lambda_handler_success(self):
+        """Test if lambda handler runs successfully with valid input."""
+        with mock_aws():
+            mock_s3_client = boto3.client("s3", region_name="eu-west-2")
+            mock_extract_bucket_name = "extract-test-bucket"
+            mock_transform_bucket_name = "transform-test-bucket"
+
+            mock_s3_client.create_bucket(Bucket=mock_extract_bucket_name,
+                                         CreateBucketConfiguration={"LocationConstraint": "eu-west-2"})
+            mock_s3_client.create_bucket(Bucket=mock_transform_bucket_name,
+                                         CreateBucketConfiguration={"LocationConstraint": "eu-west-2"})
+            design = [{
+                    "design_id": 10,
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "design_name": "Wooden",
+                    "file_location": "/usr",
+                    "file_name": "wooden-20220717-npgz.json",
+                    "last_updated": "2022-11-03 14:20:49.962000"}]
+            
+            sales_order= [{"sales_order_id": 2,
+                        "created_at": "2022-11-03 14:20:52.186000",
+                        "last_updated": "2022-11-03 14:20:52.186000",
+                        "design_id": 3,
+                        "staff_id": 19,
+                        "counterparty_id": 8,
+                        "units_sold": 42972,
+                        "unit_price": 3.94,
+                        "currency_id": 2,
+                        "agreed_delivery_date": "2022-11-07",
+                        "agreed_payment_date": "2022-11-08",
+                        "agreed_delivery_location_id": 8
+                            }]
+
+            counterparty = [{"counterparty_id": 1,
+                        "counterparty_legal_name": "Fahey and Sons",
+                        "legal_address_id": 15,
+                        "commercial_contact": "Micheal Toy",
+                        "delivery_contact": "Mrs. Lucy Runolfsdottir",
+                        "created_at": "2022-11-03 14:20:51.563000",
+                        "last_updated": "2022-11-03 14:20:51.563000"}]
+            
+            currency =[{"currency_id": 1,
+                        "currency_code": "GBP",
+                        "created_at": "2022-11-03 14:20:49.962000",
+                        "last_updated": "2022-11-03 14:20:49.962000"}]
+                            
+            department =[{"department_id": 1,
+                        "department_name": "Sales",
+                        "location": "Manchester",
+                        "manager": "Richard Roma",
+                        "created_at": "2022-11-03 14:20:49.962000",
+                        "last_updated": "2022-11-03 14:20:49.962000"}]
+            
+            staff = [{"staff_id": 1,
+                    "first_name": "Jeremie",
+                    "last_name": "Franey",
+                    "department_id": 2,
+                    "email_address": "jeremie.franey@terrifictotes.com",
+                    "created_at": "2022-11-03 14:20:51.563000",
+                    "last_updated": "2022-11-03 14:20:51.563000"}]
+                        
+            address =[{
+                    "address_id": 1,
+                    "address_line_1": "6826 Herzog Via",
+                    "address_line_2": None,
+                    "district": "Avon",
+                    "city": "New Patienceburgh",
+                    "postal_code": "28441",
+                    "country": "Turkey",
+                    "phone": "1803 637401",
+                    "created_at": "2022-11-03 14:20:49.962000",
+                    "last_updated": "2022-11-03 14:20:49.962000"}]
+
+            mock_s3_client.put_object(Bucket=mock_extract_bucket_name,
+                                      Key="data/by time/2025/03-March/11/12:07:07.196261/design",
+                                      Body=json.dumps(design),
+                                      ContentType="application/json")
+            mock_s3_client.put_object(Bucket=mock_extract_bucket_name,
+                                      Key="data/by time/2025/03-March/11/12:07:07.196261/sales_order",
+                                      Body=json.dumps(sales_order),
+                                      ContentType="application/json")
+            mock_s3_client.put_object(Bucket=mock_extract_bucket_name,
+                                      Key="data/by time/2025/03-March/11/12:07:07.196261/counterparty",
+                                      Body=json.dumps(counterparty),
+                                      ContentType="application/json")
+            mock_s3_client.put_object(Bucket=mock_extract_bucket_name,
+                                      Key="data/by time/2025/03-March/11/12:07:07.196261/currency",
+                                      Body=json.dumps(currency),
+                                      ContentType="application/json")
+            mock_s3_client.put_object(Bucket=mock_extract_bucket_name,
+                                      Key="data/by time/2025/03-March/11/12:07:07.196261/department",
+                                      Body=json.dumps(department),
+                                      ContentType="application/json")
+            mock_s3_client.put_object(Bucket=mock_extract_bucket_name,
+                                      Key="data/by time/2025/03-March/11/12:07:07.196261/staff",
+                                      Body=json.dumps(staff),
+                                      ContentType="application/json")
+            mock_s3_client.put_object(Bucket=mock_extract_bucket_name,
+                                      Key="data/by time/2025/03-March/11/12:07:07.196261/address",
+                                      Body=json.dumps(address),
+                                      ContentType="application/json")
+
+
+            event = {"filepaths": ["data/by time/2025/03-March/11/12:07:07.196261/design",
+                                   "data/by time/2025/03-March/11/12:07:07.196261/currency",
+                                    "data/by time/2025/03-March/11/12:07:07.196261/department",
+                                    "data/by time/2025/03-March/11/12:07:07.196261/counterparty",
+                                    "data/by time/2025/03-March/11/12:07:07.196261/staff",
+                                    "data/by time/2025/03-March/11/12:07:07.196261/sales_order",
+                                    "data/by time/2025/03-March/11/12:07:07.196261/address"]}
+            context = {}
+
+    
+
+            result = lambda_handler(event, context, mock_s3_client, 
+                                    extractbucketname=mock_extract_bucket_name,
+                                    transformbucketname=mock_transform_bucket_name)
+
+   
+            
+            assert result == {"filepaths": ["data/by time/2025/03-March/11/12:07:07.196261/fact_sales_order",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_staff",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_location",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_design",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_currency",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_counterparty",
+                                "data/by time/2025/03-March/11/12:07:07.196261/dim_date"]
+            }
+            
+       
 class TestTransformStaff:
     def test_transform_staff_empty_input(self):
         """Test that an empty DataFrame is handled correctly."""
@@ -220,6 +634,26 @@ class TestTransformLocation:
         assert list(result.columns) == ["location_id","address_line_1", "address_line_2",
                                         "district","city", "postal_code", "country", "phone"]
         assert result.shape == (3, 8)
+
+    def test_transform_location_missing_address_id(self, caplog):
+        """Test transform_location logs an error when 'address_id' is missing."""
+        with caplog.at_level(logging.ERROR):
+            address_data = [{
+                "address_line_1": "148 Sincere Fort",
+                "address_line_2": None,
+                "district": None,
+                "city": "Lake Charles",
+                "postal_code": "89360",
+                "country": "Samoa",
+                "phone": "0730 783349",
+                "created_at": "2022-11-03 14:20:49.962000",
+                "last_updated": "2022-11-03 14:20:49.962000",
+            }]
+
+            df = transform_location(address_data)
+            assert df.empty
+            assert "'address_id' column not found in address data." in caplog.text
+
 
 class TestGenerateDateTable:
     def test_generates_correct_columns(self):
@@ -457,6 +891,17 @@ class TestTransformCurrency:
         assert "created_at" not in result.columns 
         assert "last_updated" not in result.columns
         assert not result.empty
+
+    def test_transform_currency_no_currency_code(self):
+        currency_data = [
+            {"currency_id": 1, "created_at": "2023-01-01", "last_updated": "2023-02-01"},
+            {"currency_id": 2, "created_at": "2023-01-02", "last_updated": "2023-02-02"},
+        ]
+        
+        df = transform_currency(currency_data)
+
+        assert "currency_name" in df.columns
+        assert df["currency_name"].isnull().all()
 
 
 class TestTransformCounterParty:
