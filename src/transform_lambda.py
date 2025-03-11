@@ -109,13 +109,13 @@ def lambda_handler(event, context, client=None, extractbucketname=None, transfor
         bucketname=transformbucketname
     )
 
-    return {"filepaths":[f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_staff",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_location",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_design",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_currency",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_counterparty",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_date"
+    return {"filepaths":[f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order.parquet",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_staff.parquet",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_location.parquet",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_design.parquet",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_currency.parquet",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_counterparty.parquet",
+                            f"data/by time/{year}/{month}/{day}/{time}/dim_date.parquet"
                             ]}
 
 ################################ read each of the json files ######################################################## # noqa

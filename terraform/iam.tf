@@ -91,7 +91,7 @@ resource "aws_iam_policy" "extract_s3_policy_document" {
 
 resource "aws_iam_policy_attachment" "extract_s3_attach_policy" {
   name       = "extract_s3_attach_policy"
-  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name] 
+  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name] 
   policy_arn = aws_iam_policy.extract_s3_policy_document.arn
 
 
