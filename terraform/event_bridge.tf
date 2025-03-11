@@ -84,32 +84,22 @@
 
 
 
+# AWS Scheduler Rule
 
-# EventBridge Rule
-
-resource "aws_cloudwatch_event_rule" "scheduler" {
-  name                = "lambda-scheduler"
-  description         = "Trigger Step Function every 5 minutes"
-  schedule_expression = "rate(5 minutes)"
-  state               = "ENABLED"
-  tags = {
-    Environment = "dev"
-  }
+resource "aws_iam_policy" "step_function_logging_policy_document" {
+  name   = "StepFunctionLoggingPolicyDocument"
+  policy = data.aws_iam_policy_document.step_function_logging_policy.json
+}
+resource "aws_iam_role_policy_attachment" "step_function_logging_attach_policy" {
+  role       = aws_iam_role.step_function_role.name
+  policy_arn = aws_iam_policy.step_function_logging_policy_document.arn
 }
 
 
-# EventBridge Target
+# IAM Role
 
-resource "aws_cloudwatch_event_target" "scheduler_target" {
-  rule      = aws_cloudwatch_event_rule.scheduler.name
-  target_id = "step-function-target"
-  arn       = aws_sfn_state_machine.totes_step_function.arn
-  role_arn  = aws_iam_role.eventbridge_role.arn
-}
-
-# EventBridge IAM role with permissons
-resource "aws_iam_role" "eventbridge_role" {
-  name = "eventbridge_step_function_role"
+resource "aws_iam_role" "scheduler_role" {
+  name = "scheduler_step_function_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -117,7 +107,7 @@ resource "aws_iam_role" "eventbridge_role" {
       {
         Effect = "Allow"
         Principal = {
-          Service = "events.amazonaws.com"
+          Service = "scheduler.amazonaws.com"
         }
         Action = "sts:AssumeRole"
       }
@@ -125,8 +115,9 @@ resource "aws_iam_role" "eventbridge_role" {
   })
 }
 
-resource "aws_iam_policy" "eventbridge_sf_policy" {
-  name   = "eventbridge_sf_policy"
+
+resource "aws_iam_policy" "scheduler_sf_policy" {
+  name   = "scheduler_sf_policy"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -139,16 +130,17 @@ resource "aws_iam_policy" "eventbridge_sf_policy" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "eventbridge_sf_policy_attachment" {
-  role       = aws_iam_role.eventbridge_role.name
-  policy_arn = aws_iam_policy.eventbridge_sf_policy.arn
+
+resource "aws_iam_role_policy_attachment" "scheduler_sf_policy_attachment" {
+  role       = aws_iam_role.scheduler_role.name
+  policy_arn = aws_iam_policy.scheduler_sf_policy.arn
 }
 
 
-resource "aws_lambda_permission" "allow_eventbridge" {
-  statement_id  = "AllowExecutionFromEventBridge"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.totes_extract_lambda.arn
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.scheduler.arn
-}
+
+
+
+
+
+
+
