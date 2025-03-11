@@ -11,13 +11,13 @@ logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context, client=None, extractbucketname=None, transformbucketname=None):
 
-    if client ==  None:
+    if client is None:
         client = boto3.client("s3")
 
-    if transformbucketname == None: 
+    if transformbucketname is None: 
         transformbucketname = "totes-transform-bucket-20250227154810549700000001"
 
-    if extractbucketname == None: 
+    if extractbucketname is None: 
         extractbucketname = "totes-extract-bucket-20250227154810549900000003"
 
     loaded__files = read(event["filepaths"], client, bucketname=extractbucketname)

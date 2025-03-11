@@ -18,7 +18,7 @@ from moto import mock_aws
 import boto3
 import json
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
@@ -188,9 +188,9 @@ class TestTransformRead:
         client, bucket_name, _ = mock_s3_client_read
 
         file_paths = [
-            f"data/by_time/2025/03-March/04/14:24:54.932025/address",
-            f"data/by_time/2025/03-March/04/14:24:54.932025/department",
-            f"data/by_time/2025/03-March/04/14:24:54.932025/currency",
+            "data/by_time/2025/03-March/04/14:24:54.932025/address",
+            "data/by_time/2025/03-March/04/14:24:54.932025/department",
+            "data/by_time/2025/03-March/04/14:24:54.932025/currency",
         ]
         
         with pytest.raises(ClientError) as exc_info:
@@ -442,17 +442,6 @@ class TestLambdaHandler:
                                 "data/by time/2025/03-March/11/12:07:07.196261/dim_date"]
             }
             
-
-
-            loaded__files = {"filepaths": {"counterparty": "data/2024/03/10/12/dim_counterparty.json",
-                                   "currency": "data/2024/03/10/12/dim_currency.json",
-                                   "department": "data/2024/03/10/12/dim_department.json",
-                                   "design": "data/2024/03/10/12/dim_design.json",
-                                   "staff": "data/2024/03/10/12/dim_staff.json",
-                                   "sales_order":"data/2024/03/10/12/fact_sales_order.json",
-                                   "address": "data/2024/03/10/12/dim_location.json"}}
-        
-
        
 class TestTransformStaff:
     def test_transform_staff_empty_input(self):
