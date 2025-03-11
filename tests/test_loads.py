@@ -337,3 +337,8 @@ class TestWarehouse:
         ]
 
         # test that testdata is actually added when envoking lambda handler with filepaths
+
+        # call load_df_to_warehouse with none and assert connect_to_warehouse has been called once with patch?
+
+        #test the logging at the end
+

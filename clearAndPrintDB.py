@@ -63,7 +63,7 @@ print_all_tables_except_date()
     #    test read 
     # returns dict
     # enough dataframes
-    # time and dates are right format
+    
     # test the  error if not given filepath
 
     #     test connect_to_warehouse
