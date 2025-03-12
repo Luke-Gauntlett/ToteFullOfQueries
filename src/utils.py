@@ -2,6 +2,10 @@ import json
 import boto3
 import pg8000
 from botocore.exceptions import ClientError
+import logging
+
+logger = logging.getLogger("utils_logger")
+logger.setLevel(logging.INFO)
 
 def get_db_credentials(secret_name, region_name="eu-west-2"):
     """
@@ -14,8 +18,9 @@ def get_db_credentials(secret_name, region_name="eu-west-2"):
         secret = json.loads(response["SecretString"])
         return secret
     except Exception as e:
-        print(f"Error retrieving secret: {e}")
-        return None
+        logger.error(f"ERROR! couldn't retrieve secret: {e}")
+        raise
+        
 
 
 def connect_to_database(secret_name = "project_database_credentials",region_name = "eu-west-2"):
@@ -40,7 +45,8 @@ def connect_to_database(secret_name = "project_database_credentials",region_name
         
 
     except ClientError as err:
-        print(f"Failed to retrieve database credentials:{err}")
+        logger.error(f"ERROR! Failed to retrieve database credentials:{err}")
+        raise
     except Exception as e:
-        print(f"Database connection failed: {e}")
-        return None
+        logger.error(f"ERROR! couldn't connect to database: {e}")
+        raise
