@@ -57,7 +57,7 @@ def lambda_handler(event, context, client=None, conn=None, bucket_name="totes-tr
         if table in dataframes:
             load_df_to_warehouse(dataframes[table], table, conn)
         else:
-            logger.warning(f"Data for table {table} not found; skipping.")
+            logger.warning(f"ERROR! Data for table {table} not found; skipping.")
 
 def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227154810549700000001"):
     """
@@ -119,7 +119,7 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
 
         except ClientError as e:
             if e.response["Error"]["Code"] == "NoSuchKey":
-                logger.error(f"Warning: File {file_path} does not exist in S3. Skipping.")
+                logger.error(f"ERROR! File {file_path} does not exist in S3. Skipping.")
                 raise
             else:
                 raise
@@ -170,7 +170,7 @@ def load_df_to_warehouse(dataframe, table_name,conn = None):
             # print(f"data addeed to {table_name}")
 
     except Exception as e:
-        logger.error(f"Error inserting data: {e}")
+        logger.error(f"ERROR! couldn't insert data: {e}")
         conn.rollback()        
         # print(f"Failed! data not added {table_name}")
         conn.close()

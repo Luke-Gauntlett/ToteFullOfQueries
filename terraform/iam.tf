@@ -1,6 +1,7 @@
 
-#########################################  IAM Roles and role policy documents   ###################################################
-# Extract Lambda IAM role
+#########################################  IAM Roles and role policy documents   ######################################### 
+
+# Extract Lambda
 data "aws_iam_policy_document" "extract_iam_policy" {
   statement {
     effect = "Allow"
@@ -45,7 +46,7 @@ resource "aws_iam_role" "transform_lambda_iam_role" {
 }
 
 
-#Load Lambda
+# Load Lambda
 data "aws_iam_policy_document" "load_iam_policy" {
   statement {
     effect = "Allow"
@@ -66,11 +67,10 @@ resource "aws_iam_role" "load_lambda_iam_role" {
 }
 
 
-#########################################  IAM Policy for S3 Read/Write   ###################################################
-# Extract
+#########################################  IAM Policy for S3 Read/Write   #########################################
 
-
-data "aws_iam_policy_document" "s3_policy" {
+# Extract Bucket Permisions
+data "aws_iam_policy_document" "extract_s3_policy" {
   statement {
     effect    = "Allow"
     actions   = ["s3:ListBucket"]
@@ -80,25 +80,25 @@ data "aws_iam_policy_document" "s3_policy" {
   statement {
     effect    = "Allow"
     actions   = ["s3:PutObject", "s3:GetObject"]
-    resources = ["${resource.aws_s3_bucket.extract_bucket.arn}/*"]
+    resources = ["${aws_s3_bucket.extract_bucket.arn}/*"]
   }
 }
 
-resource "aws_iam_policy" "s3_policy" {
-  name   = "s3_bucket_policy"
-  policy = data.aws_iam_policy_document.s3_policy.json
+resource "aws_iam_policy" "extract_s3_policy_document" {
+  name   = "extract_s3_policy_document"
+  policy = data.aws_iam_policy_document.extract_s3_policy.json
 }
 
-resource "aws_iam_policy_attachment" "s3_attach_policy" {
-  name       = "s3_attach_policy"
-  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name] # Fixed to attach to both roles
-  policy_arn = aws_iam_policy.s3_policy.arn
+resource "aws_iam_policy_attachment" "extract_s3_attach_policy" {
+  name       = "extract_s3_attach_policy"
+  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name] 
+  policy_arn = aws_iam_policy.extract_s3_policy_document.arn
 
 
 }
-# Transform
+# Transform Bucket Permissions
 
-data "aws_iam_policy_document" "s3_transform_load_policy" {
+data "aws_iam_policy_document" "transform_s3_policy" {
   statement {
     effect    = "Allow"
     actions   = ["s3:ListBucket"]
@@ -108,95 +108,93 @@ data "aws_iam_policy_document" "s3_transform_load_policy" {
   statement {
     effect    = "Allow"
     actions   = ["s3:PutObject", "s3:GetObject"]
-    resources = ["${resource.aws_s3_bucket.transform_bucket.arn}/*"]
+    resources = ["${aws_s3_bucket.transform_bucket.arn}/*"]
   }
 }
 
-resource "aws_iam_policy" "s3_transform_policy_json" {
-  name   = "s3_transform_bucket_policy"
-  policy = data.aws_iam_policy_document.s3_transform_load_policy.json
+resource "aws_iam_policy" "transform_s3_policy_document" {
+  name   = "transform_s3_policy_document"
+  policy = data.aws_iam_policy_document.transform_s3_policy.json
 }
 
-resource "aws_iam_policy_attachment" "s3_transform_attach_policy" {
-  name       = "s3_transform_attach_policy"
+resource "aws_iam_policy_attachment" "transform_s3_attach_policy" {
+  name       = "transform_s3_attach_policy"
   roles      = [aws_iam_role.transform_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name]
-  policy_arn = aws_iam_policy.s3_transform_policy_json.arn
+  policy_arn = aws_iam_policy.transform_s3_policy_document.arn
 }
-###Load Transform
 
-
-# resource "aws_iam_policy" "s3_load_policy" {
-#   name   = "s3_load_bucket_policy"
-#   policy = data.aws_iam_policy_document.s3_transform_policy.json
-# }
-
-# resource "aws_iam_policy_attachment" "s3_load_attach_policy" {
-#   name       = "s3_load_attach_policy"
-#   roles      = [aws_iam_role.lambda_iam3.name]
-#   policy_arn = aws_iam_policy.s3_transform_policy.arn
-# }
-
-########################################################## IAM Policy for SNS Notification   ###########################################################
+######################################### IAM Policy for SNS Notification   #########################################
 
 
 data "aws_iam_policy_document" "sns_policy" {
   statement {
     effect    = "Allow"
     actions   = ["sns:Publish"]
-    resources = ["arn:aws:sns:eu-west-2:${data.aws_caller_identity.current.account_id}:"]
+    resources = ["arn:aws:sns:eu-west-2:${data.aws_caller_identity.current.account_id}:*"]
   }
 
 }
-resource "aws_iam_policy" "sns_policy" {
-  name   = "sns_policy"
+resource "aws_iam_policy" "sns_policy_document" {
+  name   = "sns_policy_document"
   policy = data.aws_iam_policy_document.sns_policy.json
 
 }
 
 resource "aws_iam_policy_attachment" "sns_attach_policy" {
   name       = "sns_attach_policy"
-  roles      = [aws_iam_role.extract_lambda_iam_role.name]
-  policy_arn = aws_iam_policy.sns_policy.arn
+  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name]
+  policy_arn = aws_iam_policy.sns_policy_document.arn
 }
 
-resource "aws_iam_policy_attachment" "sns_attach_policy2" {
-  name       = "sns_attach_policy2"
-  roles      = [aws_iam_role.transform_lambda_iam_role.name]
-  policy_arn = aws_iam_policy.sns_policy.arn  
-}
+#########################################  IAM Policy for Secrets Manager Get Secret  #########################################
 
-
-#########################################  IAM Policy for Secrets Manager Get Secret  ###################################################
-
-data "aws_iam_policy_document" "secret_manager_policy" {
+data "aws_iam_policy_document" "extract_secret_policy" {
   statement {
-    effect    = "Allow"
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = ["arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:*"]
+    effect  = "Allow"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [
+      "arn:aws:secretsmanager:eu-west-2:557690606237:secret:project_database_credentials-AFsnUm"
+    ]
   }
-  ##The above policy is currently using the * wildcard, where all secrets can be accessed
-}
-resource "aws_iam_policy" "secret_manager_policy_json" {
-  name   = "secret_manager_policy_json"
-  policy = data.aws_iam_policy_document.secret_manager_policy.json
-
 }
 
-resource "aws_iam_policy_attachment" "secret_manager_attach_policy" {
-  name       = "secret_manager_attach_policy"
-  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name]
-  policy_arn = aws_iam_policy.secret_manager_policy_json.arn
+resource "aws_iam_policy" "extract_secret_policy_document" {
+  name   = "extract_secret_policy_document"
+  policy = data.aws_iam_policy_document.extract_secret_policy.json
+}
+
+resource "aws_iam_policy_attachment" "extract_secret_attach_policy" {
+  name       = "extract_secret_attach_policy"
+  roles      = [aws_iam_role.extract_lambda_iam_role.name]
+  policy_arn = aws_iam_policy.extract_secret_policy_document.arn
+}
+
+data "aws_iam_policy_document" "load_secret_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [
+      "arn:aws:secretsmanager:eu-west-2:557690606237:secret:project_warehouse_credentials-bSiueL"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "load_secret_policy_document" {
+  name   = "load_secret_policy_document"
+  policy = data.aws_iam_policy_document.load_secret_policy.json
+}
+
+resource "aws_iam_policy_attachment" "load_secret_attach_policy" {
+  name       = "load_secret_attach_policy"
+  roles      = [aws_iam_role.load_lambda_iam_role.name]
+  policy_arn = aws_iam_policy.load_secret_policy_document.arn
 }
 
 
-
-
-#########################################  IAM Policy for Cloud Watch  ###################################################
+#########################################  IAM Policy for Cloud Watch  #########################################
 
 
 data "aws_iam_policy_document" "cloudwatch_policy" {
-
-  #this adds the new document which defines what our lambda is allowed to do with cloudwatch - ie log groups, streams or write log events
 
   statement {
     effect = "Allow"
@@ -208,53 +206,27 @@ data "aws_iam_policy_document" "cloudwatch_policy" {
     resources = [
       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*:*"
     ]
-    # resources (above) limits the policy to lambda related log streams
+    
   }
 }
 
-#creates document
-resource "aws_iam_policy" "cloudwatch_policy" {
-  name   = "cloudwatch_lambda_policy"
+
+resource "aws_iam_policy" "cloudwatch_policy_document" {
+  name   = "cloudwatch_policy_document"
   policy = data.aws_iam_policy_document.cloudwatch_policy.json
 }
 
-# attaches to Lambda
+
 resource "aws_iam_policy_attachment" "cloudwatch_attach_policy" {
   name       = "cloudwatch_attach_policy"
-  roles      = [aws_iam_role.extract_lambda_iam_role.name]
-  policy_arn = aws_iam_policy.cloudwatch_policy.arn
-}
-
-resource "aws_iam_policy_attachment" "cloudwatch_attach_policy2" {
-  name       = "cloudwatch_attach_policy2"
-  roles      = [aws_iam_role.transform_lambda_iam_role.name]
-  policy_arn = aws_iam_policy.cloudwatch_policy.arn  # Reusing the existing S3 policy
+  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name]
+  policy_arn = aws_iam_policy.cloudwatch_policy_document.arn
 }
 
 
-#attach cloudwatch policy to lambda_iam role
-
-
-# resource "aws_iam_policy" "postgres_policy" {
-#   name   = "postgres_lambda_policy"
-#   policy = data.aws_iam_policy_document.postgres_policy.json
-# }
-
-# resource "aws_iam_role_policy_attachment" "lambda_postgres_policy_attachment" {
-#   role       = aws_iam_role.lambda_iam.name
-#   policy_arn = aws_iam_policy.postgres_policy.arn
-# }
-
-# might need seperate log groups etc for each lambda
-
-# resource "aws_cloudwatch_log_group" "extract_lambda_logs" {
-#   name = "/aws/lambda/${var.extract_lambda}"
-# }
-
-# aws_cloudwatch_log_group.extract_lambda_logs.name for log_group_name
-
-resource "aws_cloudwatch_log_metric_filter" "cw_metric_filter" {
-  name           = "cw_metric_filter"
+# Extract Lambda
+resource "aws_cloudwatch_log_metric_filter" "extract_metric_filter" {
+  name           = "extract_metric_filter"
   pattern        = "?ERROR ?Failed ?Exception"
   log_group_name = "/aws/lambda/${var.extract_lambda}"
 
@@ -269,7 +241,7 @@ resource "aws_cloudwatch_metric_alarm" "extract_lambda_alert" {
   alarm_name          = "extract_lambda_alert"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
-  metric_name         = aws_cloudwatch_log_metric_filter.cw_metric_filter.name
+  metric_name         = aws_cloudwatch_log_metric_filter.extract_metric_filter.name
   namespace           = "cw_metrics"
   period              = 300
   statistic           = "Sum"
@@ -280,8 +252,9 @@ resource "aws_cloudwatch_metric_alarm" "extract_lambda_alert" {
 
 }
 
-resource "aws_cloudwatch_log_metric_filter" "transform_cw_metric_filter" {
-  name           = "transform_cw_metric_filter"
+# Transform Lambda
+resource "aws_cloudwatch_log_metric_filter" "transform_metric_filter" {
+  name           = "transform_metric_filter"
   pattern        = "?ERROR ?Failed ?Exception"
   log_group_name = "/aws/lambda/${var.transform_lambda}"
 
@@ -296,7 +269,7 @@ resource "aws_cloudwatch_metric_alarm" "transform_lambda_alert" {
   alarm_name          = "transform_lambda_alert"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
-  metric_name         = aws_cloudwatch_log_metric_filter.transform_cw_metric_filter.name
+  metric_name         = aws_cloudwatch_log_metric_filter.transform_metric_filter.name
   namespace           = "cw_metrics"
   period              = 300
   statistic           = "Sum"
@@ -305,51 +278,64 @@ resource "aws_cloudwatch_metric_alarm" "transform_lambda_alert" {
   alarm_actions       = [aws_sns_topic.transform_updates.arn]
 }
 
-# resource "aws_cloudwatch_log_metric_filter" "load_cw_metric_filter" {
-#   name           = "transform_cw_metric_filter"
-#   pattern        = "?ERROR ?Failed ?Exception"
-#   log_group_name = "/aws/lambda/${var.load_lambda}"
+resource "aws_cloudwatch_log_metric_filter" "load_metric_filter" {
+  name           = "load_metric_filter"
+  pattern        = "?ERROR ?Failed ?Exception"
+  log_group_name = "/aws/lambda/${var.load_lambda}"
 
-#   metric_transformation {
-#     name      = "EventCount"
-#     namespace = "cw_metrics"
-#     value     = "1"
-#   }
-# }
+  metric_transformation {
+    name      = "EventCount"
+    namespace = "cw_metrics"
+    value     = "1"
+  }
+}
 
-# resource "aws_cloudwatch_metric_alarm" "load_lambda_alert" {
-#   alarm_name          = "load_lambda_alert"
-#   comparison_operator = "GreaterThanOrEqualToThreshold"
-#   evaluation_periods  = 1
-#   metric_name         = aws_cloudwatch_log_metric_filter.load_cw_metric_filter.name
-#   namespace           = "cw_metrics"
-#   period              = 300
-#   statistic           = "Sum"
-#   threshold           = 1
-#   alarm_description   = "This metric monitors errors for load lambda"
-#   alarm_actions       = [aws_sns_topic.load_updates.arn]
-# }
+resource "aws_cloudwatch_metric_alarm" "load_lambda_alert" {
+  alarm_name          = "load_lambda_alert"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = aws_cloudwatch_log_metric_filter.load_metric_filter.name
+  namespace           = "cw_metrics"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_description   = "This metric monitors errors for load lambda"
+  alarm_actions       = [aws_sns_topic.load_updates.arn]
+}
 
 #######################################################  IAM Policy for Step Function #################################################
-#The role
+# Step Function Role
 resource "aws_iam_role" "step_function_role" {
-  name = "StepFunctionRole"
-
+  name = "step_function_role"
+  
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version = "2012-10-17"
     Statement = [
       {
+        Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "states.amazonaws.com"
+          Service = [
+            "events.amazonaws.com", 
+            "states.amazonaws.com"
+          ]
         }
+      },
+      {
         Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        }
       }
     ]
   })
 }
 
-# creates lambda permissions
+
+
+
+# Lambda permissions
 
 data "aws_iam_policy_document" "step_function_lambda_policy" {
   statement {
@@ -363,54 +349,23 @@ data "aws_iam_policy_document" "step_function_lambda_policy" {
   }
 }
 
-resource "aws_iam_policy" "step_function_lambda_policy" {
-  name   = "StepFunctionLambdaInvokePolicy"
+resource "aws_iam_policy" "step_function_lambda_policy_document" {
+  name   = "StepFunctionLambdaInvokePolicyDocument"
   policy = data.aws_iam_policy_document.step_function_lambda_policy.json
 }
 
 resource "aws_iam_role_policy_attachment" "step_function_lambda_policy_attachment" {
   role       = aws_iam_role.step_function_role.name
-  policy_arn = aws_iam_policy.step_function_lambda_policy.arn
+  policy_arn = aws_iam_policy.step_function_lambda_policy_document.arn
 }
 
-
-# create cloudwatch permissions
-
-#creates cloudwatch logs
+# CloudWatch Permissions
 resource "aws_cloudwatch_log_group" "step_function_logs" {
   name              = "/aws/vendedlogs/totes_step_function"
-  retention_in_days = 30
+  retention_in_days = 60
 }
 
-
-data "aws_iam_policy_document" "step_function_logging_policy" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents",
-      "logs:DescribeLogStreams"
-    ]
-    resources = [
-      aws_cloudwatch_log_group.step_function_logs.arn,
-      "${aws_cloudwatch_log_group.step_function_logs.arn}:*"
-    ]
-  }
-}
-
-resource "aws_iam_policy" "step_logging_policy" {
-  name   = "StepFunctionLoggingPolicy"
-  policy = data.aws_iam_policy_document.step_function_logging_policy.json
-}
-
-resource "aws_iam_role_policy_attachment" "step_function_logging_attachment" {
-  role       = aws_iam_role.step_function_role.name
-  policy_arn = aws_iam_policy.step_logging_policy.arn
-}
-
-
-resource "aws_cloudwatch_log_resource_policy" "step_function_logs_policy" {
+resource "aws_cloudwatch_log_resource_policy" "cw_sf_policy" {
   policy_name = "StepFunctionLogsPolicy"
   policy_document = jsonencode({
     Version = "2012-10-17",
@@ -433,47 +388,32 @@ resource "aws_cloudwatch_log_resource_policy" "step_function_logs_policy" {
   })
 }
 
-# resource "aws_iam_role_policy_attachment" "step_function_cw_attachment" {
-#   role       = aws_iam_role.step_function_role.name
-#   policy_arn = aws_cloudwatch_log_resource_policy.step_function_logs_policy.arn
-# }
+
+resource "aws_iam_policy" "step_function_logging_policy" {
+  name        = "step-function-logging-policy"
+  description = "Policy to allow Step Function to write logs to CloudWatch"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:PutLogEvents",
+        "logs:CreateLogStream"
+      ],
+      "Resource": "${aws_cloudwatch_log_group.step_function_logs.arn}:*"
+    }
+  ]
+}
+EOF
+}
 
 
-
-
-
-#########################################  IAM Policy for Database Access/RDS  #################################################
-
-# data "aws_iam_policy_document" "postgres_policy" {
-#   statement {
-#     effect = "Allow"
-#     actions = [
-#       "rds:DescribeDBInstances",
-#       "rds:Connect"
-#     ]
-#     resources = [
-#       "arn:aws:rds-db:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:dbuser:${var.database_id}/${var.database_user}"
-#     ]
-#   }
-
-#   statement {
-#     effect  = "Allow"
-#     actions = ["secretsmanager:GetSecretValue"]
-#     resources = [
-#       "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:*"
-#     ]
-#   }
-# }
-
-# resource "aws_iam_policy" "postgres_policy" {
-#   name   = "postgres_lambda_policy"
-#   policy = data.aws_iam_policy_document.postgres_policy.json
-# }
-
-# resource "aws_iam_role_policy_attachment" "lambda_postgres_policy_attachment" {
-#   role       = aws_iam_role.extract_lambda_iam_role.arn
-#   policy_arn = aws_iam_policy.postgres_policy.arn
-# }
-
+resource "aws_iam_role_policy_attachment" "step_function_logging_policy_attachment" {
+  role       = aws_iam_role.step_function_role.name
+  policy_arn = aws_iam_policy.step_function_logging_policy.arn
+}
 
 

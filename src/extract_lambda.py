@@ -77,9 +77,9 @@ def get_time(s3_client, bucketname='totes-extract-bucket-20250227154810549900000
         if e.response["Error"]["Code"] == "NoSuchKey":
             last_extraction_time = "0001-01-01 00:00:00.000000"
             last_extraction_times.append(last_extraction_time)
-            logger.error("No most recent extraction time.")
+            logger.error("ERROR! No most recent extraction time.")
         else:
-            logger.error("Error! Issues getting extraction time.")
+            logger.error("ERROR! Issues getting extraction time.")
             raise ClientError(e.response, e.operation_name)
     last_extraction_times.append(this_extraction_time)
     s3_client.put_object(

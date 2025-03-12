@@ -2,8 +2,6 @@ resource "aws_sfn_state_machine" "totes_step_function" {
   name     = "totes_step_function"
   role_arn = aws_iam_role.step_function_role.arn
 
-
-    
   definition = <<EOF
 {
   "Comment": "Execute lambdas in sequence",
@@ -29,9 +27,10 @@ resource "aws_sfn_state_machine" "totes_step_function" {
 EOF
 
 
+
   depends_on = [
     aws_cloudwatch_log_group.step_function_logs,
-    aws_cloudwatch_log_resource_policy.step_function_logs_policy
+    aws_cloudwatch_log_resource_policy.cw_sf_policy
   ]
 }
 
