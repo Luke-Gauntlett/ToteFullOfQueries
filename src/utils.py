@@ -7,6 +7,7 @@ import logging
 logger = logging.getLogger("utils_logger")
 logger.setLevel(logging.INFO)
 
+
 def get_db_credentials(secret_name, region_name="eu-west-2"):
     """
     Fetch database credentials from AWS Secrets Manager.
@@ -20,16 +21,17 @@ def get_db_credentials(secret_name, region_name="eu-west-2"):
     except Exception as e:
         logger.error(f"ERROR! couldn't retrieve secret: {e}")
         raise
-        
 
 
-def connect_to_database(secret_name = "project_database_credentials",region_name = "eu-west-2"):
+def connect_to_database(
+    secret_name="project_database_credentials", region_name="eu-west-2"
+):
     """
     Connects to the PostgreSQL database using pg8000.
     """
 
     try:
-        
+
         credentials = get_db_credentials(secret_name, region_name)
 
         conn = pg8000.connect(
@@ -39,10 +41,9 @@ def connect_to_database(secret_name = "project_database_credentials",region_name
             port=int(credentials["port"]),
             database=credentials["database"],
         )
-        
-        print("Database connection successful!") #nosec
+
+        print("Database connection successful!")  # nosec
         return conn
-        
 
     except ClientError as err:
         logger.error(f"ERROR! Failed to retrieve database credentials:{err}")

@@ -361,6 +361,7 @@ class TestWarehouse:
             (4, "2023", "W"),
         ]
 
+
 def test_complete_lambda_handler_takes_parquets_and_loads_to_warehouse(
     mock_s3_client_read, aws_credentials, temp_db
 ):

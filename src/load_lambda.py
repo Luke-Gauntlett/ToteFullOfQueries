@@ -11,14 +11,20 @@ logger.setLevel(logging.INFO)
 
 try:
     from src.utils import get_db_credentials
-except ImportError: # pragma: no cover
-    try:# pragma: no cover
-        from utils import get_db_credentials# pragma: no cover
-    except ImportError:# pragma: no cover
-        raise ImportError("Could not import get_db_credentials")# pragma: no cover
+except ImportError:  # pragma: no cover
+    try:  # pragma: no cover
+        from utils import get_db_credentials  # pragma: no cover
+    except ImportError:  # pragma: no cover
+        raise ImportError("Could not import get_db_credentials")  # pragma: no cover
 
 
-def lambda_handler(event, context, client=None, conn=None, bucket_name="totes-transform-bucket-20250227154810549700000001"): # noqa
+def lambda_handler(
+    event,
+    context,
+    client=None,
+    conn=None,
+    bucket_name="totes-transform-bucket-20250227154810549700000001",
+):  # noqa
     """
     AWS Lambda function handler to read parquet files from an S3 bucket, transform them, and load the transformed data # noqa
     into a database warehouse.
@@ -27,7 +33,7 @@ def lambda_handler(event, context, client=None, conn=None, bucket_name="totes-tr
     - Reads parquet files specified in the event input.
     - Loads data into predefined tables (fact and dimension tables).
     - Skips tables if no data is found for that table.
-    
+
     Parameters:
         event (dict): The input event,containing S3 file paths (via "filepaths" key).
         context (object): {}
@@ -40,18 +46,19 @@ def lambda_handler(event, context, client=None, conn=None, bucket_name="totes-tr
     """
 
     if client is None:
-        client = boto3.client("s3")    
+        client = boto3.client("s3")
 
-    dataframes = read_parquet(event["filepaths"],client, bucket_name)
+    dataframes = read_parquet(event["filepaths"], client, bucket_name)
 
-    tables = ["dim_counterparty",
-              "dim_currency",
-              "dim_date",
-              "dim_design",
-              "dim_location",
-              "dim_staff",
-              "fact_sales_order"]
-    
+    tables = [
+        "dim_counterparty",
+        "dim_currency",
+        "dim_date",
+        "dim_design",
+        "dim_location",
+        "dim_staff",
+        "fact_sales_order",
+    ]
 
     for table in tables:
         if table in dataframes:
@@ -59,7 +66,10 @@ def lambda_handler(event, context, client=None, conn=None, bucket_name="totes-tr
         else:
             logger.warning(f"ERROR! Data for table {table} not found; skipping.")
 
-def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227154810549700000001"):
+
+def read_parquet(
+    file_paths, client, bucketname="totes-transform-bucket-20250227154810549700000001"
+):
     """
     Reads parquet files from the transform S3 bucket and returns them as Pandas DataFrames.
     This function handles the conversion of date and time columns to appropriate formats.
@@ -67,14 +77,13 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
     Args:
         file_paths (list of str): List of S3 file paths of parquet files.
         client (boto3.client): Boto3 client to interact with AWS S3.
-        bucketname (str): Name of the S3 bucket. Default is "totes-transform-bucket-20250227154810549700000001".
+        bucketname (str): Name of the S3 bucket. Default is "totes-transform-bucket-20250227154810549700000001". # noqa
 
     Returns:
         dict: A dictionary where keys are the table names and values are the corresponding
               Pandas DataFrames containing the data read from the parquet files."
     """
 
-    
     dataframes = {}
 
     date_columns = {
@@ -82,14 +91,12 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
             "created_date",
             "last_updated_date",
             "agreed_payment_date",
-            "agreed_delivery_date"
+            "agreed_delivery_date",
         ],
-        "dim_date": ["date_id"]
-    }
+        "dim_date": ["date_id"],
+    }  # noqa
 
-    time_columns = {
-        "fact_sales_order": ["created_time", "last_updated_time"]
-    }
+    time_columns = {"fact_sales_order": ["created_time", "last_updated_time"]}
 
     for file_path in file_paths:
         try:
@@ -126,7 +133,10 @@ def read_parquet(file_paths, client, bucketname="totes-transform-bucket-20250227
 
     return dataframes
 
-def connect_to_warehouse(secret_name="project_warehouse_credentials", region_name="eu-west-2"): # nosec
+
+def connect_to_warehouse(
+    secret_name="project_warehouse_credentials", region_name="eu-west-2"
+):  # nosec
     """
     Establishes a connection to the project's data warehouse using credentials stored in AWS Secrets Manager.
 
@@ -136,21 +146,22 @@ def connect_to_warehouse(secret_name="project_warehouse_credentials", region_nam
     Args:
         secret_name (str): The name of the secret in AWS Secrets Manager that contains the database credentials.
                             Defaults to "project_warehouse_credentials".
-        region_name (str): The AWS region where the secret is stored. Defaults to "eu-west-2".
+        region_name (str): The AWS region where the secret is stored. Defaults to "eu-west-2". # noqa
 
     Returns:
         Connection: A SQLAlchemy Connection object connected to the data warehouse."
-    """
+    """  # noqa
     credentials = get_db_credentials(secret_name, region_name)
     db_url = (
-        f"postgresql+pg8000://{credentials['user']}:{credentials['password']}" # nosec
-        f"@{credentials['host']}:{credentials['port']}/{credentials['database']}" # nosec
-    )
+        f"postgresql+pg8000://{credentials['user']}:{credentials['password']}"  # nosec # noqa
+        f"@{credentials['host']}:{credentials['port']}/{credentials['database']}"  # nosec # noqa
+    )  # noqa
     engine = create_engine(db_url)
 
     return engine.connect()
 
-def load_df_to_warehouse(dataframe, table_name,conn = None):
+
+def load_df_to_warehouse(dataframe, table_name, conn=None):
     """
     Inserts a Pandas DataFrame into a specified database table.
 
@@ -161,17 +172,17 @@ def load_df_to_warehouse(dataframe, table_name,conn = None):
         table_name (str): The target table name.
         conn (sqlalchemy.engine.Connection, optional): An existing DB connection."
     """
-    
+
     if conn is None:
-        conn=connect_to_warehouse()
+        conn = connect_to_warehouse()
     try:
         with conn:
-            dataframe.to_sql(table_name, conn, if_exists='append', index=False)
+            dataframe.to_sql(table_name, conn, if_exists="append", index=False)
             # print(f"data addeed to {table_name}")
 
     except Exception as e:
         logger.error(f"ERROR! couldn't insert data: {e}")
-        conn.rollback()        
+        conn.rollback()
         # print(f"Failed! data not added {table_name}")
         conn.close()
         raise
