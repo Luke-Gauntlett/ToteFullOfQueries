@@ -138,7 +138,7 @@ def read(file_paths, client, bucketname="totes-extract-bucket-202502271548105499
         except ClientError as e:
             if e.response["Error"]["Code"] == "NoSuchKey":
                 logger.error(
-                    f"Warning: File {file_path} does not exist in S3. Skipping."
+                    f"ERROR! Warning: File {file_path} does not exist in S3. Skipping."
                 )
                 continue
             else:
@@ -160,7 +160,7 @@ def write(transformed_dataframe, client, filename, bucketname="totes-transform-b
         )
 
     except Exception as e:
-        logger.error(f"Failed to upload transformed data to S3. Error: {e}")
+        logger.error(f"ERROR! Failed to upload transformed data to S3. Error: {e}")
 
 
 ###################################### transform the data for dim location table ###################################   # noqa
@@ -177,7 +177,7 @@ def transform_location(address):
         if 'address_id' in df.columns:
             df.rename(columns={'address_id': 'location_id'}, inplace=True)
         else:
-            logger.error("'address_id' column not found in address data.")
+            logger.error("ERROR! 'address_id' column not found in address data.")
             return pd.DataFrame([]) 
 
         if 'created_at' in df.columns and 'last_updated' in df.columns:

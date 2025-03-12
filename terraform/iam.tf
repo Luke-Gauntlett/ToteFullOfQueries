@@ -91,7 +91,7 @@ resource "aws_iam_policy" "extract_s3_policy_document" {
 
 resource "aws_iam_policy_attachment" "extract_s3_attach_policy" {
   name       = "extract_s3_attach_policy"
-  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name] 
+  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.transform_lambda_iam_role.name] 
   policy_arn = aws_iam_policy.extract_s3_policy_document.arn
 
 
@@ -148,27 +148,47 @@ resource "aws_iam_policy_attachment" "sns_attach_policy" {
 
 #########################################  IAM Policy for Secrets Manager Get Secret  #########################################
 
-data "aws_iam_policy_document" "secret_manager_policy" {
+data "aws_iam_policy_document" "extract_secret_policy" {
   statement {
-    effect    = "Allow"
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = ["arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:*"]
+    effect  = "Allow"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [
+      "arn:aws:secretsmanager:eu-west-2:557690606237:secret:project_database_credentials-AFsnUm"
+    ]
   }
-  
-}
-resource "aws_iam_policy" "secret_manager_policy_document" {
-  name   = "secret_manager_policy_document"
-  policy = data.aws_iam_policy_document.secret_manager_policy.json
-
 }
 
-resource "aws_iam_policy_attachment" "secret_manager_attach_policy" {
-  name       = "secret_manager_attach_policy"
-  roles      = [aws_iam_role.extract_lambda_iam_role.name, aws_iam_role.load_lambda_iam_role.name]
-  policy_arn = aws_iam_policy.secret_manager_policy_document.arn
+resource "aws_iam_policy" "extract_secret_policy_document" {
+  name   = "extract_secret_policy_document"
+  policy = data.aws_iam_policy_document.extract_secret_policy.json
 }
 
+resource "aws_iam_policy_attachment" "extract_secret_attach_policy" {
+  name       = "extract_secret_attach_policy"
+  roles      = [aws_iam_role.extract_lambda_iam_role.name]
+  policy_arn = aws_iam_policy.extract_secret_policy_document.arn
+}
 
+data "aws_iam_policy_document" "load_secret_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [
+      "arn:aws:secretsmanager:eu-west-2:557690606237:secret:project_warehouse_credentials-bSiueL"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "load_secret_policy_document" {
+  name   = "load_secret_policy_document"
+  policy = data.aws_iam_policy_document.load_secret_policy.json
+}
+
+resource "aws_iam_policy_attachment" "load_secret_attach_policy" {
+  name       = "load_secret_attach_policy"
+  roles      = [aws_iam_role.load_lambda_iam_role.name]
+  policy_arn = aws_iam_policy.load_secret_policy_document.arn
+}
 
 
 #########################################  IAM Policy for Cloud Watch  #########################################
@@ -315,7 +335,6 @@ resource "aws_iam_role" "step_function_role" {
 
 
 
-
 # Lambda permissions
 
 data "aws_iam_policy_document" "step_function_lambda_policy" {
@@ -396,3 +415,5 @@ resource "aws_iam_role_policy_attachment" "step_function_logging_policy_attachme
   role       = aws_iam_role.step_function_role.name
   policy_arn = aws_iam_policy.step_function_logging_policy.arn
 }
+
+
