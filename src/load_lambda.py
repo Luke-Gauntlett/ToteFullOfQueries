@@ -18,9 +18,9 @@ except ImportError: # pragma: no cover
         raise ImportError("Could not import get_db_credentials")# pragma: no cover
 
 
-def lambda_handler(event, context, client=None, conn=None, bucket_name="totes-transform-bucket-20250227154810549700000001"):
+def lambda_handler(event, context, client=None, conn=None, bucket_name="totes-transform-bucket-20250227154810549700000001"): # noqa
     """
-    AWS Lambda function handler to read parquet files from an S3 bucket, transform them, and load the transformed data 
+    AWS Lambda function handler to read parquet files from an S3 bucket, transform them, and load the transformed data # noqa
     into a database warehouse.
 
     This function:
@@ -33,7 +33,7 @@ def lambda_handler(event, context, client=None, conn=None, bucket_name="totes-tr
         context (object): {}
         client (boto3.client, optional): A Boto3 S3 client. If None, a new client is created.
         conn (sqlalchemy.engine.Connection, optional): A database connection. If None, a new connection is created.
-        bucket_name (str, optional): The name of the S3 bucket from which parquet files are read. Defaults to "totes-transform-bucket-20250227154810549700000001".
+        bucket_name (str, optional): The name of the S3 bucket from which parquet files are read. Defaults to "totes-transform-bucket-20250227154810549700000001". # noqa
 
     Returns:
         None

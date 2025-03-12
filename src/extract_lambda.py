@@ -49,12 +49,12 @@ def get_time(s3_client, bucketname='totes-extract-bucket-20250227154810549900000
     Retrieves the last data extraction time from S3 and updates it with the current time.
 
     If the 'last_extraction_times.json' file exists, the function reads the last extraction time. 
-    If it doesn't exist, it initializes the time with a default value. The current extraction time 
+    If it doesn't exist, it initializes the time with a default value. The current extraction time
     is then appended, and the updated list is uploaded back to S3.
 
     Args:
         s3_client (boto3.client): The S3 client instance.
-        bucketname (str): The S3 bucket name. Defaults to 'totes-extract-bucket-20250227154810549900000003'.
+        bucketname (str): The S3 bucket name. Defaults to 'totes-extract-bucket-20250227154810549900000003'. # noqa
 
     Returns:
         tuple: The last extraction time and the current extraction time.
@@ -91,12 +91,12 @@ def get_time(s3_client, bucketname='totes-extract-bucket-20250227154810549900000
     return (last_extraction_time, this_extraction_time)
 
 
-def write_data(last_extraction_time, this_extraction_time, s3_client, db, bucketname='totes-extract-bucket-20250227154810549900000003'):
+def write_data(last_extraction_time, this_extraction_time, s3_client, db, bucketname='totes-extract-bucket-20250227154810549900000003'): # noqa
     """
     Extracts data from the database, formats it, and writes it to an S3 bucket.
 
     This function retrieves data from specified tables, filters records based on `last_extraction_time`,
-    to get most recent data, formats it, and uploads it to an S3 bucket as a series of jsons. It organizes the files in directories based on year, 
+    to get most recent data, formats it, and uploads it to an S3 bucket as a series of jsons. It organizes the files in directories based on year, # noqa
     month, day, and time, and returns the file paths where the data is stored.
 
     Args:
@@ -104,10 +104,10 @@ def write_data(last_extraction_time, this_extraction_time, s3_client, db, bucket
         this_extraction_time (str): The timestamp for the current data extraction.
         s3_client (boto3.client): The S3 client instance used for uploading files.
         db (DatabaseClient): A database client instance for querying data.
-        bucketname (str, optional): The name of the S3 bucket. Defaults to 'totes-extract-bucket-20250227154810549900000003'.
+        bucketname (str, optional): The name of the S3 bucket. Defaults to 'totes-extract-bucket-20250227154810549900000003'. # noqa
 
     Returns:
-        dict: A dictionary containing a list of file paths where the data was written in S3 for each table, all under key of "filepaths".
+        dict: A dictionary containing a list of file paths where the data was written in S3 for each table, all under key of "filepaths". # noqa
     """
     filepaths = []
     table_list = [

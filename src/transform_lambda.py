@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 
 
 
-def lambda_handler(event, context, client=None, extractbucketname=None, transformbucketname=None):
+def lambda_handler(event, context, client=None, extractbucketname=None, transformbucketname=None): # noqa
     """
     Main entry point for AWS Lambda function to transform and load data into S3 as a parquet, 
     ensuring that the data conforms to the data warehouse schema. The function 
@@ -26,7 +26,7 @@ def lambda_handler(event, context, client=None, extractbucketname=None, transfor
 
     Args:
         event (dict): 
-            A dictionary containing the input data. It includes a list of file paths pointing to the raw data 
+            A dictionary containing the input data. It includes a list of file paths pointing to the raw data # noqa
             in S3 to be processed.
         
         context (LambdaContext): {}            
@@ -63,7 +63,7 @@ def lambda_handler(event, context, client=None, extractbucketname=None, transfor
     year, month, day, time = split[2], split[3], split[4], split[5]
 
     # Get file_exists flag from load_date_range
-    start_date, end_date, file_exists = load_date_range(client, "date_table_last_date.json", bucketname=transformbucketname)
+    start_date, end_date, file_exists = load_date_range(client, "date_table_last_date.json", bucketname=transformbucketname) # noqa
     today = pd.to_datetime('today')
     needs_update = (end_date - today).days <= 14 * 365
 
@@ -73,7 +73,7 @@ def lambda_handler(event, context, client=None, extractbucketname=None, transfor
             start_date = end_date
             end_date = today + pd.DateOffset(years=50)
 
-            date_range = {'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d')}
+            date_range = {'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d')} # noqa
 
             save_date_range(s3_client=client,
                             bucketname="totes-transform-bucket-20250227154810549700000001",
@@ -145,18 +145,18 @@ def lambda_handler(event, context, client=None, extractbucketname=None, transfor
 
 def read(file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"):
     """
-    Reads JSON files from extract lambda put in an S3 and returns their contents (source table data) as a dictionary.
+    Reads JSON files from extract lambda put in an S3 and returns their contents (source table data) as a dictionary. # noqa
 
-    This function retrieves JSON files from the extract S3 bucket using the provided file paths, decodes the content, 
+    This function retrieves JSON files from the extract S3 bucket using the provided file paths, decodes the content, # noqa
     and stores it in a dictionary where the keys are table names derived from the file paths.
 
     Args:
         file_paths (list): A list of file paths (S3 keys) to be read from the specified bucket.
         client (boto3.client): The S3 client instance used for interacting with Amazon S3.
-        bucketname (str, optional): The S3 bucket name. Defaults to 'totes-extract-bucket-20250227154810549900000003'.
+        bucketname (str, optional): The S3 bucket name. Defaults to 'totes-extract-bucket-20250227154810549900000003'. # noqa
 
     Returns:
-        dict: A dictionary where keys are table names (derived from file paths) and values are the JSON (raw) data loaded 
+        dict: A dictionary where keys are table names (derived from file paths) and values are the JSON (raw) data loaded # noqa
               from the respective files.
     """
     file_dict = {}
@@ -185,18 +185,18 @@ def read(file_paths, client, bucketname="totes-extract-bucket-202502271548105499
     return file_dict
 
 
-def write(transformed_dataframe, client, filename, bucketname="totes-transform-bucket-20250227154810549700000001"):
+def write(transformed_dataframe, client, filename, bucketname="totes-transform-bucket-20250227154810549700000001"): # noqa
     """
     Writes a transformed table DataFrame to an S3 bucket as a Parquet file.
 
-    This function converts the provided DataFrame into a Parquet file format and uploads it to the specified S3 bucket. 
+    This function converts the provided DataFrame into a Parquet file format and uploads it to the specified S3 bucket. # noqa 
     The file is stored with the given filename and a `.parquet` extension.
 
     Args:
-        transformed_dataframe (pandas.DataFrame): The DataFrame containing the transformed data to be written.
+        transformed_dataframe (pandas.DataFrame): The DataFrame containing the transformed data to be written. # noqa
         client (boto3.client): The S3 client instance used for interacting with Amazon S3.
         filename (str): The S3 object key (filename) to store the Parquet file under.
-        bucketname (str, optional): The name of the S3 bucket. Defaults to 'totes-transform-bucket-20250227154810549700000001'.
+        bucketname (str, optional): The name of the S3 bucket. Defaults to 'totes-transform-bucket-20250227154810549700000001'. # noqa
 
     Returns:
         None
