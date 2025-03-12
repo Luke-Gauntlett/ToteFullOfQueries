@@ -272,30 +272,30 @@ def transform_staff(staff_data, department_data):
         pandas.DataFrame: Transformed staff data or an empty DataFrame if input data is missing.
     """
     # try:
-        if staff_data and department_data:
-            staff_df = pd.DataFrame(staff_data)
+    if staff_data and department_data:
+        staff_df = pd.DataFrame(staff_data)
 
-            if 'created_at' in staff_df.columns and 'last_updated' in staff_df.columns:
-                staff_df.drop(columns=["created_at", "last_updated"], inplace=True)
+        if 'created_at' in staff_df.columns and 'last_updated' in staff_df.columns:
+            staff_df.drop(columns=["created_at", "last_updated"], inplace=True)
 
-            dep_df = pd.DataFrame(department_data)
+        dep_df = pd.DataFrame(department_data)
 
-            if 'created_at' in dep_df.columns and 'last_updated' in dep_df.columns:
-                dep_df.drop(columns=["created_at", "last_updated"], inplace=True)
+        if 'created_at' in dep_df.columns and 'last_updated' in dep_df.columns:
+            dep_df.drop(columns=["created_at", "last_updated"], inplace=True)
 
-            merged = staff_df.merge(dep_df, on="department_id", how="left")
-    
-            if 'manager' in merged.columns and 'department_id' in merged.columns:
-                merged.drop(columns=["manager", "department_id"], inplace=True)
+        merged = staff_df.merge(dep_df, on="department_id", how="left")
 
-            df_reordered = merged[
-                ["staff_id", "first_name", "last_name", "department_name", "location", "email_address"]
-            ]
-            df_reordered = df_reordered.sort_values(by="staff_id").reset_index(drop=True)
+        if 'manager' in merged.columns and 'department_id' in merged.columns:
+            merged.drop(columns=["manager", "department_id"], inplace=True)
 
-            return df_reordered
-        else:
-            return pd.DataFrame([]) 
+        df_reordered = merged[
+            ["staff_id", "first_name", "last_name", "department_name", "location", "email_address"]
+        ]
+        df_reordered = df_reordered.sort_values(by="staff_id").reset_index(drop=True)
+
+        return df_reordered
+    else:
+        return pd.DataFrame([]) 
     # except KeyError as e:
     #     logger.error(f"Error in transform_staff: {e}")
     #     raise  
