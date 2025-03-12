@@ -9,15 +9,39 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def lambda_handler(event, context, client=None, extractbucketname=None, transformbucketname=None):
+def lambda_handler(
+    event, context, client=None, extractbucketname=None, transformbucketname=None
+):  # noqa
+    """
+    Main entry point for AWS Lambda function to transform and load data into S3 as a parquet,
+    ensuring that the data conforms to the data warehouse schema. The function
+    loads raw data from S3, applies transformations to various datasets, and writes
+    the transformed data back into a different S3.
 
+    Steps involved:
+    1. Load raw data files from S3 based on the provided file paths from extract lambda.
+    2. Transform the raw data for the different tables (e.g., sales order, staff, design, etc.).
+    3. Ensure that the date dimension table is updated if necessary.
+    4. Write the transformed data to the appropriate S3 location, organized by time.
+    5. Return the list of file paths where the transformed data is stored in the transform S3.
+
+    Args:
+        event (dict):
+            A dictionary containing the input data. It includes a list of file paths pointing to the raw data # noqa
+            in S3 to be processed.
+
+        context (LambdaContext): {}
+
+    Returns:
+        dict: A dictionary containing the file paths of the transformed data stored in S3.
+    """
     if client is None:
         client = boto3.client("s3")
 
-    if transformbucketname is None: 
+    if transformbucketname is None:
         transformbucketname = "totes-transform-bucket-20250227154810549700000001"
 
-    if extractbucketname is None: 
+    if extractbucketname is None:
         extractbucketname = "totes-extract-bucket-20250227154810549900000003"
 
     loaded__files = read(event["filepaths"], client, bucketname=extractbucketname)
@@ -27,10 +51,10 @@ def lambda_handler(event, context, client=None, extractbucketname=None, transfor
     design = loaded__files["design"]
     staff = loaded__files["staff"]
     sales_order = loaded__files["sales_order"]
-    address = loaded__files["address"] 
-  
-    #only needed for extension
-    
+    address = loaded__files["address"]
+
+    # only needed for extension
+
     # payment = loaded__files["payment"]
     # purchase_order = loaded__files["purchase_order"]
     # payment_type = loaded__files["payment_type"]
@@ -40,22 +64,28 @@ def lambda_handler(event, context, client=None, extractbucketname=None, transfor
     year, month, day, time = split[2], split[3], split[4], split[5]
 
     # Get file_exists flag from load_date_range
-    start_date, end_date, file_exists = load_date_range(client, "date_table_last_date.json", bucketname=transformbucketname)
-    today = pd.to_datetime('today')
+    start_date, end_date, file_exists = load_date_range(
+        client, "date_table_last_date.json", bucketname=transformbucketname
+    )  # noqa
+    today = pd.to_datetime("today")
     needs_update = (end_date - today).days <= 14 * 365
-
 
     if (not file_exists) or needs_update:
         if needs_update:
             start_date = end_date
             end_date = today + pd.DateOffset(years=50)
 
-            date_range = {'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d')}
+            date_range = {
+                "start_date": start_date.strftime("%Y-%m-%d"),
+                "end_date": end_date.strftime("%Y-%m-%d"),
+            }  # noqa
 
-            save_date_range(s3_client=client,
-                            bucketname="totes-transform-bucket-20250227154810549700000001",
-                            object_key="date_table_last_date.json",
-                            date_range=date_range)
+            save_date_range(
+                s3_client=client,
+                bucketname="totes-transform-bucket-20250227154810549700000001",
+                object_key="date_table_last_date.json",
+                date_range=date_range,
+            )
 
         transformed_date = generate_date_table(start_date, end_date)
     else:
@@ -70,57 +100,86 @@ def lambda_handler(event, context, client=None, extractbucketname=None, transfor
 
     write(
         transformed_sales_order,
-        client, f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order",
-        bucketname=transformbucketname
+        client,
+        f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order",
+        bucketname=transformbucketname,
     )
     write(
         transformed_staff,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_staff",
-        bucketname=transformbucketname  
+        client,
+        f"data/by time/{year}/{month}/{day}/{time}/dim_staff",
+        bucketname=transformbucketname,
     )
 
     write(
         transformed_location,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_location",
-        bucketname=transformbucketname
+        client,
+        f"data/by time/{year}/{month}/{day}/{time}/dim_location",
+        bucketname=transformbucketname,
     )
 
     write(
         transformed_design,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_design",
-        bucketname=transformbucketname
+        client,
+        f"data/by time/{year}/{month}/{day}/{time}/dim_design",
+        bucketname=transformbucketname,
     )
 
     write(
         transformed_currency,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_currency",
-        bucketname=transformbucketname
+        client,
+        f"data/by time/{year}/{month}/{day}/{time}/dim_currency",
+        bucketname=transformbucketname,
     )
 
     write(
         transformed_counterparty,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_counterparty",
-        bucketname=transformbucketname
+        client,
+        f"data/by time/{year}/{month}/{day}/{time}/dim_counterparty",
+        bucketname=transformbucketname,
     )
 
     write(
         transformed_date,
-        client, f"data/by time/{year}/{month}/{day}/{time}/dim_date",
-        bucketname=transformbucketname
+        client,
+        f"data/by time/{year}/{month}/{day}/{time}/dim_date",
+        bucketname=transformbucketname,
     )
 
-    return {"filepaths":[f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order.parquet",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_staff.parquet",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_location.parquet",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_design.parquet",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_currency.parquet",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_counterparty.parquet",
-                            f"data/by time/{year}/{month}/{day}/{time}/dim_date.parquet"
-                            ]}
+    return {
+        "filepaths": [
+            f"data/by time/{year}/{month}/{day}/{time}/fact_sales_order.parquet",
+            f"data/by time/{year}/{month}/{day}/{time}/dim_staff.parquet",
+            f"data/by time/{year}/{month}/{day}/{time}/dim_location.parquet",
+            f"data/by time/{year}/{month}/{day}/{time}/dim_design.parquet",
+            f"data/by time/{year}/{month}/{day}/{time}/dim_currency.parquet",
+            f"data/by time/{year}/{month}/{day}/{time}/dim_counterparty.parquet",
+            f"data/by time/{year}/{month}/{day}/{time}/dim_date.parquet",
+        ]
+    }
+
 
 ################################ read each of the json files ######################################################## # noqa
 
-def read(file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"):
+
+def read(
+    file_paths, client, bucketname="totes-extract-bucket-20250227154810549900000003"
+):
+    """
+    Reads JSON files from extract lambda put in an S3 and returns their contents (source table data) as a dictionary. # noqa
+
+    This function retrieves JSON files from the extract S3 bucket using the provided file paths, decodes the content, # noqa
+    and stores it in a dictionary where the keys are table names derived from the file paths.
+
+    Args:
+        file_paths (list): A list of file paths (S3 keys) to be read from the specified bucket.
+        client (boto3.client): The S3 client instance used for interacting with Amazon S3.
+        bucketname (str, optional): The S3 bucket name. Defaults to 'totes-extract-bucket-20250227154810549900000003'. # noqa
+
+    Returns:
+        dict: A dictionary where keys are table names (derived from file paths) and values are the JSON (raw) data loaded # noqa
+              from the respective files.
+    """
     file_dict = {}
 
     for file_path in file_paths:
@@ -133,7 +192,7 @@ def read(file_paths, client, bucketname="totes-extract-bucket-202502271548105499
 
             file_dict[table_name] = file_data
 
-            logger.info('JSON file correctly read!')
+            logger.info("JSON file correctly read!")
 
         except ClientError as e:
             if e.response["Error"]["Code"] == "NoSuchKey":
@@ -147,12 +206,32 @@ def read(file_paths, client, bucketname="totes-extract-bucket-202502271548105499
     return file_dict
 
 
-def write(transformed_dataframe, client, filename, bucketname="totes-transform-bucket-20250227154810549700000001"):
+def write(
+    transformed_dataframe,
+    client,
+    filename,
+    bucketname="totes-transform-bucket-20250227154810549700000001",
+):  # noqa
+    """
+    Writes a transformed table DataFrame to an S3 bucket as a Parquet file.
+
+    This function converts the provided DataFrame into a Parquet file format and uploads it to the specified S3 bucket. # noqa
+    The file is stored with the given filename and a `.parquet` extension.
+
+    Args:
+        transformed_dataframe (pandas.DataFrame): The DataFrame containing the transformed data to be written. # noqa
+        client (boto3.client): The S3 client instance used for interacting with Amazon S3.
+        filename (str): The S3 object key (filename) to store the Parquet file under.
+        bucketname (str, optional): The name of the S3 bucket. Defaults to 'totes-transform-bucket-20250227154810549700000001'. # noqa
+
+    Returns:
+        None
+    """
     try:
         parquet_file = transformed_dataframe.to_parquet(index=True)
-       
+
         logger.info(f"Writing to S3: {filename}")
-        
+
         client.put_object(
             Bucket=bucketname,
             Key=f"{filename}.parquet",
@@ -167,124 +246,205 @@ def write(transformed_dataframe, client, filename, bucketname="totes-transform-b
 
 
 def transform_location(address):
-    """Transforms location data to match the warehouse schema."""
+    """
+    Transforms location data to match the warehouse schema by renaming, removing,
+    and sorting columns.
+
+    Args:
+        address (list of dict): Location data to be transformed.
+
+    Returns:
+        pandas.DataFrame: Transformed data or an empty DataFrame if the transformation fails.
+    """
     # try:
     if address:
         df = pd.DataFrame(address)
-        
+
         logger.info(f"Columns in address DataFrame: {df.columns}")
-        
-        if 'address_id' in df.columns:
-            df.rename(columns={'address_id': 'location_id'}, inplace=True)
+
+        if "address_id" in df.columns:
+            df.rename(columns={"address_id": "location_id"}, inplace=True)
         else:
             logger.error("ERROR! 'address_id' column not found in address data.")
-            return pd.DataFrame([]) 
+            return pd.DataFrame([])
 
-        if 'created_at' in df.columns and 'last_updated' in df.columns:
+        if "created_at" in df.columns and "last_updated" in df.columns:
             df.drop(columns=["created_at", "last_updated"], inplace=True)
 
         df = df.sort_values(by="location_id").reset_index(drop=True)
         return df
-    else: 
-        return pd.DataFrame([]) 
+    else:
+        return pd.DataFrame([])
 
     # except KeyError as e:
     #     logger.error(f"Error in transform_location: {e}")
-    #     raise  
-
+    #     raise
 
 
 ############################## transform the data for dim staff table #############################   # noqa
 
+
 def transform_staff(staff_data, department_data):
+    """
+    Transforms staff data by merging with department data and formatting columns.
+
+    Args:
+        staff_data (list of dict): Staff data to be transformed.
+        department_data (list of dict): Department data to merge with staff data.
+
+    Returns:
+        pandas.DataFrame: Transformed staff data or an empty DataFrame if input data is missing.
+    """
     # try:
+    if staff_data and department_data:
+        staff_df = pd.DataFrame(staff_data)
 
-        if staff_data and department_data:
-            staff_df = pd.DataFrame(staff_data)
+        if "created_at" in staff_df.columns and "last_updated" in staff_df.columns:
+            staff_df.drop(columns=["created_at", "last_updated"], inplace=True)
 
-            if 'created_at' in staff_df.columns and 'last_updated' in staff_df.columns:
-                staff_df.drop(columns=["created_at", "last_updated"], inplace=True)
+        dep_df = pd.DataFrame(department_data)
 
-            dep_df = pd.DataFrame(department_data)
+        if "created_at" in dep_df.columns and "last_updated" in dep_df.columns:
+            dep_df.drop(columns=["created_at", "last_updated"], inplace=True)
 
-            if 'created_at' in dep_df.columns and 'last_updated' in dep_df.columns:
-                dep_df.drop(columns=["created_at", "last_updated"], inplace=True)
+        merged = staff_df.merge(dep_df, on="department_id", how="left")
 
-            merged = staff_df.merge(dep_df, on="department_id", how="left")
-    
-            if 'manager' in merged.columns and 'department_id' in merged.columns:
-                merged.drop(columns=["manager", "department_id"], inplace=True)
+        if "manager" in merged.columns and "department_id" in merged.columns:
+            merged.drop(columns=["manager", "department_id"], inplace=True)
 
-            df_reordered = merged[
-                ["staff_id", "first_name", "last_name", "department_name", "location", "email_address"]
+        df_reordered = merged[
+            [
+                "staff_id",
+                "first_name",
+                "last_name",
+                "department_name",
+                "location",
+                "email_address",
             ]
-            df_reordered = df_reordered.sort_values(by="staff_id").reset_index(drop=True)
+        ]
+        df_reordered = df_reordered.sort_values(by="staff_id").reset_index(drop=True)
 
-            return df_reordered
-        else:
-            return pd.DataFrame([]) 
+        return df_reordered
+    else:
+        return pd.DataFrame([])
     # except KeyError as e:
     #     logger.error(f"Error in transform_staff: {e}")
-    #     raise  
+    #     raise
+
 
 ##################################### make a date #######################################  # noqa
 
-def load_date_range(s3_client, object_key, bucketname):
 
+def load_date_range(s3_client, object_key, bucketname):
+    """
+    Loads the date range of dates to put in warehouse from an S3 bucket or creates a default date range if not found with 15 years of dates. # noqa
+
+    Args:
+        s3_client (boto3.client): The S3 client used to interact with AWS S3.
+        object_key (str): The S3 object key (path) for the date range JSON file.
+        bucketname (str): The name of the S3 bucket containing the date range file.
+
+    Returns:
+        tuple: A tuple containing:
+            - start_date (datetime): The start date of the range.
+            - end_date (datetime): The end date of the range.
+            - file_exists (bool): Flag indicating whether the file was found (True) or not (False).
+    """ # noqa
     try:
         response = s3_client.get_object(Bucket=bucketname, Key=object_key)
-        date_range = json.load(response['Body'])
-        start_date = pd.to_datetime(date_range['start_date'])
-        end_date = pd.to_datetime(date_range['end_date'])
+        date_range = json.load(response["Body"])
+        start_date = pd.to_datetime(date_range["start_date"])
+        end_date = pd.to_datetime(date_range["end_date"])
         file_exists = True
     except Exception:
-        today = pd.to_datetime('today')
-        start_date = pd.to_datetime('2020-01-01')
+        today = pd.to_datetime("today")
+        start_date = pd.to_datetime("2020-01-01")
         end_date = today + pd.DateOffset(years=15)
-        date_range = {'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d')}
+        date_range = {
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "end_date": end_date.strftime("%Y-%m-%d"),
+        }
         save_date_range(s3_client, bucketname, object_key, date_range)
         file_exists = False
     return start_date, end_date, file_exists
 
+
 def save_date_range(s3_client, bucketname, object_key, date_range):
+    """
+    Saves the date range dictionary to an S3 bucket as a JSON file.
+
+    Args:
+        s3_client (boto3.client): The S3 client used to interact with AWS S3.
+        bucketname (str): The name of the S3 bucket where the file will be saved.
+        object_key (str): The S3 object key (path) under which the file will be saved.
+        date_range (dict): A dictionary containing the 'start_date' and 'end_date' to be saved. # noqa
+
+    Returns:
+        None
+    """  # noqa
     s3_client.put_object(Bucket=bucketname, Key=object_key, Body=json.dumps(date_range))
 
+
 def generate_date_table(start_date, end_date):
-    dates = pd.date_range(start=start_date, end=end_date, freq='D')
-    date_table = pd.DataFrame({'date_id': dates})
-    date_table['year'] = date_table['date_id'].dt.year
-    date_table['month'] = date_table['date_id'].dt.month
-    date_table['day'] = date_table['date_id'].dt.day
-    date_table['day_of_week'] = date_table['date_id'].dt.dayofweek + 1
-    date_table['day_name'] = date_table['date_id'].dt.day_name()
-    date_table['month_name'] = date_table['date_id'].dt.month_name()
-    date_table['quarter'] = date_table['date_id'].dt.quarter
-    date_table['date_id'] = date_table['date_id'].dt.date
+    """
+    Generates a date table with various date-related attributes (e.g., year, month, day, weekday).
+
+    Args:
+        start_date (str or datetime): The start date for the range.
+        end_date (str or datetime): The end date for the range.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the date table with columns like 'year', 'month', 'day',
+                          'day_of_week', 'day_name', 'month_name', 'quarter', and 'date_id'.
+    """ # noqa
+    dates = pd.date_range(start=start_date, end=end_date, freq="D")
+    date_table = pd.DataFrame({"date_id": dates})
+    date_table["year"] = date_table["date_id"].dt.year
+    date_table["month"] = date_table["date_id"].dt.month
+    date_table["day"] = date_table["date_id"].dt.day
+    date_table["day_of_week"] = date_table["date_id"].dt.dayofweek + 1
+    date_table["day_name"] = date_table["date_id"].dt.day_name()
+    date_table["month_name"] = date_table["date_id"].dt.month_name()
+    date_table["quarter"] = date_table["date_id"].dt.quarter
+    date_table["date_id"] = date_table["date_id"].dt.date
     return date_table
+
 
 ############################# transform design ############################## noqa
 
+
 def transform_design(design):
-    """Transforms location data to match the warehouse schema."""
-    #try:
+    """
+    Transforms design data to match the warehouse schema by removing irrelevant columns
+    and sorting by design_id.
+
+    Args:
+        design (list of dict): Design data to be transformed.
+
+    Returns:
+        pandas.DataFrame: Transformed design data or an empty DataFrame if input data is missing.
+    """
+    # try:
     if design:
         df = pd.DataFrame(design)
 
-        if 'created_at' in df.columns and 'last_updated' in df.columns:
+        if "created_at" in df.columns and "last_updated" in df.columns:
             df.drop(columns=["created_at", "last_updated"], inplace=True)
-        
+
         df = df.sort_values(by="design_id").reset_index(drop=True)
 
         return df
 
     else:
-        return pd.DataFrame([]) 
+        return pd.DataFrame([])
 
-    #except KeyError as e:
-        #logger.error("Error! Issues transforming data due to invalid column headers.")
-        #raise KeyError(f"Missing column: {str(e)}")
+    # except KeyError as e:
+    # logger.error("Error! Issues transforming data due to invalid column headers.")
+    # raise KeyError(f"Missing column: {str(e)}")
+
 
 ############################# transform currency ############################## noqa
+
 
 def get_currency_name(currency_code: str):
     """Returns the full currency name given a currency code."""
@@ -297,8 +457,17 @@ def get_currency_name(currency_code: str):
     # except AttributeError:
     #     return None
 
+
 def transform_currency(currency):
-    """Returns DataFrame for transforming currency table."""
+    """
+    Transforms currency data by adding a currency name and sorting by currency_id.
+
+    Args:
+        currency (list of dict): Currency data to be transformed.
+
+    Returns:
+        pandas.DataFrame: Transformed currency data or an empty DataFrame if input data is missing.
+    """
     # try:
     if currency:
         df = pd.DataFrame(currency)
@@ -308,7 +477,7 @@ def transform_currency(currency):
         else:
             df["currency_name"] = None
 
-        if 'created_at' in df.columns and 'last_updated' in df.columns:
+        if "created_at" in df.columns and "last_updated" in df.columns:
             df.drop(columns=["created_at", "last_updated"], inplace=True)
 
         df = df.sort_values(by="currency_id").reset_index(drop=True)
@@ -318,56 +487,95 @@ def transform_currency(currency):
         return pd.DataFrame([])
     # except KeyError as e:
     #     logger.error(f"Error in transform_currency: {e}")
-    #     raise  
+    #     raise
+
 
 ############################# transform counterparty ############################## noqa
 
+
 def transform_counterparty(address, counterparty):
-    """Transforms counterparty and address data to match the warehouse schema."""
+    """
+    Transforms counterparty and address data by merging and renaming columns to match the warehouse schema. # noqa
+
+    Args:
+        address (list or dict): Address data to be merged with counterparty data.
+        counterparty (list or dict): Counterparty data to be transformed.
+
+    Returns:
+        pandas.DataFrame: Transformed counterparty data or an empty DataFrame if input data is missing.
+
+    """
     # try:
     if counterparty and address:
         counterparty_df = pd.DataFrame(counterparty)
         address_df = pd.DataFrame(address)
 
-        if 'created_at' in counterparty_df.columns and 'last_updated' in counterparty_df.columns:
+        if (
+            "created_at" in counterparty_df.columns
+            and "last_updated" in counterparty_df.columns
+        ):
             counterparty_df.drop(columns=["created_at", "last_updated"], inplace=True)
 
-        if 'created_at' in address_df.columns and 'last_updated' in address_df.columns:
+        if "created_at" in address_df.columns and "last_updated" in address_df.columns:
             address_df.drop(columns=["created_at", "last_updated"], inplace=True)
 
         transformed_df = counterparty_df.merge(
             address_df, left_on="legal_address_id", right_on="address_id", how="left"
         )
 
-        if 'address_id' in transformed_df.columns and 'legal_address_id' in transformed_df.columns:
-            transformed_df.drop(columns=["address_id", "legal_address_id"], inplace=True)
+        if (
+            "address_id" in transformed_df.columns
+            and "legal_address_id" in transformed_df.columns
+        ):
+            transformed_df.drop(
+                columns=["address_id", "legal_address_id"], inplace=True
+            )
 
-        if 'commercial_contact' in transformed_df.columns and 'delivery_contact' in transformed_df.columns:
-            transformed_df.drop(columns=["commercial_contact", "delivery_contact"], inplace=True)
+        if (
+            "commercial_contact" in transformed_df.columns
+            and "delivery_contact" in transformed_df.columns
+        ):
+            transformed_df.drop(
+                columns=["commercial_contact", "delivery_contact"], inplace=True
+            )
 
-        transformed_df = (
-            transformed_df.rename(columns={
-                    "address_line_1": "counterparty_legal_address_line_1",
-                    "address_line_2": "counterparty_legal_address_line_2",
-                    "district": "counterparty_legal_district",
-                    "city": "counterparty_legal_city",
-                    "postal_code": "counterparty_legal_postal_code",
-                    "country": "counterparty_legal_country",
-                    "phone": "counterparty_legal_phone_number",
-                }))
-        
-        transformed_df = transformed_df.sort_values(by="counterparty_id").reset_index(drop=True)
+        transformed_df = transformed_df.rename(
+            columns={
+                "address_line_1": "counterparty_legal_address_line_1",
+                "address_line_2": "counterparty_legal_address_line_2",
+                "district": "counterparty_legal_district",
+                "city": "counterparty_legal_city",
+                "postal_code": "counterparty_legal_postal_code",
+                "country": "counterparty_legal_country",
+                "phone": "counterparty_legal_phone_number",
+            }
+        )
+
+        transformed_df = transformed_df.sort_values(by="counterparty_id").reset_index(
+            drop=True
+        )
 
         return transformed_df
     else:
         return pd.DataFrame([])
     # except KeyError as e:
     #     logger.error(f"Error in dim_counterparty: {e}")
-    #     raise  
+    #     raise
+
+
 ###################### facts sales table ###################### noqa
 
+
 def transform_fact_sales_order(sales_order):
-    """Transforms raw sales_order data to match warehouse schema"""
+    """ # noqa
+    Transforms raw sales order data to match the warehouse schema, including date formatting and renaming columns.
+
+    Args:
+        sales_order (list of dict): Raw sales order data to be transformed.
+
+    Returns:
+        pandas.DataFrame: Transformed sales order data or an empty DataFrame if input data is empty or invalid.
+    """ # noqa
     expected_columns = [
         "sales_order_id",
         "created_date",
@@ -388,25 +596,40 @@ def transform_fact_sales_order(sales_order):
     sales_order_df = pd.DataFrame(sales_order)
     if sales_order_df.empty:
         return pd.DataFrame([])
-    
-    sales_order_df["created_at"] = pd.to_datetime(sales_order_df["created_at"], errors="coerce")
-    sales_order_df["last_updated"] = pd.to_datetime(sales_order_df["last_updated"], errors="coerce")
-    
-    sales_order_df["created_date"] = sales_order_df["created_at"].dt.strftime('%Y-%m-%d')
-    sales_order_df["created_time"] = sales_order_df["created_at"].dt.strftime('%H:%M:%S.%f')
-    sales_order_df["last_updated_date"] = sales_order_df["last_updated"].dt.strftime('%Y-%m-%d')
-    sales_order_df["last_updated_time"] = sales_order_df["last_updated"].dt.strftime('%H:%M:%S.%f')        
+
+    sales_order_df["created_at"] = pd.to_datetime(
+        sales_order_df["created_at"], errors="coerce"
+    )
+    sales_order_df["last_updated"] = pd.to_datetime(
+        sales_order_df["last_updated"], errors="coerce"
+    )
+
+    sales_order_df["created_date"] = sales_order_df["created_at"].dt.strftime(
+        "%Y-%m-%d"
+    )
+    sales_order_df["created_time"] = sales_order_df["created_at"].dt.strftime(
+        "%H:%M:%S.%f"
+    )
+    sales_order_df["last_updated_date"] = sales_order_df["last_updated"].dt.strftime(
+        "%Y-%m-%d"
+    )
+    sales_order_df["last_updated_time"] = sales_order_df["last_updated"].dt.strftime(
+        "%H:%M:%S.%f"
+    )
     sales_order_df.rename(columns={"staff_id": "sales_staff_id"}, inplace=True)
-    
+
     transformed_df = sales_order_df[expected_columns].copy()
 
-    transformed_df = transformed_df.sort_values(by="sales_order_id").reset_index(drop=True)
+    transformed_df = transformed_df.sort_values(by="sales_order_id").reset_index(
+        drop=True
+    )
 
     return transformed_df
 
     # except Exception as e:
     #     logger.error(f"Error transforming fact_sales_order: {e}", exc_info=True)
     #     return pd.DataFrame([])
+
 
 #  if __name__ == "__main__":
 #   lambda_handler({"filepaths": ["data/by time/2025/03-March/07/22:17:13.872739/address",

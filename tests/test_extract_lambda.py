@@ -64,7 +64,7 @@ class TestExtractLambda:
 
             mock_s3.put_object.assert_called()
 
-            expected_query = "SELECT column_name FROM information_schema.columns WHERE table_name = :table_name ORDER BY ordinal_position"   # noqa
+            expected_query = "SELECT column_name FROM information_schema.columns WHERE table_name = :table_name ORDER BY ordinal_position"  # noqa
             actual_query = mock_db_instance.run.call_args_list[0][0][0].strip()
             actual_query = " ".join(actual_query.split())
 
@@ -130,6 +130,7 @@ class TestWriteData:
             "data/by time/2025/02-February/25/12:00:00.000000/address",
         ]
 
+
 class TestCloudWatchLogging:
     def test_get_time_logs_correct_text_for_extraction_time_error(
         self, caplog, aws_credentials
@@ -172,4 +173,3 @@ class TestCloudWatchLogging:
                 bucketname="test_bucket",
             )  # noqa
             assert "Successfully written to bucket!" in caplog.text
-    
